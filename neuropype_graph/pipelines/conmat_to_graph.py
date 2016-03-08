@@ -10,7 +10,7 @@ import scipy.sparse as sp
 
 import nipype.pipeline.engine as pe
     
-from nipype.utils.misc import show_files
+#from nipype.utils.misc import show_files
 
 #from neuropype_graph.prepare import PrepRada
 from neuropype_graph.interfaces.radatools import PrepRada,NetPropRada,CommRada
@@ -68,7 +68,7 @@ def create_pipeline_conmat_to_graph_density(correl_analysis_name,main_path,con_d
             node_roles = pe.Node(interface = ComputeNodeRoles(role_type = "4roles"), name='node_roles')
             
             pipeline.connect( prep_rada, 'Pajek_net_file',node_roles,'Pajek_net_file')
-            pipeline.connect( community_rada, ('rada_lol_file',show_files),node_roles,'rada_lol_file')
+            pipeline.connect( community_rada, 'rada_lol_file',node_roles,'rada_lol_file')
             
             if plot == True:
                 
