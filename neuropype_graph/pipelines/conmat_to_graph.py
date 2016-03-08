@@ -165,7 +165,7 @@ def create_pipeline_conmat_to_graph_threshold(correl_analysis_name,main_path,rad
 
         ### prepare net_list for radatools processing  
         prep_rada = pe.Node(interface = PrepRada(),name='prep_rada',iterfield = ["net_List_file"])
-        prep_rada.inputs.radatools_path = radatools_path
+        prep_rada.inputs.network_type = "U"
         
         pipeline.connect(compute_net_List, 'net_List_file', prep_rada, 'net_List_file')
         
@@ -208,7 +208,7 @@ def create_pipeline_conmat_to_graph_threshold(correl_analysis_name,main_path,rad
 
         ### prepare net_list for radatools processing  
         prep_rada = pe.MapNode(interface = PrepRada(),name='prep_rada',iterfield = ["net_List_file"])
-        prep_rada.inputs.radatools_path = radatools_path
+        prep_rada.inputs.network_type = "U"
         
         pipeline.connect(compute_net_List, 'net_List_file', prep_rada, 'net_List_file')
         
