@@ -114,7 +114,7 @@ def create_pipeline_conmat_to_graph_density(correl_analysis_name, main_path, con
             pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
             
             ### node roles
-            node_roles = pe.Node(interface = ComputeNodeRoles(role_type = "4roles"), name='node_roles')
+            node_roles = pe.MapNode(interface = ComputeNodeRoles(role_type = "4roles"), name='node_roles', iterfield = ['Pajek_net_file','rada_lol_file'])
             
             pipeline.connect( prep_rada, 'Pajek_net_file',node_roles,'Pajek_net_file')
             pipeline.connect( community_rada, 'rada_lol_file',node_roles,'rada_lol_file')

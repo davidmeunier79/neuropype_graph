@@ -21,11 +21,11 @@ import os
 
 import nibabel as nib
 
-from dmgraphanalysis_nodes.utils_plot import plot_signals,plot_sep_signals
+from neuropype_graph.utils_plot import plot_signals,plot_sep_signals
         
 ######################################################################################## ExtractTS ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_indexed_mask_data
+from neuropype_graph.utils_cor import mean_select_indexed_mask_data
 
 class ExtractTSInputSpec(BaseInterfaceInputSpec):
     indexed_rois_file = File(exists=True, desc='indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True)
@@ -121,7 +121,7 @@ class ExtractTS(BaseInterface):
 
 ######################################################################################## IntersectMask ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_indexed_mask_data
+from neuropype_graph.utils_cor import mean_select_indexed_mask_data
 
 class IntersectMaskInputSpec(BaseInterfaceInputSpec):
     
@@ -324,7 +324,7 @@ class IntersectMask(BaseInterface):
 
 ############################################################################################### ExtractMeanTS #####################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_mask_data
+from neuropype_graph.utils_cor import mean_select_mask_data
 
 class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
     mask_file = File(xor = ['filter_mask_file'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True)
@@ -608,8 +608,8 @@ class SeparateTS(BaseInterface):
 ################################################################################# RegressCovar ######################################################################################################################
  
 
-#from dmgraphanalysis_nodes.utils_cor import regress_movement_wm_csf_parameters
-from dmgraphanalysis_nodes.utils_cor import regress_parameters,regress_filter_normalize_parameters
+#from neuropype_graph.utils_cor import regress_movement_wm_csf_parameters
+from neuropype_graph.utils_cor import regress_parameters,regress_filter_normalize_parameters
 
 class RegressCovarInputSpec(BaseInterfaceInputSpec):
     masked_ts_file = File(exists=True, desc='time series in npy format', mandatory=True)
@@ -1030,9 +1030,9 @@ class MergeRuns(BaseInterface):
 
         ################################################################################# ComputeConfCorMat ######################################################################################################################
  
-from dmgraphanalysis_nodes.utils_cor import return_conf_cor_mat
+from neuropype_graph.utils_cor import return_conf_cor_mat
 
-from dmgraphanalysis_nodes.utils_plot import plot_hist,plot_cormat
+from neuropype_graph.utils_plot import plot_hist,plot_cormat
         
 class ComputeConfCorMatInputSpec(BaseInterfaceInputSpec):
     
@@ -1396,7 +1396,7 @@ class SelectNonNAN(BaseInterface):
 
 ##################################################### PrepareMeanCorrel ###############################################################################
 
-from dmgraphanalysis_nodes.utils_cor import return_corres_correl_mat
+from neuropype_graph.utils_cor import return_corres_correl_mat
 
 class PrepareMeanCorrelInputSpec(BaseInterfaceInputSpec):
     
@@ -1580,7 +1580,113 @@ class PrepareMeanCorrel(BaseInterface):
         return outputs
 
 
+
+##################################################### PreparePermutMeanCorrel ###############################################################################
+
+class PreparePermutMeanCorrelInputSpec(BaseInterfaceInputSpec):
+       
+    cor_mat_files = traits.List(File(exists=True), desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True)
+
+    permut_group_sizes = traits.List(traits.Int, decs = 'How to split the groups after shuffling', mandatory = True)
+    
+    seed = traits.Int(0, usedefault = True, decs = 'Start of random process')
+    
+class PreparePermutMeanCorrelOutputSpec(TraitedSpec):
+    
+    permut_mean_cormat_files = traits.List(File(exists=True),desc="npy files containing the average of permuted correlation matrices")
+    
+class PreparePermutMeanCorrel(BaseInterface):
+    
+    import numpy as np
+    import os
+
+    #import nibabel as nib
+    
+    """
+    Return average of correlation values after shuffling orig datasets
+    """
+    
+    input_spec = PreparePermutMeanCorrelInputSpec
+    output_spec = PreparePermutMeanCorrelOutputSpec
+
+    def _run_interface(self, runtime):
+               
+            print self.inputs.seed
+            
+            np.random.seed(self.inputs.seed)
+            
+            cormats = [np.load(cor_mat_file) for cor_mat_file in self.inputs.cor_mat_files]
+            
+            print cormats
+            
+            assert len(cormats) == sum(self.inputs.permut_group_sizes), "Warning, len(cormats) {0} != sum permut_group_sizes {1}".format(len(cormats),sum(self.inputs.permut_group_sizes))
+            
+            subj_indexes = np.arange(len(cormats))
+            
+            np.random.shuffle(subj_indexes)
+            
+            print subj_indexes
+            
+            subj_indexes_file = os.path.abspath("subj_indexes.txt")
+
+            f = open(subj_indexes_file,"w+")
+            
+            #f.write(subj_indexes.tolist())
+            
+            np.savetxt(f,subj_indexes,fmt = "%d")
+                  
+                  
+            min_index = 0
+            
+            cormats = np.array(cormats)
+            
+            print cormats.shape
+            
+            self.permut_mean_cormat_files = []
+            
+            for i,cur_nb_subj_by_gender in enumerate(self.inputs.permut_group_sizes):
                 
+                print cur_nb_subj_by_gender
+                
+                cur_range = np.arange(min_index,min_index+cur_nb_subj_by_gender)
+                
+                print cur_range
+                
+                rand_indexes = subj_indexes[cur_range]
+                
+                print rand_indexes
+                
+                #f.write(rand_indexes)
+                
+                np.savetxt(f,rand_indexes,fmt = "%d")
+                
+                permut_mean_cormat = np.mean(cormats[rand_indexes,:,:],axis = 0)
+                
+                print permut_mean_cormat.shape
+                
+                permut_mean_cormat_file = os.path.abspath("permut_mean_cormat_" + str(i) + ".npy")
+                
+                np.save(permut_mean_cormat_file,permut_mean_cormat)
+                
+                self.permut_mean_cormat_files.append(permut_mean_cormat_file)
+                
+                min_index+=cur_nb_subj_by_gender
+            f.close()
+            
+            return runtime
+                    
+
+    def _list_outputs(self):
+        
+        outputs = self._outputs().get()
+        
+        outputs["permut_mean_cormat_files"] = self.permut_mean_cormat_files
+        
+        #print outputs
+        
+        return outputs
+
+                    
 
 #def prepare_signif_correlation_matrices(cor_mat_files,conf_cor_mat_files,coords_files,gm_mask_coords_file):
 
