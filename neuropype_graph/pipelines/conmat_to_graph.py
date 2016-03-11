@@ -26,9 +26,9 @@ try:
 except ImportError:
     can_plot_igraph = False
     
-def create_pipeline_conmat_to_graph_density(correl_analysis_name, main_path, con_den = 1.0,multi = False,mod = True, plot = False):
+def create_pipeline_conmat_to_graph_density(pipeline_name, main_path, con_den = 1.0,multi = False,mod = True, plot = False):
 
-    pipeline = pe.Workflow(name=correl_analysis_name)
+    pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
     if plot==True and can_plot_igraph==False:
@@ -140,9 +140,9 @@ def create_pipeline_conmat_to_graph_density(correl_analysis_name, main_path, con
     return pipeline
 
     
-def create_pipeline_conmat_to_graph_threshold(correl_analysis_name,main_path,radatools_path,con_thr = 1.0,multi = False,mod = True):
+def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,radatools_path,con_thr = 1.0,multi = False,mod = True):
 
-    pipeline = pe.Workflow(name=correl_analysis_name)
+    pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
     if plot==True and can_plot_igraph==False:
