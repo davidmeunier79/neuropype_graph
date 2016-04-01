@@ -11,12 +11,12 @@ import igraph as ig
 
 import math
 
-from dmgraphanalysis_nodes.utils_igraph import project2D_np
+from neuropype_graph.utils_igraph import project2D_np
 
-from dmgraphanalysis_nodes.utils_dtype_coord import where_in_coords,find_index_in_coords
-from dmgraphanalysis_nodes.utils_igraph import add_non_null_labels,return_base_weighted_graph
+from neuropype_graph.utils_dtype_coord import where_in_coords,find_index_in_coords
+from neuropype_graph.utils_igraph import add_non_null_labels,return_base_weighted_graph
 
-from dmgraphanalysis_nodes.utils_color import igraph_colors,new_igraph_colors,static_igraph_colors
+from neuropype_graph.utils_color import igraph_colors,new_igraph_colors,static_igraph_colors
 
 def plot_3D_igraph_int_mat_modules(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = [], edge_colors = new_igraph_colors, node_col_labels = np.array([]),nodes_sizes = np.array([]),view_from = '_from_left'):
     
@@ -312,8 +312,8 @@ def plot_3D_igraph_signed_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.a
 
 ################################# using relative coords directly 
 
-from dmgraphanalysis_nodes.utils_igraph import add_non_null_labels,add_vertex_colors,create_module_edge_list,add_node_shapes
-from dmgraphanalysis_nodes.utils_plot import plot_colorbar
+from neuropype_graph.utils_igraph import add_non_null_labels,add_vertex_colors,create_module_edge_list,add_node_shapes
+from neuropype_graph.utils_plot import plot_colorbar
 
 def plot_3D_igraph_all_modules(community_vect,Z_list,node_coords = np.array([]),node_labels = [], layout = '', node_roles = np.array([]), plot_color_bar = True):
 
@@ -408,7 +408,7 @@ def plot_3D_igraph_all_modules(community_vect,Z_list,node_coords = np.array([]),
             
             print "Warning, should have coordinates, or specify layout = 'FR' (Fruchterman-Reingold layout) in options"
 
-from dmgraphanalysis_nodes.utils_igraph import select_edge_list_outside_module
+from neuropype_graph.utils_igraph import select_edge_list_outside_module
 
 def plot_3D_igraph_single_modules(community_vect,Z_list,node_coords = np.array([]),node_labels = [], layout = '', node_roles = np.array([]), plot_color_bar = True, nb_min_nodes_by_module = 5):
 

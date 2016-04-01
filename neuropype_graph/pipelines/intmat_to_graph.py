@@ -10,17 +10,17 @@ import scipy.sparse as sp
 
 import nipype.pipeline.engine as pe
     
-from dmgraphanalysis_nodes.nodes.modularity import ComputeIntNetList
+from neuropype_graph.nodes.modularity import ComputeIntNetList
 
-from dmgraphanalysis_nodes.nodes.modularity import PrepRada,CommRada,ComputeNodeRoles
-from dmgraphanalysis_nodes.nodes.modularity import NetPropRada
+from neuropype_graph.nodes.modularity import PrepRada,CommRada,ComputeNodeRoles
+from neuropype_graph.nodes.modularity import NetPropRada
  
 import imp
 
 try:
     imp.find_module('igraph')
     can_plot_igraph = True
-    from dmgraphanalysis_nodes.nodes.igraph_plots import PlotIGraphModules
+    from neuropype_graph.nodes.igraph_plots import PlotIGraphModules
 
 except ImportError:
     can_plot_igraph = False

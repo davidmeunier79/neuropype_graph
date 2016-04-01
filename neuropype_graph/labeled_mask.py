@@ -14,7 +14,7 @@ import nipype.interfaces.spm as spm
 
 from nipype.utils.filemanip import split_filename as split_f
 
-from dmgraphanalysis_nodes.utils import check_np_dimension
+from neuropype_graph.utils import check_np_dimension
 
 import itertools as iter
 
@@ -844,7 +844,7 @@ def compute_labelled_mask_from_HO_sub(resliced_full_HO_img_file,info_template_fi
     
 def segment_atlas_in_cubes(ROI_dir,ROI_cube_size,min_nb_voxels_in_neigh):
     
-    from dmgraphanalysis_nodes.peak_labelled_mask import return_indexed_mask_neigh_within_binary_template
+    from neuropype_graph.peak_labelled_mask import return_indexed_mask_neigh_within_binary_template
     
     resliced_atlas_file = os.path.join(ROI_dir,"rHarvard-Oxford-cortl-sub-recombined-111regions.nii")
     
@@ -948,8 +948,8 @@ def generate_peaks(ROI_cube_size,mask_shape):
     
 def generate_continuous_mask_in_atlas(template_data,template_labels,ROI_cube_size,min_nb_voxels_in_neigh):
     
-    from dmgraphanalysis_nodes.utils_dtype_coord import convert_np_coords_to_coords_dt
-    from dmgraphanalysis_nodes.peak_labelled_mask import return_voxels_within_same_region
+    from neuropype_graph.utils_dtype_coord import convert_np_coords_to_coords_dt
+    from neuropype_graph.peak_labelled_mask import return_voxels_within_same_region
 
     template_data_shape = template_data.shape
     

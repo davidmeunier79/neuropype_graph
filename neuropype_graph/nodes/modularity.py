@@ -20,9 +20,9 @@ from nipype.utils.filemanip import split_filename as split_f
 #from enthought.traits.trait_base import Undefined
 ######################################################################################## ComputeNetList ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_net import return_net_list
-#from dmgraphanalysis_nodes.utils_net import export_List_net_from_list,export_Louvain_net_from_list
-from dmgraphanalysis_nodes.utils_net import export_List_net_from_list
+from neuropype_graph.utils_net import return_net_list
+#from neuropype_graph.utils_net import export_List_net_from_list,export_Louvain_net_from_list
+from neuropype_graph.utils_net import export_List_net_from_list
 
 class ComputeNetListInputSpec(BaseInterfaceInputSpec):
     
@@ -138,8 +138,8 @@ class ComputeNetList(BaseInterface):
     
 ######################################################################################## ComputeIntNetList ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_net import return_int_net_list
-from dmgraphanalysis_nodes.utils_net import export_List_net_from_list,export_Louvain_net_from_list
+from neuropype_graph.utils_net import return_int_net_list
+from neuropype_graph.utils_net import export_List_net_from_list,export_Louvain_net_from_list
 
 class ComputeIntNetListInputSpec(BaseInterfaceInputSpec):
     
@@ -218,8 +218,8 @@ class ComputeIntNetList(BaseInterface):
     
 ######################################################################################## ComputeNodeRoles ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_net import read_lol_file,read_Pajek_corres_nodes_and_sparse_matrix
-from dmgraphanalysis_nodes.utils_mod import compute_roles
+from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes_and_sparse_matrix
+from neuropype_graph.utils_mod import compute_roles
 
 class ComputeNodeRolesInputSpec(BaseInterfaceInputSpec):
     

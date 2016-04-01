@@ -55,9 +55,7 @@ class ExtractTS(BaseInterface):
         #import os
         #import numpy as np
         #import nibabel as nib
-        
-        #from dmgraphanalysis.utils_plot import plot_signals
-        
+                
         coord_rois_file = self.inputs.coord_rois_file
         indexed_rois_file = self.inputs.indexed_rois_file
         file_4D = self.inputs.file_4D
@@ -1587,9 +1585,12 @@ class PreparePermutMeanCorrelInputSpec(BaseInterfaceInputSpec):
        
     cor_mat_files = traits.List(File(exists=True), desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True)
 
-    permut_group_sizes = traits.List(traits.Int, decs = 'How to split the groups after shuffling', mandatory = True)
+    permut_group_sizes = traits.List(traits.Int, desc = 'How to split the groups after shuffling', mandatory = True)
     
     seed = traits.Int(0, usedefault = True, decs = 'Start of random process')
+    
+    #variance_adjst = traits.Bool(False, usedefault = True, desc = "is between-subject variance adjusted taken into account?")
+    
     
 class PreparePermutMeanCorrelOutputSpec(TraitedSpec):
     
@@ -1660,7 +1661,9 @@ class PreparePermutMeanCorrel(BaseInterface):
                 
                 np.savetxt(f,rand_indexes,fmt = "%d")
                 
-                permut_mean_cormat = np.mean(cormats[rand_indexes,:,:],axis = 0)
+                permut_cormats = cormats[rand_indexes,:,:]
+                
+                permut_mean_cormat = np.mean(permut_cormats,axis = 0)
                 
                 print permut_mean_cormat.shape
                 
@@ -1696,7 +1699,6 @@ class PreparePermutMeanCorrel(BaseInterface):
 
     ##import nibabel as nib
     
-    #from dmgraphanalysis.utils_cor import return_corres_correl_mat
     ##from utils_cor import read_Pajek_corres_nodes,read_lol_file
     
     #print 'loading gm mask corres'

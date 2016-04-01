@@ -291,8 +291,6 @@ class PlotIGraphConjCoclass(BaseInterface):
         threshold = self.inputs.threshold
         gm_mask_coords_file = self.inputs.gm_mask_coords_file
             
-        #from dmgraphanalysis.utils_plot import plot_ranged_cormat
-        
         
         #from nipype.utils.filemanip import split_filename as split_f
         

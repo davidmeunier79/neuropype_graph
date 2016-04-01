@@ -11,9 +11,9 @@ from nipype.interfaces.base import BaseInterface, \
     
 ############################################################################################### PrepareCoclass #####################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import return_coclass_mat
+from neuropype_graph.utils_cor import return_coclass_mat
 #,return_hierachical_order
-from dmgraphanalysis_nodes.utils_net import read_Pajek_corres_nodes,read_lol_file
+from neuropype_graph.utils_net import read_Pajek_corres_nodes,read_lol_file
 
 class PrepareCoclassInputSpec(BaseInterfaceInputSpec):
     
@@ -174,7 +174,7 @@ class PrepareCoclass(BaseInterface):
         
         ############################################################################################### DiffMatrices #####################################################################################################
 
-from dmgraphanalysis_nodes.utils import check_np_shapes
+from neuropype_graph.utils import check_np_shapes
         
 class DiffMatricesInputSpec(BaseInterfaceInputSpec):
     
@@ -240,7 +240,7 @@ class DiffMatrices(BaseInterface):
 
 from nipype.utils.filemanip import split_filename as split_f
 
-from dmgraphanalysis_nodes.utils_plot import plot_ranged_cormat
+from neuropype_graph.utils_plot import plot_ranged_cormat
 
 class PlotCoclassInputSpec(BaseInterfaceInputSpec):
     

@@ -11,7 +11,7 @@ from nipype.utils.filemanip import split_filename as split_f
         
 ############################################################################################### StatsPairBinomial #####################################################################################################
 
-import dmgraphanalysis_nodes.utils_stats as stats
+import neuropype_graph.utils_stats as stats
         
 class StatsPairBinomialInputSpec(BaseInterfaceInputSpec):
     
@@ -90,7 +90,7 @@ class StatsPairBinomial(BaseInterface):
 
 ############################################################################################### StatsPairTTest #####################################################################################################
 
-import dmgraphanalysis_nodes.utils_stats as stats
+import neuropype_graph.utils_stats as stats
         
 class StatsPairTTestInputSpec(BaseInterfaceInputSpec):
     
@@ -172,8 +172,8 @@ class StatsPairTTest(BaseInterface):
         
 ############################################################################################### PlotIGraphSignedIntMat #####################################################################################################
 
-from dmgraphanalysis_nodes.plot_igraph import plot_3D_igraph_signed_int_mat
-from dmgraphanalysis_nodes.utils import check_np_shapes
+from neuropype_graph.plot_igraph import plot_3D_igraph_signed_int_mat
+from neuropype_graph.utils import check_np_shapes
 
 #from dmgraphanalysis.utils_plot import plot_cormat
     
@@ -260,7 +260,7 @@ class PlotIGraphSignedIntMat(BaseInterface):
         
 ############################################################################################### PrepareCormat #####################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import return_corres_correl_mat
+from neuropype_graph.utils_cor import return_corres_correl_mat
 #,return_hierachical_order
         
 class PrepareCormatInputSpec(BaseInterfaceInputSpec):
