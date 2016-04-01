@@ -1,2 +1,2 @@
-#import correl_mat
+import correl_mat
 #import modularity
