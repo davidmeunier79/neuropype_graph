@@ -29,6 +29,125 @@ import os
 from xml.dom import minidom
 ############################################################ from a list of MNI coords ############################################################################
 
+def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_size = 10):
+    """
+        MNI_coords_list: list of list of 3 integer values in MNI space
+        ref_img_file: nifti1 file, the generated indexed mask will use its shape and affine
+        ROI_shape: "cube", or "sphere"
+        ROI_size: ROI size in mm (from MNI space)
+    """
+    
+    ref_img = nib.load(ref_img_file)
+    
+    ### data (shape)
+    ref_img_shape = ref_img.get_data().shape
+    
+    print ref_img_shape
+    
+    ### affine
+    ref_img_affine = ref_img.get_affine()
+    
+    inv_affine = np.linalg.inv(ref_img_affine)
+    
+    print inv_affine
+    
+    ### header
+    ref_img_hd = ref_img.get_header()
+    
+    print ref_img_hd
+    
+    pixdims = ref_img_hd['pixdim'][1:4]
+        
+    print pixdims
+        
+        
+    ### shape of the ROI    
+    if not ROI_shape in ["sphere","cube"]:
+        
+        print "Warning, could not determine shape {}".format(ROI_shape)
+        
+        ROI_shape = "cube"
+    
+    if ROI_shape == "cube":
+            
+        print "ROI_shape = cube"
+        
+        vox_dims = map(int,float(ROI_size)/pixdims)
+        
+        print vox_dims
+        
+        neigh_range = []
+        
+        for vox_dim in vox_dims:
+            
+            vox_neigh = vox_dim/2
+                
+            print vox_neigh
+                
+            ### case odd vox_dim
+            if vox_dim%2 == 1:
+            
+                cur_range = np.arange(-vox_neigh,vox_neigh+1)
+                
+                #print "odd: ",cur_range
+                
+            elif vox_dim%2 == 0:
+                
+                
+                cur_range = np.arange(-vox_neigh+1,vox_neigh+1)
+                
+                #print "even: ",cur_range
+          
+            neigh_range.append(cur_range)
+            
+        print neigh_range
+        
+    indexed_mask_data = np.zeros(shape = ref_img_shape) - 1
+    
+    for index_mask,MNI_coords in enumerate(MNI_coords_list):
+        
+        print MNI_coords
+        
+        ijk_coord =  np.dot(inv_affine,np.array(MNI_coords + [1],dtype = 'int'))[:-1]
+        
+        print ijk_coord
+        
+        coord_i = np.array(ijk_coord[0] + neigh_range[0],dtype = 'int64').tolist()
+        
+        print coord_i
+        
+        
+        coord_j = np.array(ijk_coord[1] + neigh_range[1],dtype = 'int64').tolist()
+        
+        print coord_j
+        
+        
+        coord_k = np.array(ijk_coord[2] + neigh_range[2],dtype = 'int64').tolist()
+        
+        print coord_k
+        
+        indexed_mask_data[coord_i,coord_j,coord_k] = index_mask
+        
+        print np.sum(indexed_mask_data == index_mask)
+        
+        a = np.where(indexed_mask_data == index_mask)
+        
+        print len(a)
+                  
+        0/0
+        
+        print x.shape
+        
+        print x[0],y[0],z[0]
+        
+        0/0
+        
+    
+    
+    
+    
+
+
 ### utils for merging different label and coord file before computing label masks if necessary
 def merge_coord_and_label_files(ROI_coords_dir):
     """
@@ -227,7 +346,7 @@ def compute_ROI_nii_from_ROI_coords_files(ref_img_file,MNI_coords_file,labels_fi
     return ROI_coords_labelled_mask_file
 
 #### from a ROI directories, containing a list of VOI binary mask nii images ####
-def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir):
+def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files = []):
     
     """
     compute labelled_mask from a list of img files, presenting ROIs extracted from MRIcron in the nii or img format
@@ -240,39 +359,76 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir):
     
     ref_image_data_shape = ref_image_data.shape
     
-    print ROI_dir
-    
-    resliced_ROI_files =  glob.glob(os.path.join(ROI_dir,"rROI*.nii"))
-
-    print resliced_ROI_files
-    print len(resliced_ROI_files)
-    
-    ROI_files =  glob.glob(os.path.join(ROI_dir,"ROI*.nii"))
-    
-    print ROI_files
-    print len(ROI_files)
-    
-    if len(resliced_ROI_files) != len(ROI_files) :
+    if len(list_ROI_img_files) == 0:
+            
+        print ROI_dir
         
-        for i,ROI_file in enumerate(ROI_files):
-        
-            ROI_image = nib.load(ROI_file)
-        
-            ROI_data = ROI_image.get_data()
-            
-            ROI_data_shape = ROI_data.shape
-            
-            print "Original ROI template %d shape:"%i
-            
-            print ROI_data.shape
-            
-            reslice_ROI = spm.Reslice()
-            reslice_ROI.inputs.in_file = ROI_file
-            reslice_ROI.inputs.space_defining = ref_img_file
+        resliced_ROI_files =  glob.glob(os.path.join(ROI_dir,"rROI*.nii"))
 
-            resliced_ROI_file =  reslice_ROI.run().outputs.out_file
+        print resliced_ROI_files
+        print len(resliced_ROI_files)
+        
+        ROI_files =  glob.glob(os.path.join(ROI_dir,"ROI*.nii"))
+        
+        print ROI_files
+        print len(ROI_files)
+        
+        if len(resliced_ROI_files) != len(ROI_files) :
+            
+            for i,ROI_file in enumerate(ROI_files):
+            
+                ROI_image = nib.load(ROI_file)
+            
+                ROI_data = ROI_image.get_data()
+                
+                ROI_data_shape = ROI_data.shape
+                
+                print "Original ROI template %d shape:"%i
+                
+                print ROI_data.shape
+                
+                reslice_ROI = spm.Reslice()
+                reslice_ROI.inputs.in_file = ROI_file
+                reslice_ROI.inputs.space_defining = ref_img_file
 
-        resliced_ROI_files = glob.glob(os.path.join(ROI_dir,"rROI*.nii"))
+                resliced_ROI_file =  reslice_ROI.run().outputs.out_file
+
+            resliced_ROI_files = glob.glob(os.path.join(ROI_dir,"rROI*.nii"))
+    else:
+        
+        ROI_files =  [os.path.join(ROI_dir,ROI_img_file) for ROI_img_file in list_ROI_img_files]
+        
+        print ROI_files
+        
+        resliced_ROI_files =  [os.path.join(ROI_dir,"r" + ROI_img_file) for ROI_img_file in list_ROI_img_files if os.path.exists(os.path.join(ROI_dir,"r" + ROI_img_file))]
+
+        print resliced_ROI_files
+        print len(resliced_ROI_files)
+        
+        
+        if len(resliced_ROI_files) != len(ROI_files) :
+            
+            resliced_ROI_files = []
+            
+            for i,ROI_file in enumerate(ROI_files):
+            
+                ROI_image = nib.load(ROI_file)
+            
+                ROI_data = ROI_image.get_data()
+                
+                ROI_data_shape = ROI_data.shape
+                
+                print "Original ROI template %d shape:"%i
+                
+                print ROI_data.shape
+                
+                reslice_ROI = spm.Reslice()
+                reslice_ROI.inputs.in_file = ROI_file
+                reslice_ROI.inputs.space_defining = ref_img_file
+
+                resliced_ROI_file =  reslice_ROI.run().outputs.out_file
+
+                resliced_ROI_files.append(resliced_ROI_file)
         
     resliced_ROI_files.sort()
     
