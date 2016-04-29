@@ -437,7 +437,7 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files
     
     labels = []
     
-    labelled_mask_data = np.zeros(shape = ref_image_data.shape, dtype = 'int')
+    labelled_mask_data = np.zeros(shape = ref_image_data.shape, dtype = 'int') - 1
     
     print labelled_mask_data.shape
     
@@ -457,7 +457,7 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files
         
         print np.sum(resliced_ROI_data != 0)
         
-        labelled_mask_data[resliced_ROI_data != 0] = i+1
+        labelled_mask_data[resliced_ROI_data != 0] = i
         
         print np.unique(labelled_mask_data)
     
@@ -474,6 +474,8 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files
     labels_list_file = os.path.join(ROI_dir,"labels_all_ROIs.txt")
     
     np.savetxt(labels_list_file,np.array(labels,dtype = 'string'),fmt = "%s")
+    
+    
     
     return labelled_mask_data_file,labels_list_file
     #nib.load(ref_img_file)
@@ -507,7 +509,7 @@ def compute_MNI_coords_from_indexed_template(indexed_template_file,ROI_dir):
     
     ROI_MNI_coords = []
     
-    for index in np.unique(ref_image_data):
+    for index in np.unique(ref_image_data)[1:]:
         
         i,j,k = np.where(ref_image_data == index)
         
