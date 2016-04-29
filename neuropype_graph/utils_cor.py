@@ -208,16 +208,18 @@ def mean_select_mask_data(data_img,data_mask):
     
     return np.array(mean_mask_data_matrix)
     
-def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50):
+def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50,percent_signal = 0.5):
         
         ### extrating ts by averaging the time series of all voxel with the same index
-        sequence_roi_index = np.array(np.unique(indexed_mask_rois_data),dtype = int)
+        sequence_roi_index = np.unique(indexed_mask_rois_data)
+        
+        print sequence_roi_index
         
         if sequence_roi_index[0] == -1.0:
             sequence_roi_index = sequence_roi_index[1:]
         
         #print "sequence_roi_index:"
-        #print sequence_roi_index
+        print sequence_roi_index
         
         if sequence_roi_index.shape[0] != coord_rois.shape[0]:
             print "Warning, indexes in template_ROI are incompatible with ROI coords"
@@ -243,7 +245,8 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
             #print all_voxel_roi_ts.shape
             
             ### testing if at least 50% of the voxels in the ROIs have values always higher than min bold intensity
-            if np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]) > 0.5:
+            
+            if np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]) > percent_signal:
                 
                 #print "Roi selected: " + str(roi_index)
                 #print "coord_rois shape: "
@@ -254,7 +257,7 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
                 subj_coord_rois.append(coord_rois[roi_index,])
                 mean_masked_ts.append(mean_roi_ts)
             else:
-                print "ROI " + str(roi_index) + " was not selected"
+                print "ROI {} was not selected : {} {} ".format(np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
                 
                 
             ### testing if mean_roi_ts if always higher than minimal BOLD intensity
@@ -269,6 +272,8 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
             #else:
                 #print "ROI " + str(roi_index) + " was not selected"
                 
+        assert len(mean_masked_ts) != 0, "min_BOLD_intensity {} and percent_signal are to restrictive".format(min_BOLD_intensity,percent_signal)
+            
             
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
         subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')

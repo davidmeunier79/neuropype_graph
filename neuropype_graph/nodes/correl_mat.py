@@ -36,6 +36,8 @@ class ExtractTSInputSpec(BaseInterfaceInputSpec):
     
     min_BOLD_intensity = traits.Float(default = 50.0, desc='BOLD signal below this value will be set to zero',mandatory=False,usedefault = True)
 
+    percent_signal = traits.Float(default = 0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",mandatory=False,usedefault = True)
+    
 class ExtractTSOutputSpec(TraitedSpec):
     
     mean_masked_ts_file = File(exists=True, desc="mean ts in .npy (pickle format)")
@@ -81,7 +83,7 @@ class ExtractTS(BaseInterface):
         print "orig_ts shape:"
         print orig_ts.shape
             
-        mean_masked_ts,subj_coord_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50)
+        mean_masked_ts,subj_coord_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity, percent_signal = 0.5)
         
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
         subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')
@@ -232,21 +234,22 @@ class IntersectMask(BaseInterface):
         print len(index_corres)
         
         print "reorder_indexed_rois:"
-        reorder_indexed_rois_data = np.zeros(shape = filtered_indexed_rois_data.shape) - 1
+        reorder_indexed_rois_data = np.zeros(shape = filtered_indexed_rois_data.shape,dtype = 'int64') - 1
         
         for i,index in enumerate(index_corres):
             
-            #print i,index
+            print i,index
             
             if np.sum(np.array(filtered_indexed_rois_data == index,dtype = int)) != 0:
                 
+                print np.sum(np.array(filtered_indexed_rois_data == index,dtype = int))
                 reorder_indexed_rois_data[filtered_indexed_rois_data == index] = i
             else:
                 print "Warning could not find value %d in filtered_indexed_rois_data"%index
             
                                        
-        print np.unique(reorder_indexed_rois_data)                               
-    
+        print np.unique(reorder_indexed_rois_data)  
+        
         reorder_indexed_rois_img_file = os.path.abspath("reorder_filtered_indexed_rois.nii")
         nib.save(nib.Nifti1Image(reorder_indexed_rois_data,indexed_rois_img.get_affine(),indexed_rois_img.get_header()),reorder_indexed_rois_img_file)
     
@@ -290,6 +293,7 @@ class IntersectMask(BaseInterface):
                 
             labels_rois = [line.strip() for line in open(labels_rois_file)]
             print labels_rois
+            print len(labels_rois)
             
             np_labels_rois = np.array(labels_rois,dtype = 'str')
             
