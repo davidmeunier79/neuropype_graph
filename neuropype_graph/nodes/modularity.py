@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#from dmgraphanalysis.plot_igraph import *
+#from neuropype_graph.plot_igraph import *
 
 #import rpy,os
 import os

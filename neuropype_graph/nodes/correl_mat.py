@@ -164,7 +164,7 @@ class IntersectMask(BaseInterface):
         
         import nipype.interfaces.spm as spm
 
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         indexed_rois_file = self.inputs.indexed_rois_file
         filter_mask_file = self.inputs.filter_mask_file
@@ -460,7 +460,7 @@ class ConcatTS(BaseInterface):
         #import numpy as np
         #import nibabel as nib
         
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         all_ts_file = self.inputs.all_ts_file
         
@@ -569,7 +569,7 @@ class SeparateTS(BaseInterface):
         #import numpy as np
         #import nibabel as nib
         
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         all_ts_file = self.inputs.all_ts_file
         
