@@ -9,15 +9,13 @@ import numpy as np
 import scipy.sparse as sp 
 
 import nipype.pipeline.engine as pe
-    
 #from nipype.utils.misc import show_files
 
-#from neuropype_graph.prepare import PrepRada
 from neuropype_graph.interfaces.radatools import PrepRada,NetPropRada,CommRada
-
 from neuropype_graph.nodes.modularity import ComputeNetList,ComputeNodeRoles
 
 import imp
+
 try:
     imp.find_module('igraph')
     can_plot_igraph = True
