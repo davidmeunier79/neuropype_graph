@@ -18,8 +18,6 @@ from neuropype_graph.utils import check_np_dimension
 
 import itertools as iter
 
-from nipy.labs.viz import coord_transform
-
 import numpy as np
 import nibabel as nib
 import glob
@@ -27,6 +25,54 @@ import os
 
 
 from xml.dom import minidom
+
+
+######################################### copied from nipy project ####################
+
+def coord_transform(x, y, z, affine):
+    """ Convert the x, y, z coordinates from one image space to another
+        space. 
+  
+        Parameters
+        ----------
+        x : number or ndarray
+            The x coordinates in the input space
+        y : number or ndarray
+            The y coordinates in the input space
+        z : number or ndarray
+            The z coordinates in the input space
+        affine : 2D 4x4 ndarray
+            affine that maps from input to output space.
+  
+        Returns
+        -------
+        x : number or ndarray
+            The x coordinates in the output space
+        y : number or ndarray
+            The y coordinates in the output space
+        z : number or ndarray
+            The z coordinates in the output space
+  
+        Warning: The x, y and z have their Talairach ordering, not 3D
+        numy image ordering.
+    """
+    coords = np.c_[np.atleast_1d(x).flat, 
+                   np.atleast_1d(y).flat, 
+                   np.atleast_1d(z).flat,
+                   np.ones_like(np.atleast_1d(z).flat)].T
+    x, y, z, _ = np.dot(affine, coords)
+    return x.squeeze(), y.squeeze(), z.squeeze()
+
+    
+    
+
+
+
+
+
+
+
+
 ############################################################ from a list of MNI coords ############################################################################
 
 def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_size = 10):
@@ -142,9 +188,6 @@ def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_s
         
         0/0
         
-    
-    
-    
     
 
 
