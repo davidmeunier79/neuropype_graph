@@ -26,11 +26,7 @@ except ImportError:
     
 def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_den_pipe", con_den = 1.0,multi = False,mod = True, plot = False):
 
-    pip_name = pipeline_name + "_den_" + str(con_den).replace(".","_")
-    
-    print pip_name
-    
-    pipeline = pe.Workflow(name= pip_name)
+    pipeline = pe.Workflow(name= pipeline_name + "_den_" + str(con_den).replace(".","_"))
     pipeline.base_dir = main_path
     
     if plot==True and can_plot_igraph==False:
