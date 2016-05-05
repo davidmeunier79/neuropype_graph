@@ -26,7 +26,7 @@ except ImportError:
     
 def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_den_pipe", con_den = 1.0,multi = False,mod = True, plot = False):
 
-    pip_name = pipeline_name + "_den_ " + str(con_den).replace(".","_")
+    pip_name = pipeline_name + "_den_" + str(con_den).replace(".","_")
     
     print pip_name
     
