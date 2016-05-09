@@ -14,12 +14,12 @@ import nipype.pipeline.engine as pe
 from neuropype_graph.interfaces.radatools import PrepRada,NetPropRada,CommRada
 from neuropype_graph.nodes.modularity import ComputeNetList,ComputeNodeRoles
 
-import imp
+#import imp
 
 try:
-    imp.find_module('igraph')
+    import igraph
     can_plot_igraph = True
-    from neuropype_graph.nodes.igraph_plots import PlotIGraphModules
+    from neuropype_graph.interfaces.plot_igraph.plots import PlotIGraphModules
 
 except ImportError:
     can_plot_igraph = False
