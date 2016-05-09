@@ -38,6 +38,9 @@ class ExtractTSInputSpec(BaseInterfaceInputSpec):
 
     percent_signal = traits.Float(default = 0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",mandatory=False,usedefault = True)
     
+    plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
+    
+    
 class ExtractTSOutputSpec(TraitedSpec):
     
     mean_masked_ts_file = File(exists=True, desc="mean ts in .npy (pickle format)")
@@ -98,13 +101,14 @@ class ExtractTS(BaseInterface):
         subj_coord_rois_file = os.path.abspath("subj_coord_rois.txt")
         np.savetxt(subj_coord_rois_file,subj_coord_rois,fmt = '%.3f')
         
-        
-        print "plotting mean_masked_ts"
-        
-        plot_mean_masked_ts_file = os.path.abspath('mean_masked_ts.eps')    
-        
-        plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
-        
+        if plot_fig == True:
+                
+            print "plotting mean_masked_ts"
+            
+            plot_mean_masked_ts_file = os.path.abspath('mean_masked_ts.eps')    
+            
+            plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
+            
         return runtime
         
         #return mean_masked_ts_file,subj_coord_rois_file
@@ -339,6 +343,7 @@ class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
     
     suffix = traits.String(desc='Suffix added to describe the extracted time series',mandatory=False)
 
+    plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
     
 class ExtractMeanTSOutputSpec(TraitedSpec):
     
@@ -407,13 +412,14 @@ class ExtractMeanTS(BaseInterface):
         mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.txt')    
         np.savetxt(mean_masked_ts_file,mean_masked_ts,fmt = '%.3f')
         
-        
-        print "plotting mean_masked_ts"
-        
-        plot_mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.eps')    
-        
-        plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
-        
+        if plot_fig == True:
+                
+            print "plotting mean_masked_ts"
+            
+            plot_mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.eps')    
+            
+            plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
+            
         return runtime
         
         #return mean_masked_ts_file,subj_coord_rois_file
