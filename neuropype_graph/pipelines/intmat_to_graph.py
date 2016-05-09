@@ -10,17 +10,15 @@ import scipy.sparse as sp
 
 import nipype.pipeline.engine as pe
     
-from neuropype_graph.nodes.modularity import ComputeIntNetList
-
-from neuropype_graph.nodes.modularity import PrepRada,CommRada,ComputeNodeRoles
-from neuropype_graph.nodes.modularity import NetPropRada
+from neuropype_graph.nodes.modularity import ComputeIntNetList,ComputeNodeRoles
+from neuropype_graph.interfaces.radatools.rada import PrepRada,CommRada,NetPropRada
  
-import imp
+#import imp
 
 try:
-    imp.find_module('igraph')
+    import igraph
     can_plot_igraph = True
-    from neuropype_graph.nodes.igraph_plots import PlotIGraphModules
+    from neuropype_graph.interfaces.plot_igraph.plots import PlotIGraphModules
 
 except ImportError:
     can_plot_igraph = False
@@ -136,59 +134,59 @@ except ImportError:
 
 ################################################ threshold-based graphs
     
-def create_pipeline_intmat_to_graph_threshold(analysis_name,main_path,radatools_path,threshold = 50, plot = False):
+def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_to_graph_pipeline",threshold = 50, mod = False, plot = False):
 
     pipeline = pe.Workflow(name=analysis_name)
     pipeline.base_dir = main_path
 
 
-    if plot==True and can_plot_igraph==False:
+    if can_plot_igraph==False:
         
         plot = False
         
-        
+    print "########################### plot = " + str(plot) + " #####################################################"
+    print "can_plot_igraph = " + str(can_plot_igraph)
+    
     ### compute Z_list from coclass matrix
-    compute_list_norm_coclass = pe.Node(interface = ComputeIntNetList(),name='compute_list_norm_coclass')
-    compute_list_norm_coclass.inputs.threshold = threshold
+    compute_net_list = pe.Node(interface = ComputeIntNetList(),name='compute_net_list')
+    compute_net_list.inputs.threshold = threshold
     
     ############################################### radatools ################################################################
     
     ###--- prepare net_list for radatools processing
     prep_rada = pe.Node(interface = PrepRada(),name='prep_rada')
-    prep_rada.inputs.radatools_path = radatools_path
     
-    pipeline.connect(compute_list_norm_coclass, 'net_List_file', prep_rada, 'net_List_file')
+    pipeline.connect(compute_net_list, 'net_List_file', prep_rada, 'net_List_file')
     
-    
-    ### compute community with radatools
-    community_rada = pe.Node(interface = CommRada(), name='community_rada',iterfield = ["Pajek_net_file"])
-    #community_rada.inputs.optim_seq = radatools_optim
-    community_rada.inputs.radatools_path = radatools_path
-    
-    pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
-    
-
-    
-    ### node roles
-    node_roles = pe.Node(interface = ComputeNodeRoles(role_type = "4roles"), name='node_roles')
-    
-    pipeline.connect( prep_rada, 'Pajek_net_file',node_roles,'Pajek_net_file')
-    pipeline.connect( community_rada, 'rada_lol_file',node_roles,'rada_lol_file')
-    
-    if plot == True:
+    if mod == True:
             
-        #### plot_igraph_modules_rada
-        plot_igraph_modules_rada = pe.Node(interface = PlotIGraphModules(),name='plot_igraph_modules_rada')
+        ### compute community with radatools
+        community_rada = pe.Node(interface = CommRada(), name='community_rada',iterfield = ["Pajek_net_file"])
+        #community_rada.inputs.optim_seq = radatools_optim
         
-        pipeline.connect(prep_rada, 'Pajek_net_file',plot_igraph_modules_rada,'Pajek_net_file')
-        pipeline.connect(community_rada, 'rada_lol_file',plot_igraph_modules_rada,'rada_lol_file')
+        pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
         
-        pipeline.connect(node_roles, 'node_roles_file',plot_igraph_modules_rada,'node_roles_file')
+
+        
+        ### node roles
+        node_roles = pe.Node(interface = ComputeNodeRoles(role_type = "4roles"), name='node_roles')
+        
+        pipeline.connect( prep_rada, 'Pajek_net_file',node_roles,'Pajek_net_file')
+        pipeline.connect( community_rada, 'rada_lol_file',node_roles,'rada_lol_file')
+        
+        if plot == True:
+                
+            #### plot_igraph_modules_rada
+            plot_igraph_modules_rada = pe.Node(interface = PlotIGraphModules(),name='plot_igraph_modules_rada')
+            
+            pipeline.connect(prep_rada, 'Pajek_net_file',plot_igraph_modules_rada,'Pajek_net_file')
+            pipeline.connect(community_rada, 'rada_lol_file',plot_igraph_modules_rada,'rada_lol_file')
+            
+            pipeline.connect(node_roles, 'node_roles_file',plot_igraph_modules_rada,'node_roles_file')
 
 
     ############################################ compute network properties with rada ############################################
     net_prop = pe.Node(interface = NetPropRada(optim_seq = "A"), name = 'net_prop')
-    net_prop.inputs.radatools_path = radatools_path
     
     pipeline.connect(prep_rada, 'Pajek_net_file',net_prop,'Pajek_net_file')
     
