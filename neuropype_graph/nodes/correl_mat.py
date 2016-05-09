@@ -66,6 +66,8 @@ class ExtractTS(BaseInterface):
         file_4D = self.inputs.file_4D
         min_BOLD_intensity = self.inputs.min_BOLD_intensity
         
+        plot_fig = self.inputs.plot_fig
+        
         ## loading ROI coordinates
         coord_rois = np.loadtxt(coord_rois_file)
         
@@ -366,6 +368,8 @@ class ExtractMeanTS(BaseInterface):
         mask_file = self.inputs.mask_file
         filter_mask_file = self.inputs.filter_mask_file
         filter_thr = self.inputs.filter_thr
+        plot_fig = self.inputs.plot_fig
+        
         
         if isdefined(self.inputs.suffix):
             suffix = self.inputs.suffix
