@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Support function for net handling
+Pipeline to compute graph and modularity with radatools and (possibly if installed) plot with igraph
 """
-import sys
-import time
 
-import numpy as np
-import scipy.sparse as sp 
+#import sys
+#import time
+
+#import numpy as np
+#import scipy.sparse as sp 
 
 import nipype.pipeline.engine as pe
 #from nipype.utils.misc import show_files
+
+import nipype.interfaces.utility  as niu
 
 from neuropype_graph.interfaces.radatools import PrepRada,NetPropRada,CommRada
 from neuropype_graph.nodes.modularity import ComputeNetList,ComputeNodeRoles
@@ -29,6 +32,11 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
     pipeline = pe.Workflow(name= pipeline_name + "_den_" + str(con_den).replace(".","_"))
     pipeline.base_dir = main_path
     
+    
+    inputnode = pe.Node(niu.IdentityInterface(fields=['conmat_file','coords_file','labels_file']),
+                        name='inputnode')
+     
+    
     if plot==True and can_plot_igraph==False:
         
         plot = False
@@ -41,7 +49,7 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
         compute_net_List = pe.Node(interface = ComputeNetList(),name='compute_net_List')
         compute_net_List.inputs.density = con_den
         
-        #pipeline.connect(convert_mat, 'conmat_file',compute_net_List, 'Z_cor_mat_file')
+        pipeline.connect(inputnode, 'conmat_file',compute_net_List, 'Z_cor_mat_file')
         
         ##### radatools ################################################################
 
@@ -77,6 +85,10 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
                 
                 pipeline.connect(node_roles, 'node_roles_file',plot_igraph_modules_rada,'node_roles_file')
         
+                
+                pipeline.connect(inputnode,'coords_file',plot_igraph_modules_rada,'coords_file')
+                pipeline.connect(inputnode,'labels_file',plot_igraph_modules_rada,'labels_file')
+            
         ############ compute network properties with rada
         net_prop = pe.Node(interface = NetPropRada(optim_seq = "A"), name = 'net_prop')
         #net_prop.inputs.radatools_path = radatools_path
