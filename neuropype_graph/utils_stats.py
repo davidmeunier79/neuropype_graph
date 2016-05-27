@@ -158,7 +158,8 @@ def return_signif_code_Z(Z_values,conf_interval_binom_fdr = 0.05):
     
     return signif_code
     
-    
+################################################ pairwise stats ##########################################
+
 def compute_pairwise_binom(X,Y,conf_interval_binom):
 
     # number of nodes
@@ -348,6 +349,7 @@ def compute_pairwise_binom_fdr(X,Y,conf_interval_binom_fdr):
     
     return signif_signed_adj_mat
 
+############### nodewise stats #########################
 def compute_nodewise_t_test_vect(d_stacked, nx, ny):
 
     print d_stacked.shape
