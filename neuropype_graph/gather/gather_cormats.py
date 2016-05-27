@@ -13,12 +13,18 @@ import numpy as np
 from itertools import product,combinations
 from numpy import isnan, nan, logical_not, logical_or
 
+def isInAlphabeticalOrder(word):
+    return list(word) == sorted(word)
+    #return word==''.join(sorted(word))
+
 def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
        
     print zip(*iterables)
     
     all_iter_cormats = []
     all_descriptors = []
+    
+    assert isInAlphabeticalOrder(iternames), "Warning, iternames are not in alphabetical oroder, check the iterables order as well"
     
     for iter_obj in product(*iterables):
         
@@ -44,3 +50,12 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
         
     return np.array(all_iter_cormats),pd.DataFrame(all_descriptors,columns = iternames)
     
+
+if __name__ =='__main__':
+	
+	test1 = isInAlphabeticalOrder(["a","b","c"])
+	print test1
+	
+	test2 = isInAlphabeticalOrder(["ab","ba","ca"])
+	print test2
+	
