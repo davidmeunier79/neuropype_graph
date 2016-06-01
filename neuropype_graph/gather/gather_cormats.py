@@ -49,7 +49,32 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
             print "Warning, file {}  could not be found".format(cormat_file)
         
     return np.array(all_iter_cormats),pd.DataFrame(all_descriptors,columns = iternames)
+
+def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
+
+    for column in descript_columns:
     
+        assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
+
+    dict_mean = {}
+    
+    for elem, lines in all_descriptors.groupby(by = descript_columns):
+    
+        print elem
+        print lines
+        print lines.index
+        
+        elem_cormats = all_cormats[lines.index]
+        
+        print elem_cormats.shape
+        
+        mean_elem = np.mean(elem_cormats,axis = 0)
+        
+        print mean_elem.shape
+        
+        dict_mean[elem] = elem_cormats
+        
+    return dict_mean
 
 if __name__ =='__main__':
 	
