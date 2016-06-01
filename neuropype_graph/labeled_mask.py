@@ -25,8 +25,8 @@ import os
 
 
 from xml.dom import minidom
-
-
+from scipy import ndimage as ndimg 
+        
 ######################################### copied from nipy project ####################
 
 def coord_transform(x, y, z, affine):
@@ -1130,6 +1130,143 @@ def segment_atlas_in_cubes(ROI_dir,ROI_cube_size,min_nb_voxels_in_neigh):
     
     
     return indexed_mask_rois_file,coord_rois_file
+
+
+
+
+def segment_mask_in_ROI(mask_file,segment_type,mask_thr,min_count_voxel_in_ROI = 100,ROI_cube_size = 1,min_frac_vox_in_bin_mask=0.5):
+    
+    print mask_file
+    
+    path,fnmae,ext = split_f(mask_file)
+    
+    ############ load mask
+    mask = nib.load(mask_file)
+    
+    mask_data = mask.get_data()
+    
+    mask_header = mask.get_header()
+    
+    mask_affine = mask.get_affine()
+    
+    print mask_data.shape
+    
+    print segment_type
+    
+    bin_mask_data = np.zeros(shape = mask_data.shape,dtype = 'int64')
+    
+    bin_mask_data[mask_data > mask_thr] = 1
+    
+    print np.sum(bin_mask_data == 1)
+
+    if segment_type == "cube":
+            
+        indexed_mask_rois_data = np.zeros(shape = bin_mask_data.shape,dtype = 'int64')
+
+        i_coords = np.arange(ROI_cube_size,mask_data.shape[0]-ROI_cube_size,step = 2*ROI_cube_size+1)
+        j_coords = np.arange(ROI_cube_size,mask_data.shape[1]-ROI_cube_size,step = 2*ROI_cube_size+1)
+        k_coords = np.arange(ROI_cube_size,mask_data.shape[2]-ROI_cube_size,step = 2*ROI_cube_size+1)
+            
+        val = 1    
+        
+        for x,y,z in product(i_coords,j_coords,k_coords):
+        
+            count_nb_vox = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3)])
+            
+            count_nb_vox_in_bin_mask = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3) if bin_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]] == 1.0])
+            
+            #count_nb_vox = 0
+            
+            #count_nb_vox_in_bin_mask = 0
+            
+            #for neigh in product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3):
+            
+                ##print neigh
+                
+                #if bin_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]] == 1.0:
+                    #count_nb_vox_in_bin_mask += 1
+                    
+                #count_nb_vox += 1
+                
+                
+                
+                
+            frac_vox_in_bin_mask = count_nb_vox_in_bin_mask/float(count_nb_vox)
+            
+            print frac_vox_in_bin_mask
+            
+            if frac_vox_in_bin_mask > min_frac_vox_in_bin_mask:
+                    
+                for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat = 3):
+                
+                    #print neigh
+                
+                    indexed_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]]=val
+                                
+                val = val + 1
+                
+            else:
+                
+                print "not enough voxels in bin_mask, percent = {}".format(frac_vox_in_bin_mask)
+                
+            print val
+            
+        ROI_mask_prefix = segment_type +  "ROI_" + str(ROI_cube_size) + "_min_frac_" + str(min_frac_vox_in_bin_mask) + "_"
+            
+    elif segment_type == 'disjoint_comp':
+        
+        indexed_mask_rois_data = ndimg.label(bin_mask_data)[0] 
+        num_disjoint_comp = indexed_mask_rois_data.max() 
+
+        for index_ROI in np.unique(indexed_mask_rois_data):
+            count_voxel_in_ROI = np.sum(indexed_mask_rois_data == index_ROI)
+            if count_voxel_in_ROI < min_count_voxel_in_ROI:
+                indexed_mask_rois_data[indexed_mask_rois_data == index_ROI] = 0
+            
+        ROI_mask_prefix = segment_type +  "ROI_" + str(min_count_voxel_in_ROI) + "_"
+    #if segment_type == "voxel": ### A faire
+
+    #indexed_mask_rois_file = os.path.join(path,segment_type  + "ROI_" + ROI_cube_size + "_" + fname,ext)
+            
+    #nib.save(nib.Nifti1Image(dataobj = indexed_mask_data, header = mask_header, affine = mask_affine),indexed_mask_rois_file)
+
+
+    indexed_mask_rois_file = os.path.join(path, "indexed_mask-" + ROI_mask_prefix + ".nii")
+    
+    nib.save(nib.Nifti1Image(dataobj = indexed_mask_rois_data,header = mask_header,affine = mask_affine),indexed_mask_rois_file)
+    
+    return indexed_mask_rois_file
+
+    0/0
+    #### saving ROI coords as textfile
+    
+    coord_rois_file =  os.path.join(ROI_dir, "coords-" + ROI_mask_prefix + ".txt")
+
+    np.savetxt(coord_rois_file,np.array(list_selected_peaks_coords,dtype = int), fmt = '%d')
+    
+    
+    #### saving labels
+    label_rois_file = os.path.join(ROI_dir,"labels-" + ROI_mask_prefix + ".txt")
+    
+    np_full_label_rois = np.array(full_label_rois,dtype = 'string').reshape(len(full_label_rois),1)
+    
+    print np_full_label_rois.shape
+    
+    np.savetxt(label_rois_file,np_full_label_rois, fmt = '%s')
+    
+    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),np_full_label_rois,np_label_rois,rois_MNI_coords))
+    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),rois_MNI_coords))
+    info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(full_label_rois),1),np.array(list_selected_peaks_coords,dtype = int),np_full_label_rois))
+    
+    print info_rois
+    info_rois_file = os.path.join(ROI_dir,"info-" + ROI_mask_prefix + ".txt")
+   
+    np.savetxt(info_rois_file,info_rois, fmt = '%s %s %s %s %s')
+    
+    
+    return indexed_mask_rois_file,coord_rois_file
+    
+    
     
 def generate_peaks(ROI_cube_size,mask_shape):
     
