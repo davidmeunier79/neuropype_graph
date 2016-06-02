@@ -72,7 +72,7 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
         
         print mean_elem.shape
         
-        dict_mean[elem] = elem_cormats
+        dict_mean[elem] = mean_elem
         
     return dict_mean
 
