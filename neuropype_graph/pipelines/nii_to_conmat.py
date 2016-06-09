@@ -133,11 +133,46 @@ def create_pipeline_nii_to_conmat(main_path,ROI_mask_file,ROI_coords_file,ROI_MN
     
     pipeline.connect(regress_covar, ('resid_ts_file',show_length), compute_conf_cor_mat, 'ts_file')
     
+    return pipeline
+
+#ROI_mask_file,ROI_coords_file,ROI_MNI_coords_file,ROI_labels_file,
+
+def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_weighted_conmat", concatenate_runs = 1, conf_interval_prob = 0.05):
+
+
+    pipeline = pe.Workflow(name=pipeline_name)
+    pipeline.base_dir = main_path
     
-    ###plot_hist_conf = pe.Node(Function(input_names=['cor_mat_file','Z_cor_mat_file','conf_cor_mat_file'],output_names=['plot_hist_cor_mat_file','plot_heatmap_cor_mat_file','plot_hist_cor_mat_file','plot_heatmap_cor_mat_file','plot_hist_conf_cor_mat_file','plot_heatmap_conf_cor_mat_file'],function=plot_hist_conf_cor_mat),name='plot_hist_conf')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['resid_ts_file','spm_mat_file','regress_names','run_index']),
+                        name='inputnode')
+     
     
-    ###pipeline.connect(compute_conf_cor_mat, 'cor_mat_file',plot_hist_conf,'cor_mat_file')
-    ###pipeline.connect(compute_conf_cor_mat, 'Z_cor_mat_file',plot_hist_conf,'Z_cor_mat_file')
-    ###pipeline.connect(compute_conf_cor_mat, 'conf_cor_mat_file',plot_hist_conf,'conf_cor_mat_file')
+    
+    #### extract regressor of interest from SPM.mat
+    extract_cond = pe.MapNode(interface = FindSPMRegressor(only_positive_values = True),iterfield = ['regressor_name'], name='extract_cond')
+    
+    pipeline.connect(inputnode, ('spm_mat_file',show_files), extract_cond, 'spm_mat_file')
+    pipeline.connect(inputnode, 'regress_names', extract_cond, 'regressor_name')
+    pipeline.connect(inputnode, 'run_index', extract_cond, 'run_index')
+    
+    #extract_cond.inputs.run_index = 0
+    extract_cond.inputs.concatenate_runs = concatenate_runs
+    
+    ##### merge_runs new version: merge also coords (if different between sessions)
+    ##merge_runs = pe.Node(interface = MergeRuns(),name='merge_runs')
+    
+    ##pipeline.connect(extract_mean_ROI_ts, ('subj_coord_rois_file',show_length), merge_runs, 'coord_rois_files')
+    ##pipeline.connect(regress_covar, ('resid_ts_file',show_length), merge_runs, 'ts_files')
+    
+    ##################################### compute weighted correlations ####################################################
+    
+    ########## confidence interval 
+    
+    compute_conf_cor_mat = pe.MapNode(interface = ComputeConfCorMat(),iterfield = ['weight_file'], name='compute_conf_cor_mat')
+    
+    compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
+    
+    pipeline.connect(inputnode, 'resid_ts_file', compute_conf_cor_mat, 'ts_file')
+    pipeline.connect(extract_cond, 'regressor_file', compute_conf_cor_mat, 'weight_file')
     
     return pipeline
