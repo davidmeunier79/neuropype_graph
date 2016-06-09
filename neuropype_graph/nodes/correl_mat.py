@@ -791,7 +791,7 @@ class FindSPMRegressorInputSpec(BaseInterfaceInputSpec):
      
     only_positive_values = traits.Bool(True, usedefault = True , desc = "Return only positive values of the regressor (negative values are set to 0)")
     
-    concatenate_runs = traits.Int(None, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
     
 class FindSPMRegressorOutputSpec(TraitedSpec):
     
