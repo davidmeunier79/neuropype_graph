@@ -523,7 +523,7 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files
     return labelled_mask_data_file,labels_list_file
     #nib.load(ref_img_file)
     
-def compute_MNI_coords_from_indexed_template(indexed_template_file,ROI_dir):
+def compute_MNI_coords_from_indexed_template(indexed_template_file):
     
     """
     compute MNI coords from an indexed template
@@ -576,12 +576,12 @@ def compute_MNI_coords_from_indexed_template(indexed_template_file,ROI_dir):
     
     print ROI_MNI_coords
     
-    ROI_coords_file = os.path.join(ROI_dir,"ROI_coords-" + base_name + ".txt")
+    ROI_coords_file = os.path.join(path,"ROI_coords-" + base_name + ".txt")
     
     np.savetxt(ROI_coords_file,ROI_coords, fmt = "%.3f %.3f %.3f")
     
     
-    ROI_MNI_coords_file = os.path.join(ROI_dir,"ROI_MNI_coords-" + base_name + ".txt")
+    ROI_MNI_coords_file = os.path.join(path,"ROI_MNI_coords-" + base_name + ".txt")
     
     np.savetxt(ROI_MNI_coords_file,ROI_MNI_coords, fmt = "%.3f %.3f %.3f")
     
@@ -589,6 +589,265 @@ def compute_MNI_coords_from_indexed_template(indexed_template_file,ROI_dir):
     return ROI_coords_file,ROI_MNI_coords_file
     #nib.load(ref_img_file)
 
+
+def segment_atlas_in_cubes(ROI_dir,ROI_cube_size,min_nb_voxels_in_neigh):
+    
+    from neuropype_graph.peak_labelled_mask import return_indexed_mask_neigh_within_binary_template
+    
+    resliced_atlas_file = os.path.join(ROI_dir,"rHarvard-Oxford-cortl-sub-recombined-111regions.nii")
+    
+    print resliced_atlas_file
+    
+    resliced_atlas_labels_file = os.path.join(ROI_dir,"info-Harvard-Oxford-reorg.txt")
+    
+    if not os.path.exists(resliced_atlas_file) or not os.path.exists(resliced_atlas_labels_file):
+        
+        print "Warning, missing atals: " + resliced_atlas_file
+        
+        return
+        
+    resliced_atlas = nib.load(resliced_atlas_file)
+    
+    resliced_atlas_data = resliced_atlas.get_data()
+    
+    reslice_atlas_header = resliced_atlas.get_header()
+    
+    reslice_atlas_affine = resliced_atlas.get_affine()
+    
+    
+    print resliced_atlas_data.shape
+    
+    
+    labels = [line.strip().split(' ')[-1] for line in open(resliced_atlas_labels_file)]
+    
+    np_labels = np.array(labels,dtype = 'string')
+    
+    print labels
+    
+    ############################ computing #####################################################
+    
+    list_selected_peaks_coords,indexed_mask_rois_data,label_rois = generate_continuous_mask_in_atlas(resliced_atlas_data,labels,ROI_cube_size,min_nb_voxels_in_neigh)
+
+    print len(label_rois)
+    
+    template_indexes = np.array([resliced_atlas_data[coord[0],coord[1],coord[2]] for coord in list_selected_peaks_coords],dtype = 'int64')
+    
+    print template_indexes-1
+    
+    #label_rois = np_HO_abbrev_labels[template_indexes-1]
+    full_label_rois = np_labels[template_indexes-1]
+    
+    #print label_rois2
+    
+    print label_rois
+    
+    #### exporting Rois image with different indexes 
+    print np.unique(indexed_mask_rois_data)[1:].shape
+    
+    ROI_mask_prefix = "template_ROI_cube_size_" + str(ROI_cube_size)
+    
+    indexed_mask_rois_file = os.path.join(ROI_dir, "indexed_mask-" + ROI_mask_prefix + ".nii")
+    
+    nib.save(nib.Nifti1Image(dataobj = indexed_mask_rois_data,header = reslice_atlas_header,affine = reslice_atlas_affine),indexed_mask_rois_file)
+    
+    #### saving ROI coords as textfile
+    
+    coord_rois_file =  os.path.join(ROI_dir, "coords-" + ROI_mask_prefix + ".txt")
+
+    np.savetxt(coord_rois_file,np.array(list_selected_peaks_coords,dtype = int), fmt = '%d')
+    
+    
+    #### saving labels
+    label_rois_file = os.path.join(ROI_dir,"labels-" + ROI_mask_prefix + ".txt")
+    
+    np_full_label_rois = np.array(full_label_rois,dtype = 'string').reshape(len(full_label_rois),1)
+    
+    print np_full_label_rois.shape
+    
+    np.savetxt(label_rois_file,np_full_label_rois, fmt = '%s')
+    
+    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),np_full_label_rois,np_label_rois,rois_MNI_coords))
+    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),rois_MNI_coords))
+    info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(full_label_rois),1),np.array(list_selected_peaks_coords,dtype = int),np_full_label_rois))
+    
+    print info_rois
+    info_rois_file = os.path.join(ROI_dir,"info-" + ROI_mask_prefix + ".txt")
+   
+    np.savetxt(info_rois_file,info_rois, fmt = '%s %s %s %s %s')
+    
+    
+    return indexed_mask_rois_file,coord_rois_file
+
+
+
+
+def segment_mask_in_ROI(mask_file,segment_type,mask_thr,min_count_voxel_in_ROI = 100,ROI_cube_size = 1,min_frac_vox_in_bin_mask=0.5):
+    
+    print mask_file
+    
+    path,fnmae,ext = split_f(mask_file)
+    
+    ############ load mask
+    mask = nib.load(mask_file)
+    
+    mask_data = mask.get_data()
+    
+    mask_header = mask.get_header()
+    
+    mask_affine = mask.get_affine()
+    
+    print mask_data.shape
+    
+    print segment_type
+    
+    bin_mask_data = np.zeros(shape = mask_data.shape,dtype = 'int64')
+    
+    bin_mask_data[mask_data > mask_thr] = 1
+    
+    print np.sum(bin_mask_data == 1)
+
+    if segment_type == "cube":
+            
+        indexed_mask_rois_data = np.zeros(shape = bin_mask_data.shape,dtype = 'int64')
+
+        i_coords = np.arange(ROI_cube_size,mask_data.shape[0]-ROI_cube_size,step = 2*ROI_cube_size+1)
+        j_coords = np.arange(ROI_cube_size,mask_data.shape[1]-ROI_cube_size,step = 2*ROI_cube_size+1)
+        k_coords = np.arange(ROI_cube_size,mask_data.shape[2]-ROI_cube_size,step = 2*ROI_cube_size+1)
+            
+        val = 1    
+        
+        for x,y,z in product(i_coords,j_coords,k_coords):
+        
+            count_nb_vox = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3)])
+            
+            count_nb_vox_in_bin_mask = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3) if bin_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]] == 1.0])
+            
+            frac_vox_in_bin_mask = count_nb_vox_in_bin_mask/float(count_nb_vox)
+            
+            print frac_vox_in_bin_mask
+            
+            if frac_vox_in_bin_mask > min_frac_vox_in_bin_mask:
+                    
+                for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat = 3):
+                
+                    #print neigh
+                
+                    indexed_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]]=val
+                                
+                val = val + 1
+                
+            else:
+                
+                print "not enough voxels in bin_mask, percent = {}".format(frac_vox_in_bin_mask)
+                
+            print val
+            
+        ROI_mask_prefix = segment_type +  "_ROI_" + str(ROI_cube_size) + "_min_frac_" + str(min_frac_vox_in_bin_mask)
+            
+    elif segment_type == 'disjoint_comp':
+        
+        print "computing disjoint cluster"
+        
+        ROI_mask_prefix = segment_type +  "_ROI_" + str(min_count_voxel_in_ROI)
+        
+        raw_indexed_mask_rois_data = ndimg.label(bin_mask_data)[0] 
+        num_disjoint_comp = raw_indexed_mask_rois_data.max() 
+
+        print np.unique(raw_indexed_mask_rois_data) 
+        
+        for index_ROI in np.unique(raw_indexed_mask_rois_data):
+            count_voxel_in_ROI = np.sum(raw_indexed_mask_rois_data == index_ROI)
+            
+            print index_ROI,count_voxel_in_ROI
+            
+            if count_voxel_in_ROI < min_count_voxel_in_ROI:
+                raw_indexed_mask_rois_data[raw_indexed_mask_rois_data == index_ROI] = 0
+                
+        print np.unique(raw_indexed_mask_rois_data) 
+        
+        ### reordering indexes
+        indexed_mask_rois_data = np.zeros(shape = raw_indexed_mask_rois_data.shape)
+        
+        for i,index_ROI in enumerate(np.unique(raw_indexed_mask_rois_data)):
+            indexed_mask_rois_data[raw_indexed_mask_rois_data == index_ROI] = i
+            
+    indexed_mask_rois_data = indexed_mask_rois_data -1
+        
+    #if segment_type == "voxel": ### A faire
+
+    #indexed_mask_rois_file = os.path.join(path,segment_type  + "ROI_" + ROI_cube_size + "_" + fname,ext)
+            
+    #nib.save(nib.Nifti1Image(dataobj = indexed_mask_data, header = mask_header, affine = mask_affine),indexed_mask_rois_file)
+
+    print np.unique(indexed_mask_rois_data)
+
+    indexed_mask_rois_file = os.path.join(path, "indexed_mask-" + ROI_mask_prefix + ".nii")
+    
+    nib.save(nib.Nifti1Image(dataobj = indexed_mask_rois_data,header = mask_header,affine = mask_affine),indexed_mask_rois_file)
+    
+    ROI_coords_file, ROI_MNI_coords_file = compute_MNI_coords_from_indexed_template(indexed_mask_rois_file)
+    
+    return indexed_mask_rois_file,ROI_coords_file, ROI_MNI_coords_file
+
+def generate_peaks(ROI_cube_size,mask_shape):
+    
+    from itertools import product
+    
+    ijk_list = [range(0,shape_i,ROI_cube_size) for shape_i in mask_shape]
+    
+    print ijk_list
+    
+    
+    list_orig_peaks = [[i,j,k] for i,j,k in product(*ijk_list)]
+    
+    print list_orig_peaks
+    
+    return list_orig_peaks
+
+    
+def generate_continuous_mask_in_atlas(template_data,template_labels,ROI_cube_size,min_nb_voxels_in_neigh):
+    
+    from neuropype_graph.utils_dtype_coord import convert_np_coords_to_coords_dt
+    from neuropype_graph.peak_labelled_mask import return_voxels_within_same_region
+
+    template_data_shape = template_data.shape
+    
+    indexed_mask_rois_data = np.zeros(template_data_shape,dtype = 'int64') -1
+    
+    print indexed_mask_rois_data.shape
+    
+    list_orig_peak_coords = generate_peaks(ROI_cube_size,template_data_shape)
+    
+    label_rois = []
+    
+    list_selected_peaks_coords = []
+    
+    for orig_peak_coord in list_orig_peak_coords:
+        
+        print orig_peak_coord
+        
+        orig_peak_coord_np = np.array(orig_peak_coord)
+        
+        print orig_peak_coord_np
+        
+        list_voxel_coords,peak_template_roi_index = return_voxels_within_same_region(orig_peak_coord_np,ROI_cube_size,template_data,min_nb_voxels_in_neigh)
+        
+        print peak_template_roi_index
+        
+        if peak_template_roi_index > 0:
+            
+            neigh_coords = np.array(list_voxel_coords,dtype = 'int16')
+    
+            indexed_mask_rois_data[neigh_coords[:,0],neigh_coords[:,1],neigh_coords[:,2]] = len(list_selected_peaks_coords)
+        
+            label_rois.append(template_labels[peak_template_roi_index-1])
+            
+            list_selected_peaks_coords.append(orig_peak_coord_np)
+                
+            print len(list_selected_peaks_coords)
+        
+    return list_selected_peaks_coords,indexed_mask_rois_data,label_rois
+    
 
 ################################# preparing HO template by recombining sub and cortical mask + reslicing to image format ##################################
 
@@ -1042,288 +1301,4 @@ def compute_labelled_mask_from_HO_sub(resliced_full_HO_img_file,info_template_fi
         nib.save(single_ROI_mask,single_ROI_mask_file)
         
     return ROI_mask_file,ROI_mask_labels_file
-    
-def segment_atlas_in_cubes(ROI_dir,ROI_cube_size,min_nb_voxels_in_neigh):
-    
-    from neuropype_graph.peak_labelled_mask import return_indexed_mask_neigh_within_binary_template
-    
-    resliced_atlas_file = os.path.join(ROI_dir,"rHarvard-Oxford-cortl-sub-recombined-111regions.nii")
-    
-    print resliced_atlas_file
-    
-    resliced_atlas_labels_file = os.path.join(ROI_dir,"info-Harvard-Oxford-reorg.txt")
-    
-    if not os.path.exists(resliced_atlas_file) or not os.path.exists(resliced_atlas_labels_file):
-        
-        print "Warning, missing atals: " + resliced_atlas_file
-        
-        return
-        
-    resliced_atlas = nib.load(resliced_atlas_file)
-    
-    resliced_atlas_data = resliced_atlas.get_data()
-    
-    reslice_atlas_header = resliced_atlas.get_header()
-    
-    reslice_atlas_affine = resliced_atlas.get_affine()
-    
-    
-    print resliced_atlas_data.shape
-    
-    
-    labels = [line.strip().split(' ')[-1] for line in open(resliced_atlas_labels_file)]
-    
-    np_labels = np.array(labels,dtype = 'string')
-    
-    print labels
-    
-    ############################ computing #####################################################
-    
-    list_selected_peaks_coords,indexed_mask_rois_data,label_rois = generate_continuous_mask_in_atlas(resliced_atlas_data,labels,ROI_cube_size,min_nb_voxels_in_neigh)
-
-    print len(label_rois)
-    
-    template_indexes = np.array([resliced_atlas_data[coord[0],coord[1],coord[2]] for coord in list_selected_peaks_coords],dtype = 'int64')
-    
-    print template_indexes-1
-    
-    #label_rois = np_HO_abbrev_labels[template_indexes-1]
-    full_label_rois = np_labels[template_indexes-1]
-    
-    #print label_rois2
-    
-    print label_rois
-    
-    #### exporting Rois image with different indexes 
-    print np.unique(indexed_mask_rois_data)[1:].shape
-    
-    ROI_mask_prefix = "template_ROI_cube_size_" + str(ROI_cube_size)
-    
-    indexed_mask_rois_file = os.path.join(ROI_dir, "indexed_mask-" + ROI_mask_prefix + ".nii")
-    
-    nib.save(nib.Nifti1Image(dataobj = indexed_mask_rois_data,header = reslice_atlas_header,affine = reslice_atlas_affine),indexed_mask_rois_file)
-    
-    #### saving ROI coords as textfile
-    
-    coord_rois_file =  os.path.join(ROI_dir, "coords-" + ROI_mask_prefix + ".txt")
-
-    np.savetxt(coord_rois_file,np.array(list_selected_peaks_coords,dtype = int), fmt = '%d')
-    
-    
-    #### saving labels
-    label_rois_file = os.path.join(ROI_dir,"labels-" + ROI_mask_prefix + ".txt")
-    
-    np_full_label_rois = np.array(full_label_rois,dtype = 'string').reshape(len(full_label_rois),1)
-    
-    print np_full_label_rois.shape
-    
-    np.savetxt(label_rois_file,np_full_label_rois, fmt = '%s')
-    
-    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),np_full_label_rois,np_label_rois,rois_MNI_coords))
-    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),rois_MNI_coords))
-    info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(full_label_rois),1),np.array(list_selected_peaks_coords,dtype = int),np_full_label_rois))
-    
-    print info_rois
-    info_rois_file = os.path.join(ROI_dir,"info-" + ROI_mask_prefix + ".txt")
-   
-    np.savetxt(info_rois_file,info_rois, fmt = '%s %s %s %s %s')
-    
-    
-    return indexed_mask_rois_file,coord_rois_file
-
-
-
-
-def segment_mask_in_ROI(mask_file,segment_type,mask_thr,min_count_voxel_in_ROI = 100,ROI_cube_size = 1,min_frac_vox_in_bin_mask=0.5):
-    
-    print mask_file
-    
-    path,fnmae,ext = split_f(mask_file)
-    
-    ############ load mask
-    mask = nib.load(mask_file)
-    
-    mask_data = mask.get_data()
-    
-    mask_header = mask.get_header()
-    
-    mask_affine = mask.get_affine()
-    
-    print mask_data.shape
-    
-    print segment_type
-    
-    bin_mask_data = np.zeros(shape = mask_data.shape,dtype = 'int64')
-    
-    bin_mask_data[mask_data > mask_thr] = 1
-    
-    print np.sum(bin_mask_data == 1)
-
-    if segment_type == "cube":
-            
-        indexed_mask_rois_data = np.zeros(shape = bin_mask_data.shape,dtype = 'int64')
-
-        i_coords = np.arange(ROI_cube_size,mask_data.shape[0]-ROI_cube_size,step = 2*ROI_cube_size+1)
-        j_coords = np.arange(ROI_cube_size,mask_data.shape[1]-ROI_cube_size,step = 2*ROI_cube_size+1)
-        k_coords = np.arange(ROI_cube_size,mask_data.shape[2]-ROI_cube_size,step = 2*ROI_cube_size+1)
-            
-        val = 1    
-        
-        for x,y,z in product(i_coords,j_coords,k_coords):
-        
-            count_nb_vox = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3)])
-            
-            count_nb_vox_in_bin_mask = len([neigh for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3) if bin_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]] == 1.0])
-            
-            #count_nb_vox = 0
-            
-            #count_nb_vox_in_bin_mask = 0
-            
-            #for neigh in product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat =3):
-            
-                ##print neigh
-                
-                #if bin_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]] == 1.0:
-                    #count_nb_vox_in_bin_mask += 1
-                    
-                #count_nb_vox += 1
-                
-                
-                
-                
-            frac_vox_in_bin_mask = count_nb_vox_in_bin_mask/float(count_nb_vox)
-            
-            print frac_vox_in_bin_mask
-            
-            if frac_vox_in_bin_mask > min_frac_vox_in_bin_mask:
-                    
-                for neigh in iter.product(np.arange(-ROI_cube_size,ROI_cube_size+1), repeat = 3):
-                
-                    #print neigh
-                
-                    indexed_mask_data[x+neigh[0],y+neigh[1],z+neigh[2]]=val
-                                
-                val = val + 1
-                
-            else:
-                
-                print "not enough voxels in bin_mask, percent = {}".format(frac_vox_in_bin_mask)
-                
-            print val
-            
-        ROI_mask_prefix = segment_type +  "ROI_" + str(ROI_cube_size) + "_min_frac_" + str(min_frac_vox_in_bin_mask) + "_"
-            
-    elif segment_type == 'disjoint_comp':
-        
-        indexed_mask_rois_data = ndimg.label(bin_mask_data)[0] 
-        num_disjoint_comp = indexed_mask_rois_data.max() 
-
-        for index_ROI in np.unique(indexed_mask_rois_data):
-            count_voxel_in_ROI = np.sum(indexed_mask_rois_data == index_ROI)
-            if count_voxel_in_ROI < min_count_voxel_in_ROI:
-                indexed_mask_rois_data[indexed_mask_rois_data == index_ROI] = 0
-            
-        ROI_mask_prefix = segment_type +  "ROI_" + str(min_count_voxel_in_ROI) + "_"
-    #if segment_type == "voxel": ### A faire
-
-    #indexed_mask_rois_file = os.path.join(path,segment_type  + "ROI_" + ROI_cube_size + "_" + fname,ext)
-            
-    #nib.save(nib.Nifti1Image(dataobj = indexed_mask_data, header = mask_header, affine = mask_affine),indexed_mask_rois_file)
-
-
-    indexed_mask_rois_file = os.path.join(path, "indexed_mask-" + ROI_mask_prefix + ".nii")
-    
-    nib.save(nib.Nifti1Image(dataobj = indexed_mask_rois_data,header = mask_header,affine = mask_affine),indexed_mask_rois_file)
-    
-    return indexed_mask_rois_file
-
-    0/0
-    #### saving ROI coords as textfile
-    
-    coord_rois_file =  os.path.join(ROI_dir, "coords-" + ROI_mask_prefix + ".txt")
-
-    np.savetxt(coord_rois_file,np.array(list_selected_peaks_coords,dtype = int), fmt = '%d')
-    
-    
-    #### saving labels
-    label_rois_file = os.path.join(ROI_dir,"labels-" + ROI_mask_prefix + ".txt")
-    
-    np_full_label_rois = np.array(full_label_rois,dtype = 'string').reshape(len(full_label_rois),1)
-    
-    print np_full_label_rois.shape
-    
-    np.savetxt(label_rois_file,np_full_label_rois, fmt = '%s')
-    
-    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),np_full_label_rois,np_label_rois,rois_MNI_coords))
-    #info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(label_rois),1),rois_MNI_coords))
-    info_rois = np.hstack((np.unique(indexed_mask_rois_data)[1:].reshape(len(full_label_rois),1),np.array(list_selected_peaks_coords,dtype = int),np_full_label_rois))
-    
-    print info_rois
-    info_rois_file = os.path.join(ROI_dir,"info-" + ROI_mask_prefix + ".txt")
-   
-    np.savetxt(info_rois_file,info_rois, fmt = '%s %s %s %s %s')
-    
-    
-    return indexed_mask_rois_file,coord_rois_file
-    
-    
-    
-def generate_peaks(ROI_cube_size,mask_shape):
-    
-    from itertools import product
-    
-    ijk_list = [range(0,shape_i,ROI_cube_size) for shape_i in mask_shape]
-    
-    print ijk_list
-    
-    
-    list_orig_peaks = [[i,j,k] for i,j,k in product(*ijk_list)]
-    
-    print list_orig_peaks
-    
-    return list_orig_peaks
-
-    
-def generate_continuous_mask_in_atlas(template_data,template_labels,ROI_cube_size,min_nb_voxels_in_neigh):
-    
-    from neuropype_graph.utils_dtype_coord import convert_np_coords_to_coords_dt
-    from neuropype_graph.peak_labelled_mask import return_voxels_within_same_region
-
-    template_data_shape = template_data.shape
-    
-    indexed_mask_rois_data = np.zeros(template_data_shape,dtype = 'int64') -1
-    
-    print indexed_mask_rois_data.shape
-    
-    list_orig_peak_coords = generate_peaks(ROI_cube_size,template_data_shape)
-    
-    label_rois = []
-    
-    list_selected_peaks_coords = []
-    
-    for orig_peak_coord in list_orig_peak_coords:
-        
-        print orig_peak_coord
-        
-        orig_peak_coord_np = np.array(orig_peak_coord)
-        
-        print orig_peak_coord_np
-        
-        list_voxel_coords,peak_template_roi_index = return_voxels_within_same_region(orig_peak_coord_np,ROI_cube_size,template_data,min_nb_voxels_in_neigh)
-        
-        print peak_template_roi_index
-        
-        if peak_template_roi_index > 0:
-            
-            neigh_coords = np.array(list_voxel_coords,dtype = 'int16')
-    
-            indexed_mask_rois_data[neigh_coords[:,0],neigh_coords[:,1],neigh_coords[:,2]] = len(list_selected_peaks_coords)
-        
-            label_rois.append(template_labels[peak_template_roi_index-1])
-            
-            list_selected_peaks_coords.append(orig_peak_coord_np)
-                
-            print len(list_selected_peaks_coords)
-        
-    return list_selected_peaks_coords,indexed_mask_rois_data,label_rois
     
