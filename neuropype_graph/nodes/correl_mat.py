@@ -32,11 +32,11 @@ class ExtractTSInputSpec(BaseInterfaceInputSpec):
     
     file_4D = File(exists=True, desc='4D volume to be extracted', mandatory=True)
     
-    coord_rois_file = File(exists=True, desc='ROI coordinates', mandatory= False )
+    coord_rois_file = File(desc='ROI coordinates')
     
-    min_BOLD_intensity = traits.Float(default = 50.0, desc='BOLD signal below this value will be set to zero',mandatory=False,usedefault = True)
+    min_BOLD_intensity = traits.Float(50.0, desc='BOLD signal below this value will be set to zero',usedefault = True)
 
-    percent_signal = traits.Float(default = 0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",mandatory=False,usedefault = True)
+    percent_signal = traits.Float(0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",usedefault = True)
     
     plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
     
@@ -133,21 +133,23 @@ class IntersectMaskInputSpec(BaseInterfaceInputSpec):
     
     
     indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True)
-    filter_mask_file = File(exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True)
+    filter_mask_file = File( exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True)
     
-    coords_rois_file = File(exists=True, desc='ijk coords txt file', mandatory=False)
-    labels_rois_file = File(exists=True, desc='labels txt file', mandatory=False)
-    MNI_coords_rois_file = File(exists=True, desc='MNI coords txt file', mandatory=False)
+    coords_rois_file = File(desc='ijk coords txt file')
+    labels_rois_file = File( desc='labels txt file')
+    MNI_coords_rois_file = File(desc='MNI coords txt file')
+    
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
-    #filter_thr = traits.Float(0.9,  desc='Value to threshold filter_mask',mandatory = False,usedefault = True)
                           
 class IntersectMaskOutputSpec(TraitedSpec):
     
     filtered_indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)')
     
-    filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')
-    filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
-    filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
+    
+    filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')    
+    #
+    #filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
+    #filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
     
     
 
@@ -260,9 +262,11 @@ class IntersectMask(BaseInterface):
         nib.save(nib.Nifti1Image(reorder_indexed_rois_data,indexed_rois_img.get_affine(),indexed_rois_img.get_header()),reorder_indexed_rois_img_file)
     
     
-        if os.path.exists(coords_rois_file):
+        if isdefined(coords_rois_file):
             
             ## loading ROI coordinates
+            print "coords_rois_file: "
+            print coords_rois_file
             coords_rois = np.loadtxt(coords_rois_file)
             
             print "coords_rois: " 
@@ -276,7 +280,7 @@ class IntersectMask(BaseInterface):
             filtered_coords_rois_file = os.path.abspath("filtered_coords_rois.txt")
             np.savetxt(filtered_coords_rois_file,filtered_coords_rois, fmt = "%d")
             
-        if os.path.exists(MNI_coords_rois_file):
+        if isdefined(MNI_coords_rois_file):
             
             ## loading ROI coordinates
             MNI_coords_rois = np.loadtxt(MNI_coords_rois_file)
@@ -292,7 +296,7 @@ class IntersectMask(BaseInterface):
             filtered_MNI_coords_rois_file = os.path.abspath("filtered_MNI_coords_rois.txt")
             np.savetxt(filtered_MNI_coords_rois_file,filtered_MNI_coords_rois, fmt = "%f")
             
-        if os.path.exists(labels_rois_file):
+        if isdefined(labels_rois_file):
     
     
             print 'extracting node labels'
@@ -322,9 +326,11 @@ class IntersectMask(BaseInterface):
         
         outputs["filtered_indexed_rois_file"] = os.path.abspath("reorder_filtered_indexed_rois.nii")
     
-        outputs["filtered_MNI_coords_rois_file"] = os.path.abspath("filtered_MNI_coords_rois.txt")
-        outputs["filtered_coords_rois_file"] = os.path.abspath("filtered_coords_rois.txt")
-        outputs["filtered_labels_rois_file"] = os.path.abspath("filtered_labels_rois.txt")
+        if isdefined(self.inputs.coords_rois_file):
+            outputs["filtered_coords_rois_file"] = os.path.abspath("filtered_coords_rois.txt")
+            
+        #outputs["filtered_MNI_coords_rois_file"] = os.path.abspath("filtered_MNI_coords_rois.txt")
+        #outputs["filtered_labels_rois_file"] = os.path.abspath("filtered_labels_rois.txt")
     
         return outputs
 

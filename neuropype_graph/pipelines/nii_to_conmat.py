@@ -28,24 +28,25 @@ from neuropype_graph.utils import show_files,show_length
     #can_plot_igraph = False
     
 
-def create_pipeline_nii_to_conmat(main_path,ROI_mask_file,ROI_coords_file,ROI_MNI_coords_file,ROI_labels_file, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
+def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold = 0.9, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
 
 
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
-    inputnode = pe.Node(niu.IdentityInterface(fields=['nii_4D_file','rp_file','gm_anat_file','wm_anat_file','csf_anat_file']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['nii_4D_file','rp_file','gm_anat_file','wm_anat_file','csf_anat_file',
+                                                      'ROI_coords_file','ROI_MNI_coords_file','ROI_labels_file']),
                         name='inputnode')
      
     ###### Preprocess pipeline,
     filter_ROI_mask_with_GM = pe.Node(interface = IntersectMask(),name = 'filter_ROI_mask_with_GM')
     
     filter_ROI_mask_with_GM.inputs.indexed_rois_file = ROI_mask_file
+    filter_ROI_mask_with_GM.inputs.filter_thr = filter_gm_threshold
     
-    filter_ROI_mask_with_GM.inputs.coords_rois_file = ROI_coords_file
-    filter_ROI_mask_with_GM.inputs.MNI_coords_rois_file = ROI_MNI_coords_file    
-    filter_ROI_mask_with_GM.inputs.labels_rois_file = ROI_labels_file
-    
+    pipeline.connect(inputnode, 'ROI_coords_file', filter_ROI_mask_with_GM, 'coords_rois_file')
+    pipeline.connect(inputnode, 'ROI_MNI_coords_file', filter_ROI_mask_with_GM, 'MNI_coords_rois_file')
+    pipeline.connect(inputnode, 'ROI_labels_file', filter_ROI_mask_with_GM, 'labels_rois_file')
     
     pipeline.connect(inputnode, 'gm_anat_file', filter_ROI_mask_with_GM, 'filter_mask_file')
     
