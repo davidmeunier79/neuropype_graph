@@ -120,10 +120,12 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
                 
                 print signif_signif_adj_mat
                 
-                dict_stats["T-test " + combi_pair] = signif_signif_adj_mat
+                dict_stats["T-test " + pair_name] = signif_signif_adj_mat
             except AssertionError:
-                print "Stop runnig after {} was wrong".format(combi_pair)
+                print "Stop running after {} was wrong".format(pair_name)
                 
+    return dict_stats
+
 if __name__ =='__main__':
 	
 	test1 = isInAlphabeticalOrder(["a","b","c"])
