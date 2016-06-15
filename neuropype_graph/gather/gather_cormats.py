@@ -50,10 +50,14 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
         else:
             print "Warning, file {}  could not be found".format(cormat_file)
         
+    print np.array(all_iter_cormats).shape
+    
     return np.array(all_iter_cormats),pd.DataFrame(all_descriptors,columns = iternames)
 
 def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
+    print "In compute_mean_cormats"
+    
     for column in descript_columns:
     
         assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
