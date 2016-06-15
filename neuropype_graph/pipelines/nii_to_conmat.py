@@ -133,7 +133,7 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
     compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
     
     pipeline.connect(regress_covar, ('resid_ts_file',show_length), compute_conf_cor_mat, 'ts_file')
-    
+    pipeline.connect(inputnode, 'ROI_labels_file', compute_conf_cor_mat, 'labels_file')
     return pipeline
 
 #ROI_mask_file,ROI_coords_file,ROI_MNI_coords_file,ROI_labels_file,
@@ -144,7 +144,7 @@ def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_we
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
-    inputnode = pe.Node(niu.IdentityInterface(fields=['resid_ts_file','spm_mat_file','regress_names','run_index']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['resid_ts_file','spm_mat_file','regress_names','run_index','ROI_labels_file']),
                         name='inputnode')
      
     
@@ -175,5 +175,7 @@ def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_we
     
     pipeline.connect(inputnode, 'resid_ts_file', compute_conf_cor_mat, 'ts_file')
     pipeline.connect(extract_cond, 'regressor_file', compute_conf_cor_mat, 'weight_file')
+    
+    pipeline.connect(inputnode, 'ROI_labels_file', compute_conf_cor_mat, 'labels_file')
     
     return pipeline
