@@ -349,6 +349,63 @@ def compute_pairwise_binom_fdr(X,Y,conf_interval_binom_fdr):
     
     return signif_signed_adj_mat
 
+############### OneWay Anova (F-test)
+
+def compute_oneway_anova_fwe(list_of_list_matrices,fwe_alpha = 0.05):
+
+    #np_cond_matrices = np.array(list_of_list_matrices)
+    
+    #print np_cond_matrices.shape
+    
+    #assert np_cond_matrices.shape[2] == np_cond_matrices.shape[3], "warning, matrices are not squared {} {}".format(np_cond_matrices.shape[2], np_cond_matrices.shape[3])
+    
+    #N = np_cond_matrices.shape[2]
+    
+    
+    for group_mat in list_of_list_matrices:
+        assert group_mat.shape[1] == group_mat.shape[2], "warning, matrices are not squared {} {}".format(group_mat.shape[1], group_mat.shape[2])
+    
+    N = group_mat.shape[2]
+    list_diff = []
+    
+    for i,j in it.combinations(range(N), 2):
+        
+        print i,j
+        
+        list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
+        
+        print list_val
+        
+        F_stat,p_val = stat.f_oneway(*list_val)
+        
+        print F_stat,p_val
+        
+        list_diff.append([i,j,p_val,F_stat])
+        
+    ############### computing significance code ################
+    
+    np_list_diff = np.array(list_diff)
+    
+    print np_list_diff
+    
+    signif_code = return_signif_code_Z(np_list_diff[:,2],fwe_alpha)
+    
+    signif_code[np.isnan(np_list_diff[:,2])] = 0
+                         
+    print np.sum(signif_code == 0.0),np.sum(signif_code == 1.0),np.sum(signif_code == 2.0),np.sum(signif_code == 3.0),np.sum(signif_code == 4.0)
+    
+    ################ converting to matrix
+    
+    signif_adj_mat = np.zeros((N,N),dtype = 'int')
+    
+    signif_i = np.array(np_list_diff[:,0],dtype = int)
+    signif_j = np.array(np_list_diff[:,1],dtype = int)
+    
+    signif_adj_mat[signif_i,signif_j] = signif_adj_mat[signif_j,signif_i] = signif_code
+    
+    return signif_adj_mat
+
+
 ############### nodewise stats #########################
 def compute_nodewise_t_test_vect(d_stacked, nx, ny):
 

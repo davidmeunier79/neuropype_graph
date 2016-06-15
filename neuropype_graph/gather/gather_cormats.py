@@ -13,6 +13,8 @@ import numpy as np
 from itertools import product,combinations
 from numpy import isnan, nan, logical_not, logical_or
 
+from neuropype_graph.utils_stats import compute_oneway_anova_fwe
+
 def isInAlphabeticalOrder(word):
     return list(word) == sorted(word)
     #return word==''.join(sorted(word))
@@ -75,6 +77,60 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
         dict_mean[elem] = mean_elem
         
     return dict_mean
+
+def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
+
+    print all_cormats.shape
+    
+    for column in descript_columns:
+    
+        assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
+
+    dict_stats = {}
+    
+    for column in descript_columns:
+        
+        ############## compute F-test over matrices
+        
+        list_of_list_matrices = [all_cormats[all_descriptors[all_descriptors[column] == desc].index,:,:] for desc in all_descriptors[column].unique()]
+        
+        print list_of_list_matrices
+        print len(list_of_list_matrices)
+        print np.array(list_of_list_matrices).shape
+        
+        
+        signif_adj_mat = compute_oneway_anova_fwe(list_of_list_matrices,0.05)
+        
+        print signif_adj_mat
+        
+        0/0
+        for compi_pair in combinations(all_descriptors[column].unique(),2):
+            pair_name = "-".join(compi_pair)
+            print pair_name
+            
+            
+            
+        #0/0
+        
+    
+    #for elem, lines in all_descriptors.groupby(by = descript_columns):
+    
+        #print elem
+        #print lines
+        #print lines.index
+        
+        #elem_cormats = all_cormats[lines.index]
+        
+        #print elem_cormats.shape
+        
+        #mean_elem = np.mean(elem_cormats,axis = 0)
+        
+        #print mean_elem.shape
+        
+        #dict_mean[elem] = mean_elem
+        
+    #return dict_mean
+
 
 if __name__ =='__main__':
 	
