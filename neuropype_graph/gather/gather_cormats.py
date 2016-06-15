@@ -119,8 +119,8 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
                                                                cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False)
                 
                 print signif_signif_adj_mat
+                dict_stats["T-test_" + pair_name] = signif_signif_adj_mat
                 
-                dict_stats["T-test " + pair_name] = signif_signif_adj_mat
             except AssertionError:
                 print "Stop running after {} was wrong".format(pair_name)
                 
