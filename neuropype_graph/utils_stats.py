@@ -175,51 +175,102 @@ def compute_pairwise_binom(X,Y,conf_interval_binom):
     return ADJ
 
     
-def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True):
+def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True):
     
-    # number of nodes
-    N = X.shape[0]
-   
-   
-    #print X.shape
     
-    list_diff = []
+    if old_order:
+            
+        # number of nodes
+        N = X.shape[0]
     
-    for i,j in it.combinations(range(N), 2):
+    
+        #print X.shape
         
-        X_nonan = X[i,j,np.logical_not(np.isnan(X[i,j,:]))]
-        Y_nonan = Y[i,j,np.logical_not(np.isnan(Y[i,j,:]))]
+        list_diff = []
+        
+        for i,j in it.combinations(range(N), 2):
             
-        #print len(X_nonan),len(Y_nonan)
-        
-        if len(X_nonan) < 2 or len(Y_nonan) < 2:
-        #if len(X_nonan) < 1 or len(Y_nonan) < 1:
-            #list_diff.append([i,j,1.0,0.0])
-            continue
-        
-        if paired == True:
+            X_nonan = X[i,j,np.logical_not(np.isnan(X[i,j,:]))]
+            Y_nonan = Y[i,j,np.logical_not(np.isnan(Y[i,j,:]))]
+                
+            #print len(X_nonan),len(Y_nonan)
             
-            t_stat,p_val = stat.ttest_rel(X_nonan,Y_nonan)
+            if len(X_nonan) < 2 or len(Y_nonan) < 2:
+            #if len(X_nonan) < 1 or len(Y_nonan) < 1:
+                #list_diff.append([i,j,1.0,0.0])
+                continue
             
-            if np.isnan(p_val):
+            if paired == True:
                 
-                print "Warning, unable to compute T-test: "
-                print t_stat,p_val,X_nonan,Y_nonan
+                t_stat,p_val = stat.ttest_rel(X_nonan,Y_nonan)
                 
+                if np.isnan(p_val):
+                    
+                    print "Warning, unable to compute T-test: "
+                    print t_stat,p_val,X_nonan,Y_nonan
+                    
+                    
+            
+                ## pas encore present (version scipy 0.18)
+                #t_stat,p_val = stat.ttest_rel(X[i,j,:],Y[i,j,:],nan_policy = 'omit')
+            
+            else:
+                t_stat,p_val = stat.ttest_ind(X_nonan,Y_nonan)
+            
+            #print t_stat,p_val
+            
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan))])
+    else:
+        # number of nodes
+        assert X.shape[1] == X.shape[2] and Y.shape[1] == Y.shape[2], "Error, X {}{} and/or Y {}{} are not squared".format(X.shape[1],X.shape[2], Y.shape[1], Y.shape[2])
+        
+        N = X.shape[1]
+    
+        if paired:
+            assert X.shape[0] == Y.shape[0], "Error, X and Y are paired but do not have the same number od samples{}{}".format(X.shape[0],Y.shape[0])
+            
+        #print X.shape
+        
+        list_diff = []
+        
+        for i,j in it.combinations(range(N), 2):
+            
+            X_nonan = X[np.logical_not(np.isnan(X[:,i,j])),i,j]
+            Y_nonan = Y[np.logical_not(np.isnan(Y[:,i,j])),i,j]
                 
-           
-            ## pas encore present (version scipy 0.18)
-            #t_stat,p_val = stat.ttest_rel(X[i,j,:],Y[i,j,:],nan_policy = 'omit')
+            #print len(X_nonan),len(Y_nonan)
+            
+            if len(X_nonan) < 2 or len(Y_nonan) < 2:
+            #if len(X_nonan) < 1 or len(Y_nonan) < 1:
+                #list_diff.append([i,j,1.0,0.0])
+                continue
+            
+            if paired == True:
+                
+                t_stat,p_val = stat.ttest_rel(X_nonan,Y_nonan)
+                
+                if np.isnan(p_val):
+                    
+                    print "Warning, unable to compute T-test: "
+                    print t_stat,p_val,X_nonan,Y_nonan
+                    
+                    
+            
+                ## pas encore present (version scipy 0.18)
+                #t_stat,p_val = stat.ttest_rel(X[i,j,:],Y[i,j,:],nan_policy = 'omit')
+            
+            else:
+                t_stat,p_val = stat.ttest_ind(X_nonan,Y_nonan)
+            
+            #print t_stat,p_val
+            
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan))])
+            
         
-        else:
-            t_stat,p_val = stat.ttest_ind(X_nonan,Y_nonan)
+    print list_diff
         
-        #print t_stat,p_val
-        
-        list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan))])
-        
-    #print list_diff
-        
+    assert len(list_diff) != 0, "Error, list_diff is empty"
+    
     np_list_diff = np.array(list_diff)
    
     print np_list_diff
@@ -351,7 +402,7 @@ def compute_pairwise_binom_fdr(X,Y,conf_interval_binom_fdr):
 
 ############### OneWay Anova (F-test)
 
-def compute_oneway_anova_fwe(list_of_list_matrices,fwe_alpha = 0.05):
+def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.001):
 
     #np_cond_matrices = np.array(list_of_list_matrices)
     
@@ -388,7 +439,7 @@ def compute_oneway_anova_fwe(list_of_list_matrices,fwe_alpha = 0.05):
     
     print np_list_diff
     
-    signif_code = return_signif_code_Z(np_list_diff[:,2],fwe_alpha)
+    signif_code = return_signif_code(np_list_diff[:,2],uncor_alpha = uncor_alpha, fdr_alpha = cor_alpha, bon_alpha = cor_alpha)
     
     signif_code[np.isnan(np_list_diff[:,2])] = 0
                          

@@ -13,7 +13,7 @@ import numpy as np
 from itertools import product,combinations
 from numpy import isnan, nan, logical_not, logical_or
 
-from neuropype_graph.utils_stats import compute_oneway_anova_fwe
+from neuropype_graph.utils_stats import compute_oneway_anova_fwe,compute_pairwise_ttest_fdr
 
 def isInAlphabeticalOrder(word):
     return list(word) == sorted(word)
@@ -90,48 +90,40 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
     
     for column in descript_columns:
         
+        cond_names = all_descriptors[column].unique().tolist()
+        
         ############## compute F-test over matrices
         
-        list_of_list_matrices = [all_cormats[all_descriptors[all_descriptors[column] == desc].index,:,:] for desc in all_descriptors[column].unique()]
+        list_of_list_matrices = [all_cormats[all_descriptors[all_descriptors[column] == cond_name].index,:,:] for cond_name in cond_names]
         
         print list_of_list_matrices
         print len(list_of_list_matrices)
         print np.array(list_of_list_matrices).shape
         
         
-        signif_adj_mat = compute_oneway_anova_fwe(list_of_list_matrices,0.05)
+        signif_adj_mat = compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.01)
         
         print signif_adj_mat
+             
+        dict_stats["F-test"] = signif_adj_mat
         
-        0/0
-        for compi_pair in combinations(all_descriptors[column].unique(),2):
-            pair_name = "-".join(compi_pair)
+        for combi_pair in combinations(cond_names,2):
+            pair_name = "-".join(combi_pair)
             print pair_name
             
+            print combi_pair[0]
             
-            
-        #0/0
-        
-    
-    #for elem, lines in all_descriptors.groupby(by = descript_columns):
-    
-        #print elem
-        #print lines
-        #print lines.index
-        
-        #elem_cormats = all_cormats[lines.index]
-        
-        #print elem_cormats.shape
-        
-        #mean_elem = np.mean(elem_cormats,axis = 0)
-        
-        #print mean_elem.shape
-        
-        #dict_mean[elem] = mean_elem
-        
-    #return dict_mean
-
-
+            try:
+                signif_signif_adj_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[cond_names.index(combi_pair[0])],
+                                                               Y = list_of_list_matrices[cond_names.index(combi_pair[1])],
+                                                               cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False)
+                
+                print signif_signif_adj_mat
+                
+                dict_stats["T-test " + combi_pair] = signif_signif_adj_mat
+            except AssertionError:
+                print "Stop runnig after {} was wrong".format(combi_pair)
+                
 if __name__ =='__main__':
 	
 	test1 = isInAlphabeticalOrder(["a","b","c"])
