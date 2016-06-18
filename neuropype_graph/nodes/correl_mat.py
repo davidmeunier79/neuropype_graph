@@ -854,6 +854,8 @@ class FindSPMRegressor(BaseInterface):
 
         print regressor_vect
         
+        assert np.sum(regressor_vect) != 0, "Error, empty regressor {}".format(cond_name)
+        
         if only_positive_values == True:
             
             regressor_vect[regressor_vect < 0] = 0
