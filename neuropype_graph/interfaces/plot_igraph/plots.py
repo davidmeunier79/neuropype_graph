@@ -120,7 +120,7 @@ class PlotIGraphModules(BaseInterface):
             print len(node_labels)
             
         else :
-            node_labels = []
+            node_labels = node_corres.tolist()
             
         if isdefined(node_roles_file):
         
