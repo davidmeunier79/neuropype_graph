@@ -19,7 +19,7 @@ def isInAlphabeticalOrder(word):
     return list(word) == sorted(word)
     #return word==''.join(sorted(word))
 
-def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
+def return_all_iter_cormats(cormat_path ,iterables ,iternames):
        
     print zip(*iterables)
     
@@ -34,7 +34,7 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames ):
         
         assert len(iter_obj) == len(iternames), "Error, different number of iternames and iterables"
         
-        iter_dir = "".join(["_" + zip_iter[0] + "_" + zip_iter[1] for zip_iter in zip(iternames,iter_obj)])
+        iter_dir = "".join(["_" + zip_iter[0].strip() + "_" + zip_iter[1].strip() for zip_iter in zip(iternames,iter_obj)])
                             
         print iter_dir
         
@@ -82,7 +82,10 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
         
     return dict_mean
 
-def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
+
+
+
+def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups = []):
 
     print all_cormats.shape
     
@@ -94,11 +97,12 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
     
     for column in descript_columns:
         
-        cond_names = all_descriptors[column].unique().tolist()
+        if len(groups) == 0:
+            groups = all_descriptors[column].unique().tolist()
         
         ############## compute F-test over matrices
         
-        list_of_list_matrices = [all_cormats[all_descriptors[all_descriptors[column] == cond_name].index,:,:] for cond_name in cond_names]
+        list_of_list_matrices = [all_cormats[all_descriptors[all_descriptors[column] == cond_name].index,:,:] for cond_name in groups]
         
         print list_of_list_matrices
         print len(list_of_list_matrices)
@@ -111,15 +115,15 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns):
              
         dict_stats["F-test"] = signif_adj_mat
         
-        for combi_pair in combinations(cond_names,2):
+        for combi_pair in combinations(groups,2):
             pair_name = "-".join(combi_pair)
             print pair_name
             
             print combi_pair[0]
             
             try:
-                signif_signif_adj_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[cond_names.index(combi_pair[0])],
-                                                               Y = list_of_list_matrices[cond_names.index(combi_pair[1])],
+                signif_signif_adj_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[groups.index(combi_pair[0])],
+                                                               Y = list_of_list_matrices[groups.index(combi_pair[1])],
                                                                cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False)
                 
                 print signif_signif_adj_mat
