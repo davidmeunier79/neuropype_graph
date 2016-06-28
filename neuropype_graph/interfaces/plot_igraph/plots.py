@@ -89,11 +89,6 @@ class PlotIGraphModules(BaseInterface):
             
             print 'extracting node coords'
             
-            #with open(coords_file, 'Ur') as f:
-                #coords_list = list(tuple(map(int,rec))[0:2] for rec in csv.reader(f, delimiter=' '))
-            
-            
-            
             coords = np.array(np.loadtxt(coords_file),dtype = 'float')
             print coords.shape
             
