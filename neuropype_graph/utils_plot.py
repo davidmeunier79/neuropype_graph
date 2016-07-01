@@ -97,7 +97,7 @@ def plot_ranged_cormat(plot_file, cor_mat,list_labels = [], fix_full_range = [-1
     #fig1.close()
     del fig1
     
-def plot_int_mat(plot_file, cor_mat,list_labels, fix_full_range,label_size = 2):
+def plot_int_mat(plot_file, cor_mat,list_labels = [], fix_full_range = [-4,4],label_size = 2):
     
     fig1 = plt.figure(frameon=False)
     ax = fig1.add_subplot(1,1,1)
@@ -105,12 +105,12 @@ def plot_int_mat(plot_file, cor_mat,list_labels, fix_full_range,label_size = 2):
     #cmap= plt.get_cmap('spectral',9) 
     
     
-    cmap = plt.get_cmap('jet',9)
+    cmap = plt.get_cmap('jet',len(np.unique(np.arange(fix_full_range[0],fix_full_range[1]+1))))
     
+    print cmap
     #cmap_vals = cmap(np.linspace(0.2,0.8,9))
     
-    
-    print np.array(cmap(np.arange(9)))
+    0/0
     
     im = ax.matshow(cor_mat,vmin = fix_full_range[0], vmax = fix_full_range[1],interpolation="none", cmap= cmap)
     #plt.axis('off')
