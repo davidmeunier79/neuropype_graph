@@ -107,7 +107,7 @@ def plot_int_mat(plot_file, cor_mat,list_labels = [], fix_full_range = [-4,4],la
     
     cmap = plt.get_cmap('jet',len(np.unique(np.arange(fix_full_range[0],fix_full_range[1]+1))))
     
-    print cmap
+    print len(np.unique(np.arange(fix_full_range[0],fix_full_range[1]+1)))
     #cmap_vals = cmap(np.linspace(0.2,0.8,9))
     
     0/0
