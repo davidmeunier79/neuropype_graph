@@ -75,7 +75,7 @@ def coord_transform(x, y, z, affine):
 
 ############################################################ from a list of MNI coords ############################################################################
 
-def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_size = 10):
+def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,ROI_shape = "cube", ROI_size = 10):
     """
         MNI_coords_list: list of list of 3 integer values in MNI space
         ref_img_file: nifti1 file, the generated indexed mask will use its shape and affine
@@ -88,6 +88,12 @@ def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_s
     ### data (shape)
     ref_img_shape = ref_img.get_data().shape
     
+    if len(ref_img_shape) == 4:
+        
+        print "using 4D image for computing 3D mask, reducing shape"
+        
+        ref_img_shape = ref_img_shape[:-1]
+    
     print ref_img_shape
     
     ### affine
@@ -95,22 +101,24 @@ def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_s
     
     inv_affine = np.linalg.inv(ref_img_affine)
     
-    print inv_affine
+    #print inv_affine
     
     ### header
     ref_img_hd = ref_img.get_header()
     
-    print ref_img_hd
+    #print ref_img_hd
     
     pixdims = ref_img_hd['pixdim'][1:4]
         
     print pixdims
         
-        
+    ######################################## building indexed mask
+    indexed_mask_data = np.zeros(shape = ref_img_shape) - 1
+    
     ### shape of the ROI    
     if not ROI_shape in ["sphere","cube"]:
         
-        print "Warning, could not determine shape {}".format(ROI_shape)
+        print "Warning, could not determine shape {}, using cube instead".format(ROI_shape)
         
         ROI_shape = "cube"
     
@@ -147,48 +155,139 @@ def create_indexed_mask(MNI_coords_list, ref_img_file, ROI_shape = "cube", ROI_s
             neigh_range.append(cur_range)
             
         print neigh_range
+            
+        for index_mask,MNI_coords in enumerate(MNI_coords_list):
+            
+            print MNI_coords
+            
+            ijk_coord =  np.dot(inv_affine,np.array(MNI_coords + [1],dtype = 'int'))[:-1]
+            
+            print ijk_coord
+            
+            coord_i = np.array(ijk_coord[0] + neigh_range[0],dtype = 'int64').tolist()
+            
+            print coord_i
+            
+            
+            coord_j = np.array(ijk_coord[1] + neigh_range[1],dtype = 'int64').tolist()
+            
+            print coord_j
+            
+            
+            coord_k = np.array(ijk_coord[2] + neigh_range[2],dtype = 'int64').tolist()
+            
+            print coord_k
+            
+            indexed_mask_data[coord_i,coord_j,coord_k] = index_mask
+            
+            print np.sum(indexed_mask_data == index_mask)
+            
+            a = np.where(indexed_mask_data == index_mask)
+            
+            print len(a)
+                    
+            0/0
+            
+            print x.shape
+            
+            print x[0],y[0],z[0]
+            
+            0/0
+            
         
-    indexed_mask_data = np.zeros(shape = ref_img_shape) - 1
+        
+    elif ROI_shape == "sphere":
+        
+        print "building spheres of {} mm".format(ROI_size)
+        
+        
+        radius = ROI_size/2.0
+        
+        print radius
+        
+        vox_dims = map(int,float(radius)/pixdims)
+        
+        print vox_dims
+        
+        
+        r2_dim = []
+        neigh_range = []
+        
+        for i,vox_dim in enumerate(vox_dims):
+            
+            pixdim = pixdims[i]
+            
+            cur_range = np.arange(-vox_dim,(vox_dim+1))
+            
+            print cur_range
+            
+            cur_r2 = (cur_range*pixdim)**2
+            
+            print cur_r2
+            
+            neigh_range.append(cur_range.tolist())
+            
+            r2_dim.append(cur_r2)
+            
+        print neigh_range
+        
+        #neigh_coords = [i for i in iter.product(neigh_range[0],neigh_range[1],neigh_range[2])]
+        neigh_coords = np.array([list(i) for i in iter.product(*neigh_range)],dtype = int)
+        print neigh_coords
+        
+        neigh_dist = np.array([np.sum(i)  for i in iter.product(*r2_dim)])
+        
+        print neigh_dist
+        
+        neigh_range = neigh_coords[neigh_dist < radius**2]
+        
+        print neigh_range.shape
+        
+        ROI_coords = []
+        
+        ########## pour les ROI    
+        for index_mask,MNI_coords in enumerate(MNI_coords_list):
+            
+            print MNI_coords
+            
+            ijk_coord =  np.dot(inv_affine,np.array(MNI_coords + [1],dtype = 'int'))[:-1]
+            
+            print ijk_coord
+            
+            ROI_coords.append(ijk_coord)
+            
+            cur_coords = np.array([map(int,ijk_coord + neigh_coord) for neigh_coord in neigh_range.tolist()])
+            
+            print cur_coords
+            
+            #indexed_mask_data[cur_coords[:,0],cur_coords[:,1],cur_coords[:,2]] = index_mask
+                
+            indexed_mask_data[cur_coords[:,0],cur_coords[:,1],cur_coords[:,2]] = index_mask
+                
+             
+                
+            print np.where(indexed_mask_data == index_mask)
+            
+            print np.unique(indexed_mask_data)
+            
+            print np.sum(indexed_mask_data == index_mask)
+            
     
-    for index_mask,MNI_coords in enumerate(MNI_coords_list):
-        
-        print MNI_coords
-        
-        ijk_coord =  np.dot(inv_affine,np.array(MNI_coords + [1],dtype = 'int'))[:-1]
-        
-        print ijk_coord
-        
-        coord_i = np.array(ijk_coord[0] + neigh_range[0],dtype = 'int64').tolist()
-        
-        print coord_i
-        
-        
-        coord_j = np.array(ijk_coord[1] + neigh_range[1],dtype = 'int64').tolist()
-        
-        print coord_j
-        
-        
-        coord_k = np.array(ijk_coord[2] + neigh_range[2],dtype = 'int64').tolist()
-        
-        print coord_k
-        
-        indexed_mask_data[coord_i,coord_j,coord_k] = index_mask
-        
-        print np.sum(indexed_mask_data == index_mask)
-        
-        a = np.where(indexed_mask_data == index_mask)
-        
-        print len(a)
-                  
-        0/0
-        
-        print x.shape
-        
-        print x[0],y[0],z[0]
-        
-        0/0
-        
+    #ROI_coords_labelled_mask_file = os.path.join(path,"All_labelled_ROI2-neigh_"+str(neighbourhood)+".nii")
+    indexed_mask_file = os.path.join(ROI_dir,"indexed_mask-"+ ROI_mask_prefix +".nii")
     
+    ###save ROI_coords_labelled_mask
+    
+    nib.save(nib.Nifti1Image(indexed_mask_data,ref_img_affine),indexed_mask_file)
+    
+    #ROI_coords_np_coords_file = os.path.join(path,"All_ROI_np_coords.txt")    
+    ROI_coords_file =  os.path.join(ROI_dir, "ROI_coords-" + ROI_mask_prefix + ".txt")
+    
+    #### save np coords
+    np.savetxt(ROI_coords_file,np.array(ROI_coords,dtype = int),fmt = "%d")
+    
+    
+    return indexed_mask_file
 
 
 ### utils for merging different label and coord file before computing label masks if necessary
