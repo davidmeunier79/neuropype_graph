@@ -150,11 +150,13 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
     return pipeline
 
     
-def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,radatools_path,con_thr = 1.0,multi = False,mod = True):
+def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,con_thr = 1.0,multi = False,mod = True, plot = True):
 
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
+    #inputnode = pe.Node(niu.IdentityInterface(fields=['conmat_file','coords_file','labels_file']),                        name='inputnode')
+     
     if plot==True and can_plot_igraph==False:
         
         plot = False
@@ -166,14 +168,14 @@ def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,radatools_
         #### net_list
         compute_net_List = pe.Node(interface = ComputeNetList(),name='compute_net_List')
         compute_net_List.inputs.threshold = con_thr
-        compute_net_List.inputs.density = None
-        #pipeline.connect(convert_mat, 'conmat_file',compute_net_List, 'Z_cor_mat_file')
+        #compute_net_List.inputs.density = None
+        
+        #pipeline.connect(inputnode, 'conmat_file',compute_net_List, 'Z_cor_mat_file')
         
         ##### radatools ################################################################
 
         ### prepare net_list for radatools processing  
         prep_rada = pe.Node(interface = PrepRada(),name='prep_rada',iterfield = ["net_List_file"])
-        prep_rada.inputs.radatools_path = radatools_path
         
         pipeline.connect(compute_net_List, 'net_List_file', prep_rada, 'net_List_file')
         
@@ -183,7 +185,6 @@ def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,radatools_
             ### compute community with radatools
             community_rada = pe.Node(interface = CommRada(), name='community_rada',iterfield = ["Pajek_net_file"])
             #community_rada.inputs.optim_seq = radatools_optim
-            community_rada.inputs.radatools_path = radatools_path
             
             pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
             
@@ -197,7 +198,6 @@ def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,radatools_
                 
         ############ compute network properties with rada
         net_prop = pe.Node(interface = NetPropRada(optim_seq = "A"), name = 'net_prop')
-        net_prop.inputs.radatools_path = radatools_path
         
         pipeline.connect(prep_rada, 'Pajek_net_file',net_prop,'Pajek_net_file')
         
