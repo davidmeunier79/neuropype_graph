@@ -673,7 +673,7 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
     t1 = time.time()
     
     if ts_mat.shape[0] != len(regressor_vect):
-        "Warning, incompatible regressor length {} {}".format(ts_mat.shape[0], len(regressor_vect))
+        print "Warning, incompatible regressor length {} {}".format(ts_mat.shape[0], len(regressor_vect))
         return
 
     
@@ -704,8 +704,14 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
     
     for i,j in it.combinations(range(n), 2):
     
-        s1 = ts_mat2[:,i]
-        s2 = ts_mat2[:,j]
+        keep_val = np.logical_not(np.logical_or(np.isnan(ts_mat2[:,i]),np.isnan(ts_mat2[:,j])))
+            
+        print keep_val
+        
+        
+        s1 = ts_mat2[keep_val,i]
+        s2 = ts_mat2[keep_val,j]
+            
         
         cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
         Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
@@ -716,6 +722,28 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
             conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
         else:
             conf_cor_mat[i,j] = - cor_mat[i,j] + np.tanh(Z_cor_mat[i,j] + norm/np.sqrt(deg_freedom))
+            
+        #if np.sum(np.logical_or(np.isnan(ts_mat2[:,i]),np.isnan(ts_mat2[:,j]))) != 0:
+            
+            #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
+    
+    
+    #for i,j in it.combinations(range(n), 2):
+    
+        #s1 = ts_mat2[:,i]
+        #s2 = ts_mat2[:,j]
+        
+        
+        
+        #cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
+        #Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
+        
+        #Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
+        
+        #if cor_mat[i,j] > 0:
+            #conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
+        #else:
+            #conf_cor_mat[i,j] = - cor_mat[i,j] + np.tanh(Z_cor_mat[i,j] + norm/np.sqrt(deg_freedom))
             
         
         #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
