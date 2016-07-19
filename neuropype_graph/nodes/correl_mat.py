@@ -1122,7 +1122,10 @@ class ComputeConfCorMat(BaseInterface):
         
         #print cor_mat.shape
         
-        #cor_mat = cor_mat + np.transpose(cor_mat)
+        cor_mat = cor_mat + np.transpose(cor_mat)
+        
+        
+        Z_cor_mat = Z_cor_mat + np.transpose(Z_cor_mat)
         
         #sum_nan = np.sum(np.array(np.isnan(cor_mat), dtype = int),axis = 0)
         #sort_order =  np.argsort(sum_nan)
