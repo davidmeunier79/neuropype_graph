@@ -112,7 +112,7 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
     compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
     
     pipeline.connect(regress_covar, ('resid_ts_file',show_length), compute_conf_cor_mat, 'ts_file')
-    pipeline.connect(inputnode, 'ROI_labels_file', compute_conf_cor_mat, 'labels_file')
+    pipeline.connect(filter_ROI_mask_with_GM, 'filtered_labels_rois_file', compute_conf_cor_mat, 'labels_file')
     
     return pipeline
 

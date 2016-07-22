@@ -148,7 +148,7 @@ class IntersectMaskOutputSpec(TraitedSpec):
     
     filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')    
     #
-    #filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
+    filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
     #filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
     
     
@@ -330,7 +330,7 @@ class IntersectMask(BaseInterface):
             outputs["filtered_coords_rois_file"] = os.path.abspath("filtered_coords_rois.txt")
             
         #outputs["filtered_MNI_coords_rois_file"] = os.path.abspath("filtered_MNI_coords_rois.txt")
-        #outputs["filtered_labels_rois_file"] = os.path.abspath("filtered_labels_rois.txt")
+        outputs["filtered_labels_rois_file"] = os.path.abspath("filtered_labels_rois.txt")
     
         return outputs
 
