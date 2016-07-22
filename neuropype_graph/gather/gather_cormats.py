@@ -19,14 +19,19 @@ def isInAlphabeticalOrder(word):
     return list(word) == sorted(word)
     #return word==''.join(sorted(word))
 
-def return_all_iter_cormats(cormat_path ,iterables ,iternames):
-       
+def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_file = 0):
+    """
+    gm_mask_coords_file is the coords commun to all analyses before Inteersectmask
+    """
     print zip(*iterables)
     
     all_iter_cormats = []
     all_descriptors = []
     
     assert isInAlphabeticalOrder(iternames), "Warning, iternames are not in alphabetical oroder, check the iterables order as well"
+    
+    if gm_mask_coords_file != 0:
+        gm_mask_coords = np.loadtxt(gm_mask_coords_file)
     
     for iter_obj in product(*iterables):
         
@@ -44,6 +49,12 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames):
             cormat = np.load(cormat_file)
             print cormat.shape
             
+            if gm_mask_coords_file != 0:
+                coords_file = os.path.join(cormat_path,iter_dir,"filter_ROI_mask_with_GM","filtered_coords_rois.txt")
+                coords = np.loadtxt(coords_file)
+            
+                cormat,_ = return_corres_correl_mat(cormat,coords,gm_mask_coords)
+                
             all_iter_cormats.append(cormat)
             all_descriptors.append(iter_obj)
             
