@@ -257,7 +257,7 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
                 subj_coord_rois.append(coord_rois[roi_index,])
                 mean_masked_ts.append(mean_roi_ts)
             else:
-                print "ROI {} was not selected : {} {} ".format(np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
+                print "ROI {} was not selected : {} {} ".format(roi_index, np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
                 
                 
             ### testing if mean_roi_ts if always higher than minimal BOLD intensity
