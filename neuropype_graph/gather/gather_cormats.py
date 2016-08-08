@@ -78,10 +78,12 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
     for elem, lines in all_descriptors.groupby(by = descript_columns):
     
         print elem
-        print lines
+        #print lines
         print lines.index
         
-        elem_cormats = all_cormats[lines.index]
+        print all_cormats.shape
+        
+        elem_cormats = all_cormats[lines.index,:,:]
         
         print elem_cormats.shape
         
