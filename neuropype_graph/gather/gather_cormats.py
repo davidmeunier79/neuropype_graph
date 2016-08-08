@@ -63,7 +63,11 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
         
     print np.array(all_iter_cormats).shape
     
-    return np.array(all_iter_cormats),pd.DataFrame(all_descriptors,columns = iternames)
+    pd_all_descriptors = pd.DataFrame(all_descriptors,columns = iternames)
+    
+    pd_all_descriptors.to_excel(os.path.join(cormat_path,"all_descriptors.xls"))
+                            
+    return np.array(all_iter_cormats),pd_all_descriptors
 
 def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
