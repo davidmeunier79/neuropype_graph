@@ -74,6 +74,7 @@ def coord_transform(x, y, z, affine):
 
 
 ############################################################ from a list of MNI coords ############################################################################
+from scipy.spatial.distance import cdist
 
 def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,ROI_shape = "cube", ROI_size = 10):
     """
@@ -82,6 +83,18 @@ def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,
         ROI_shape: "cube", or "sphere"
         ROI_size: ROI size in mm (from MNI space)
     """
+    
+    print MNI_coords_list
+    
+    np_coord = np.array(MNI_coords_list)
+    
+    dist = cdist(np_coord,np_coord,metric = 'euclidean')
+    
+    print dist[np.triu_indices(dist.shape[0],k = 1)]
+    
+    print dist[np.triu_indices(dist.shape[0],k = 1)] < ROI_size
+    
+    assert np.all(dist[np.triu_indices(dist.shape[0],k = 1)] > ROI_size), "Error, distance < {}".format(ROI_size)
     
     ref_img = nib.load(ref_img_file)
     
