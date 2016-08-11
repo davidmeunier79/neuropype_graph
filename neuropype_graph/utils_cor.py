@@ -716,6 +716,13 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
         cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
         Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
         
+        if np.isnan(Z_cor_mat[i,j]):
+            
+            print keep_val
+            print s1
+            print s2
+            print cor_mat[i,j]
+            0/0
         Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
         
         if cor_mat[i,j] > 0:
