@@ -118,7 +118,7 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
 
 #ROI_mask_file,ROI_coords_file,ROI_MNI_coords_file,ROI_labels_file,
 
-def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_weighted_conmat", concatenate_runs = 1, conf_interval_prob = 0.05, mult_regnames = True):
+def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_weighted_conmat", concatenated_runs = True, conf_interval_prob = 0.05, mult_regnames = True):
 
 
     pipeline = pe.Workflow(name=pipeline_name)
@@ -138,7 +138,7 @@ def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_we
         pipeline.connect(inputnode, 'run_index', extract_cond, 'run_index')
         
         #extract_cond.inputs.run_index = 0
-        extract_cond.inputs.concatenate_runs = concatenate_runs
+        extract_cond.inputs.concatenated_runs = concatenated_runs
         
         ##################################### compute weighted correlations ####################################################
         
@@ -163,7 +163,7 @@ def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_we
         pipeline.connect(inputnode, 'run_index', extract_cond, 'run_index')
         
         #extract_cond.inputs.run_index = 0
-        extract_cond.inputs.concatenate_runs = concatenate_runs
+        extract_cond.inputs.concatenated_runs = concatenated_runs
         
         ##################################### compute weighted correlations ####################################################
         
