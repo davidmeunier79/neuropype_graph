@@ -88,14 +88,16 @@ def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,
     
     np_coord = np.array(MNI_coords_list)
     
-    dist = cdist(np_coord,np_coord,metric = 'euclidean')
-    
-    print dist[np.triu_indices(dist.shape[0],k = 1)]
-    
-    print dist[np.triu_indices(dist.shape[0],k = 1)] < ROI_size
-    
-    assert np.all(dist[np.triu_indices(dist.shape[0],k = 1)] > ROI_size), "Error, distance < {}".format(ROI_size)
-    
+    if len(np_coord.shape) > 1:
+            
+        dist = cdist(np_coord,np_coord,metric = 'euclidean')
+        
+        print dist[np.triu_indices(dist.shape[0],k = 1)]
+        
+        print dist[np.triu_indices(dist.shape[0],k = 1)] < ROI_size
+        
+        assert np.all(dist[np.triu_indices(dist.shape[0],k = 1)] > ROI_size), "Error, distance < {}".format(ROI_size)
+        
     ref_img = nib.load(ref_img_file)
     
     ### data (shape)
@@ -285,7 +287,12 @@ def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,
             
             print np.sum(indexed_mask_data == index_mask)
             
-    
+    try:
+        os.makedirs(ROI_dir)
+        
+    except OSError:
+        print "directory already created"
+        
     #ROI_coords_labelled_mask_file = os.path.join(path,"All_labelled_ROI2-neigh_"+str(neighbourhood)+".nii")
     indexed_mask_file = os.path.join(ROI_dir,"indexed_mask-"+ ROI_mask_prefix +".nii")
     
