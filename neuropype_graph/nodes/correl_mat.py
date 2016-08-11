@@ -819,9 +819,6 @@ class FindSPMRegressor(BaseInterface):
         import numpy as np
         import os
 
-        #print spm_mat_file
-        
-        
         spm_mat_file = self.inputs.spm_mat_file
         regressor_name = self.inputs.regressor_name
         run_index = self.inputs.run_index
