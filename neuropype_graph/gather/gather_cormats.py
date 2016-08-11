@@ -34,7 +34,7 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
         gm_mask_coords = np.loadtxt(gm_mask_coords_file)
     
     if export_df:
-        writer = os.path.join(cormat_path,"all_cormats.xls")
+        writer = pd.ExcelWriter(os.path.join(cormat_path,"all_cormats.xls"))
         
     for iter_obj in product(*iterables):
         
