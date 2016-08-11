@@ -75,6 +75,9 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
         else:
             print "Warning, file {}  could not be found".format(cormat_file)
         
+    if export_df:
+        writer.save()
+        
     print np.array(all_iter_cormats).shape
     
     pd_all_descriptors = pd.DataFrame(all_descriptors,columns = iternames)
