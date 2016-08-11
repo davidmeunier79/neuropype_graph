@@ -19,7 +19,7 @@ def isInAlphabeticalOrder(word):
     return list(word) == sorted(word)
     #return word==''.join(sorted(word))
 
-def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_file = 0):
+def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_file = 0, gm_mask_labels_file = 0,export_df = False):
     """
     gm_mask_coords_file is the coords commun to all analyses before Inteersectmask
     """
@@ -33,6 +33,9 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
     if gm_mask_coords_file != 0:
         gm_mask_coords = np.loadtxt(gm_mask_coords_file)
     
+    if export_df:
+        writer = os.path.join(cormat_path,"all_cormats.xls")
+        
     for iter_obj in product(*iterables):
         
         print iter_obj
@@ -54,6 +57,17 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
                 coords = np.loadtxt(coords_file)
             
                 cormat,_ = return_corres_correl_mat(cormat,coords,gm_mask_coords)
+                
+            if export_df:
+                if gm_mask_labels_file:
+                    labels = [line.strip() for line in open(gm_mask_labels_file)]
+                else: 
+                    labels = range(cormat.shape[0])
+                    
+                df = pd.DataFrame(cormat, columns = labels,index = labels)
+                print df
+                
+                df.to_excel(writer, "_".join(iter_obj))
                 
             all_iter_cormats.append(cormat)
             all_descriptors.append(iter_obj)
