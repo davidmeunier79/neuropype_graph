@@ -797,7 +797,8 @@ class FindSPMRegressorInputSpec(BaseInterfaceInputSpec):
      
     only_positive_values = traits.Bool(True, usedefault = True , desc = "Return only positive values of the regressor (negative values are set to 0)")
     
-    concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    #concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    concatenated_runs = traits.Bool(False, usedefault = True , desc = "If concatenate runs, need to search for the lenghth of the session")
     
 class FindSPMRegressorOutputSpec(TraitedSpec):
     
@@ -823,7 +824,7 @@ class FindSPMRegressor(BaseInterface):
         regressor_name = self.inputs.regressor_name
         run_index = self.inputs.run_index
         only_positive_values = self.inputs.only_positive_values
-        concatenate_runs = self.inputs.concatenate_runs
+        concatenated_runs = self.inputs.concatenated_runs
         
         
         print spm_mat_file
@@ -857,29 +858,22 @@ class FindSPMRegressor(BaseInterface):
             
             regressor_vect[regressor_vect < 0] = 0
         
-        if concatenate_runs != None:
+        if concatenated_runs:
             
-            print run_index,concatenate_runs
+            print run_index
             print regressor_vect.shape[0]
             
-            nb_samples = regressor_vect.shape[0]/concatenate_runs
             
-            print nb_samples
+            samples = d['SPM']['xX'][0][0]['K'][0][0]['row'][0][run_index-1][0]-1
             
-            begin_interval = (run_index-1)*nb_samples
-            end_interval = run_index*nb_samples
+            print samples
             
-            if 0 <= begin_interval and end_interval <= regressor_vect.shape[0]:
+            regressor_vect = regressor_vect[samples]
             
-                print begin_interval,end_interval
+            print regressor_vect
             
-                regressor_vect = regressor_vect[begin_interval:end_interval]
-            
-            else:
-                
-                print "Warning, error with interval [%d,%d]"%(begin_interval,end_interval)
-        
             print regressor_vect.shape
+            
             
         print "Saving extract_cond"
         regressor_file = os.path.abspath('extract_cond.txt')
