@@ -100,6 +100,10 @@ class ComputeNetList(BaseInterface):
             
             print Z_list
             
+        else:
+            
+            Z_list = return_net_list(Z_cor_mat)
+        
         ## Z correl_mat as list of edges
         
         print "saving Z_list as list of edges"
