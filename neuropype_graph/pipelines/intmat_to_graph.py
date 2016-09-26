@@ -8,6 +8,8 @@ import time
 import numpy as np
 import scipy.sparse as sp 
 
+import nipype.interfaces.utility  as niu
+
 import nipype.pipeline.engine as pe
     
 from neuropype_graph.nodes.modularity import ComputeIntNetList,ComputeNodeRoles
@@ -134,12 +136,16 @@ except ImportError:
 
 ################################################ threshold-based graphs
     
-def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_to_graph_pipeline",threshold = 50, mod = False, plot = False):
+def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_graph_thr_pipe",threshold = 50, mod = False, plot = False,radatools_optim = ""):
 
     pipeline = pe.Workflow(name=analysis_name)
     pipeline.base_dir = main_path
 
 
+    inputnode = pe.Node(niu.IdentityInterface(fields=['int_mat_file','coords_file','labels_file']),
+                        name='inputnode')
+     
+    
     if can_plot_igraph==False:
         
         plot = False
@@ -150,6 +156,8 @@ def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_to_
     ### compute Z_list from coclass matrix
     compute_net_list = pe.Node(interface = ComputeIntNetList(),name='compute_net_list')
     compute_net_list.inputs.threshold = threshold
+    
+    pipeline.connect(inputnode, 'int_mat_file', compute_net_list, 'int_mat_file')
     
     ############################################### radatools ################################################################
     
@@ -162,7 +170,7 @@ def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_to_
             
         ### compute community with radatools
         community_rada = pe.Node(interface = CommRada(), name='community_rada',iterfield = ["Pajek_net_file"])
-        #community_rada.inputs.optim_seq = radatools_optim
+        community_rada.inputs.optim_seq = radatools_optim
         
         pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
         
@@ -178,6 +186,9 @@ def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_to_
                 
             #### plot_igraph_modules_rada
             plot_igraph_modules_rada = pe.Node(interface = PlotIGraphModules(),name='plot_igraph_modules_rada')
+            
+            pipeline.connect(inputnode, 'labels_file',plot_igraph_modules_rada,'labels_file')
+            pipeline.connect(inputnode, 'coords_file',plot_igraph_modules_rada,'coords_file')
             
             pipeline.connect(prep_rada, 'Pajek_net_file',plot_igraph_modules_rada,'Pajek_net_file')
             pipeline.connect(community_rada, 'rada_lol_file',plot_igraph_modules_rada,'rada_lol_file')
