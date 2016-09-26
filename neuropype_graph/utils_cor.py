@@ -1674,7 +1674,9 @@ def return_coclass_mat(community_vect,corres_coords,gm_mask_coords):
     
     print where_in_gm
     
-    print np.min(where_in_gm),np.max(where_in_gm),where_in_gm.shape
+    print np.min(where_in_gm)
+    print np.max(where_in_gm)
+    print where_in_gm.shape
     
     if (where_in_gm.shape[0] != community_vect.shape[0]):
         print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
@@ -1693,7 +1695,43 @@ def return_coclass_mat(community_vect,corres_coords,gm_mask_coords):
         
     return coclass_mat,possible_edge_mat
     
+def where_in_labels(corres_labels,gm_mask_labels):
+
+    return np.array([gm_mask_labels.index(lab) for lab in corres_labels],dtype  = 'int64')
+
+def return_coclass_mat_labels(community_vect,corres_labels,gm_mask_labels):
+
+    print corres_labels.shape[0],community_vect.shape[0]
     
+    if (corres_labels.shape[0] != community_vect.shape[0]):
+        print "warning, length of corres_labels and community_vect are imcompatible {} {}".format(corres_labels.shape[0],community_vect.shape[0])
+    
+    where_in_gm = where_in_labels(corres_labels.tolist(),gm_mask_labels.tolist())
+    
+    print where_in_gm
+    
+    print np.min(where_in_gm)
+    print np.max(where_in_gm)
+    print where_in_gm.shape
+    
+    if (where_in_gm.shape[0] != community_vect.shape[0]):
+        print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
+    
+    coclass_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+        
+    possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    for i,j in it.combinations(range(where_in_gm.shape[0]),2):
+    
+        coclass_mat[where_in_gm[i],where_in_gm[j]] = np.int(community_vect[i] == community_vect[j])
+        coclass_mat[where_in_gm[j],where_in_gm[i]] = np.int(community_vect[i] == community_vect[j])
+        
+        possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
+        
+    return coclass_mat,possible_edge_mat
+    
+
 
 #def return_coclass_mat_list_by_module(community_vect,corres_coords,gm_mask_coords):
 
