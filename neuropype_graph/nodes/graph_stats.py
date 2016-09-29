@@ -389,3 +389,124 @@ class PrepareCormat(BaseInterface):
         outputs["group_vect_file"] = os.path.abspath('group_vect.npy')
         
         return outputs
+    
+############################ SwapLists ####################################################################################################
+import itertools as iter
+
+class SwapListsInputSpec(BaseInterfaceInputSpec):
+    
+    list_of_lists = traits.List(traits.List(traits.List(File(exists=True))), desc='list of all correlation matrice files (in npy format) for each subject', mandatory=True)
+    
+    seed = traits.Int(-1, desc='value for seed', mandatory=True, usedefault = True)
+    
+class SwapListsOutputSpec(TraitedSpec):
+    
+    permut_lists_of_lists = traits.List(traits.List(traits.List(File(exists=True))), desc='swapped list of all correlation matrice files (in npy format) for each subject', mandatory=True)
+    
+    
+class SwapLists(BaseInterface):
+    
+    """
+    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    """
+    input_spec = SwapListsInputSpec
+    output_spec = SwapListsOutputSpec
+
+    def _run_interface(self, runtime):
+                
+        print 'in prepare_coclass'
+        list_of_lists = self.inputs.list_of_lists
+        seed = self.inputs.seed
+        
+        
+        ######## checking lists homogeneity
+        print len(list_of_lists)
+        
+        print len(list_of_lists[0])
+        
+        nb_files_per_list = -1
+        
+        ### number of elements tomix from (highest level)
+        nb_set_to_shuffle = len(list_of_lists)
+        
+        ### number of files per case to shuffle (typically cor_mat, coords -> 2, or Z_list, node_corres and labels -> 3)
+        
+        nb_args_per_list = -1
+        
+        for i,j in iter.combinations(range(nb_set_to_shuffle),2):
+                                  
+            print i,j
+            
+            print len(list_of_lists[i])
+            print len(list_of_lists[j])
+            
+            if nb_args_per_list == -1:
+                nb_args_per_list =len(list_of_lists[i])
+            else:
+            
+                assert nb_args_per_list == len(list_of_lists[i]),"Error list length {} != than list {} length {}".format(nb_args_per_list ,i,len(list_of_lists[i]))
+        
+            if nb_files_per_list == -1:
+                nb_files_per_list = len(list_of_lists[i][0])
+            else:
+                assert nb_files_per_list == len(list_of_lists[i][0]),"Error list length {} != than list {} length {}".format(nb_files_per_list,i,len(list_of_lists[i][0]))
+                
+        print nb_files_per_list
+        
+        
+        ########## generating 0 or 1 for each subj:
+        
+        if seed == -1:
+            is_permut = np.zeros(shape = (nb_files_per_list), dtype=int)
+            
+        else:
+                
+            np.random.seed(seed)
+            
+            is_permut = np.array(np.random.randint(nb_set_to_shuffle, size=nb_files_per_list),dtype = int)
+            
+            
+        print is_permut
+                
+        np.savetxt(os.path.abspath("is_permut.txt"),is_permut, fmt = "%d")
+        
+        ########## shuffling list
+        
+        self.permut_lists_of_lists = [[[] for i in range(nb_args_per_list)] for j in range(nb_set_to_shuffle)]
+    
+        print len(self.permut_lists_of_lists)
+        print len(self.permut_lists_of_lists[0])
+        
+        for index_file,permut in enumerate(is_permut):
+            
+            print "index_file:"
+            print index_file
+            
+            print "permut:"
+            print permut
+            
+            for j in range(nb_set_to_shuffle):
+                
+                print j,permut
+                
+                shift = j + permut
+                
+                rel_shift = shift % nb_set_to_shuffle
+                
+                print shift,rel_shift
+                
+                for i in range(nb_args_per_list):
+                    self.permut_lists_of_lists[j][i].append(list_of_lists[rel_shift][i][index_file])
+                
+        print self.permut_lists_of_lists
+        
+        return runtime
+        
+    def _list_outputs(self):
+        
+        outputs = self._outputs().get()
+        
+        outputs["permut_lists_of_lists"] = self.permut_lists_of_lists
+        
+        return outputs
+    
