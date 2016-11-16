@@ -296,11 +296,9 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     p_val_mat[signif_i,signif_j] = p_val_mat[signif_i,signif_j] = np_list_diff[:,2]
     T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_i,signif_j] = np_list_diff[:,4]
     
-    #print signif_adj_mat
-    #print p_val_mat
     print T_stat_mat
     
-    return signif_adj_mat, p_val_mat, T_stat_mat
+    return signif_signed_adj_mat, p_val_mat, T_stat_mat
 
 
     
