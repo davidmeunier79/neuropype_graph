@@ -291,12 +291,8 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     signif_i = np.array(np_list_diff[:,0],dtype = int)
     signif_j = np.array(np_list_diff[:,1],dtype = int)
     
-    signif_sign = np.array(np_list_diff[:,3],dtype = int)
+    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = np.array(np_list_diff[:,3],dtype = int)
     
-    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = signif_sign
-    
-    
-    signif_adj_mat[signif_i,signif_j] = signif_adj_mat[signif_j,signif_i] = signif_code
     p_val_mat[signif_i,signif_j] = p_val_mat[signif_i,signif_j] = np_list_diff[:,2]
     T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_i,signif_j] = np_list_diff[:,4]
     
