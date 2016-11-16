@@ -127,9 +127,13 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
     
         assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
 
+    dict_signif = {}
+    dict_p_val = {}
     dict_stats = {}
     
     for column in descript_columns:
+        
+        print column
         
         if len(groups) == 0:
             groups = all_descriptors[column].unique().tolist()
@@ -143,11 +147,15 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
         print np.array(list_of_list_matrices).shape
         
         
-        signif_adj_mat = compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.01)
+        signif_adj_mat, p_val_mat, F_stat_mat = compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.01)
         
-        print signif_adj_mat
+        #print signif_adj_mat
+        #print p_val_mat
+        #print F_stat_mat
              
-        dict_stats["F-test"] = signif_adj_mat
+        dict_signif["F-test_" + column] = signif_adj_mat
+        dict_p_val["F-test_" + column] = p_val_mat
+        dict_stats["F-test_" + column] = F_stat_mat
         
         for combi_pair in combinations(groups,2):
             pair_name = "-".join(combi_pair)
@@ -156,17 +164,24 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
             print combi_pair[0]
             
             try:
-                signif_signif_adj_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[groups.index(combi_pair[0])],
+                signif_adj_mat,p_val_mat,T_stat_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[groups.index(combi_pair[0])],
                                                                Y = list_of_list_matrices[groups.index(combi_pair[1])],
                                                                cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False)
                 
-                print signif_signif_adj_mat
-                dict_stats["T-test_" + pair_name] = signif_signif_adj_mat
+                print T_stat_mat
+                
+                dict_signif["T-test_" + pair_name] = signif_adj_mat
+                dict_p_val["T-test_" + pair_name] = p_val_mat
+                dict_stats["T-test_" + pair_name] = T_stat_mat
+        
                 
             except AssertionError:
                 print "Stop running after {} was wrong".format(pair_name)
                 
-    return dict_stats
+        print column
+        print dict_signif.keys()
+        
+    return dict_signif,dict_p_val,dict_stats
 
 if __name__ =='__main__':
 	
