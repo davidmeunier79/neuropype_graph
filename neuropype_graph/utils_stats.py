@@ -286,15 +286,17 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     print np.sum(np_list_diff[:,3] == -1.0),np.sum(np_list_diff[:,3] == -2.0),np.sum(np_list_diff[:,3] == -3.0),np.sum(np_list_diff[:,3] == -4.0)
     
     
-    signif_signed_adj_mat = p_val_mat = T_stat_mat = np.zeros((N,N),dtype = 'int')
+    signif_signed_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    T_stat_mat = np.zeros((N,N),dtype = 'float')
     
     signif_i = np.array(np_list_diff[:,0],dtype = int)
     signif_j = np.array(np_list_diff[:,1],dtype = int)
     
     signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = np.array(np_list_diff[:,3],dtype = int)
     
-    p_val_mat[signif_i,signif_j] = p_val_mat[signif_i,signif_j] = np_list_diff[:,2]
-    T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_i,signif_j] = np_list_diff[:,4]
+    p_val_mat[signif_i,signif_j] = p_val_mat[signif_j,signif_i] = np_list_diff[:,2]
+    T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_j,signif_i] = np_list_diff[:,4]
     
     print T_stat_mat
     
@@ -449,7 +451,10 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     
     ################ converting to matrix
     
-    signif_adj_mat = p_val_mat = F_stat_mat = np.zeros((N,N),dtype = 'int')
+    
+    signif_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    F_stat_mat = np.zeros((N,N),dtype = 'float')
     
     signif_i = np.array(np_list_diff[:,0],dtype = int)
     signif_j = np.array(np_list_diff[:,1],dtype = int)
