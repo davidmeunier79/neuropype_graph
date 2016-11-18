@@ -1462,10 +1462,11 @@ class PrepareMeanCorrel(BaseInterface):
             
             print 'loading gm mask corres'
             
-            gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+            gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
             
+            print gm_mask_coords
             print gm_mask_coords.shape
-                
+            
             #### read matrix from the first group
             #print Z_cor_mat_files
             
@@ -1492,11 +1493,11 @@ class PrepareMeanCorrel(BaseInterface):
                     print Z_cor_mat.shape
                     
                     
-                    coords = np.loadtxt(coords_files[index_file])
-                    #print coords.shape
+                    coords = np.array(np.loadtxt(coords_files[index_file]),dtype = int)
                     
-                    
-                    
+                    print coords
+                    print coords.shape
+                                        
                     corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
                     
                     
@@ -1540,7 +1541,7 @@ class PrepareMeanCorrel(BaseInterface):
             avg_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
             
             
-            if (np.sum(np.array(sum_possible_edge_matrix == 0)) != 0):
+            if np.sum(np.array(sum_possible_edge_matrix == 0)) == 0:
             
                     avg_cor_mat_matrix = np.divide(np.array(sum_cor_mat_matrix,dtype = float),np.array(sum_possible_edge_matrix,dtype = float))
                             
@@ -1553,6 +1554,11 @@ class PrepareMeanCorrel(BaseInterface):
             
             else:
                     print "!!!!!!!!!!!!!!!!!!!!!!Breaking!!!!!!!!!!!!!!!!!!!!!!!!, found 0 elements in sum_cor_mat_matrix"
+                    
+                    print sum_possible_edge_matrix
+                    print np.array(sum_possible_edge_matrix == 0)
+                    print np.sum(np.array(sum_possible_edge_matrix == 0))
+                    
                     return
                 
                 
