@@ -219,7 +219,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
             
             #print t_stat,p_val
             
-            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan))])
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan)),t_stat])
     else:
         # number of nodes
         assert X.shape[1] == X.shape[2] and Y.shape[1] == Y.shape[2], "Error, X {}{} and/or Y {}{} are not squared".format(X.shape[1],X.shape[2], Y.shape[1], Y.shape[2])
@@ -264,7 +264,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
             
             #print t_stat,p_val
             
-            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan))])
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan)),t_stat])
             
         
     print list_diff
@@ -287,17 +287,21 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     
     
     signif_signed_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    T_stat_mat = np.zeros((N,N),dtype = 'float')
     
     signif_i = np.array(np_list_diff[:,0],dtype = int)
     signif_j = np.array(np_list_diff[:,1],dtype = int)
     
-    signif_sign = np.array(np_list_diff[:,3],dtype = int)
+    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = np.array(np_list_diff[:,3],dtype = int)
     
-    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = signif_sign
+    p_val_mat[signif_i,signif_j] = p_val_mat[signif_j,signif_i] = np_list_diff[:,2]
+    T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_j,signif_i] = np_list_diff[:,4]
     
-    #print signif_signed_adj_mat
+    print T_stat_mat
     
-    return signif_signed_adj_mat
+    return signif_signed_adj_mat, p_val_mat, T_stat_mat
+
 
     
 def compute_pairwise_mannwhitney_fdr(X,Y,t_test_thresh_fdr,uncor_alpha = 0.01):
@@ -421,15 +425,15 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     
     for i,j in it.combinations(range(N), 2):
         
-        print i,j
+        #print i,j
         
         list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
         
-        print list_val
+        #print list_val
         
         F_stat,p_val = stat.f_oneway(*list_val)
         
-        print F_stat,p_val
+        #print F_stat,p_val
         
         list_diff.append([i,j,p_val,F_stat])
         
@@ -447,14 +451,23 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     
     ################ converting to matrix
     
+    
     signif_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    F_stat_mat = np.zeros((N,N),dtype = 'float')
     
     signif_i = np.array(np_list_diff[:,0],dtype = int)
     signif_j = np.array(np_list_diff[:,1],dtype = int)
     
     signif_adj_mat[signif_i,signif_j] = signif_adj_mat[signif_j,signif_i] = signif_code
+    p_val_mat[signif_i,signif_j] = p_val_mat[signif_i,signif_j] = np_list_diff[:,2]
+    F_stat_mat[signif_i,signif_j] = F_stat_mat[signif_i,signif_j] = np_list_diff[:,3]
     
-    return signif_adj_mat
+    #print signif_adj_mat
+    #print p_val_mat
+    #print F_stat_mat
+    
+    return signif_adj_mat, p_val_mat, F_stat_mat
 
 
 ############### nodewise stats #########################
