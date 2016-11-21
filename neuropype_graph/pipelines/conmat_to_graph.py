@@ -20,14 +20,14 @@ from neuropype_graph.nodes.modularity import ComputeNetList,ComputeNodeRoles
 #import imp
 
 try:
-    import igraph
+    import jgraph
     can_plot_igraph = True
     from neuropype_graph.interfaces.plot_igraph.plots import PlotIGraphModules
 
 except ImportError:
     can_plot_igraph = False
     
-def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_den_pipe", con_den = 1.0,multi = False,mod = True, plot = False):
+def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_den_pipe", con_den = 1.0,multi = False,mod = True, plot = False, optim_seq = "WS trfr 100"):
 
     pipeline = pe.Workflow(name= pipeline_name + "_den_" + str(con_den).replace(".","_"))
     pipeline.base_dir = main_path
@@ -63,7 +63,7 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
                 
             ### compute community with radatools
             community_rada = pe.Node(interface = CommRada(), name='community_rada')
-            #community_rada.inputs.optim_seq = radatools_optim
+            community_rada.inputs.optim_seq = optim_seq
             
             pipeline.connect( prep_rada, 'Pajek_net_file',community_rada,'Pajek_net_file')
             
