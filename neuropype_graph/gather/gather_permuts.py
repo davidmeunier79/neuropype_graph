@@ -17,7 +17,247 @@ from numpy import isnan, nan, logical_not, logical_or
 from collections import Counter
 #from neuropype_graph.utils_stats import compute_oneway_anova_fwe,compute_pairwise_ttest_fdr
 
-def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session", start_col = 3, stop_col = 0):
+def compute_rada_df(iter_path,df):
+
+    from neuropype_graph.utils_mod import get_modularity_value_from_lol_file
+    from neuropype_graph.utils_mod import get_values_from_global_info_file
+    from neuropype_graph.utils_mod import get_path_length_from_info_dists_file
+        
+    ########### modularity
+    
+    modularity_file = os.path.join(iter_path,"community_rada","Z_List.lol")
+
+    print modularity_file
+    
+
+    
+    
+    if os.path.exists(modularity_file):
+    
+        mod_val = get_modularity_value_from_lol_file(modularity_file)
+    #else:
+        #mod_val = np.nan
+            
+        print mod_val
+        
+        df['Modularity'] = mod_val
+        
+    print df
+    
+    #################### info_global 
+    
+    global_info_file = os.path.join(iter_path,"net_prop","Z_List-info_global.txt")
+    
+    print global_info_file
+    
+    if os.path.exists(global_info_file):
+    
+    
+        global_info_values = get_values_from_global_info_file(global_info_file)
+        
+        print global_info_values
+        
+        df.update(global_info_values)
+        
+        print df
+        
+    ##################### info_dists
+    
+    path_length_file = os.path.join(iter_path,"net_prop","Z_List-info_dists.txt")
+
+    print path_length_file
+    
+    if os.path.exists(path_length_file):
+    
+        mean_path_length,diameter,global_efficiency = get_path_length_from_info_dists_file(path_length_file)
+        
+        print mean_path_length,diameter
+        
+        df['Mean_path_length'] = str(mean_path_length)
+        df['Diameter'] = str(diameter)
+        df['Global_efficiency'] = str(global_efficiency)
+    
+    print df
+            
+
+def compute_nodes_rada_df(iter_path,df):
+
+    from neuropype_graph.utils_mod import get_modularity_value_from_lol_file
+    from neuropype_graph.utils_mod import get_values_from_global_info_file
+    from neuropype_graph.utils_mod import get_path_length_from_info_dists_file
+        
+    ########### modularity
+    
+    modularity_file = os.path.join(iter_path,"community_rada","Z_List.lol")
+
+    print modularity_file
+    
+
+    
+    
+    if os.path.exists(modularity_file):
+    
+        mod_val = get_modularity_value_from_lol_file(modularity_file)
+    #else:
+        #mod_val = np.nan
+            
+        print mod_val
+        
+        df['Modularity'] = mod_val
+        
+    print df
+    
+    #################### info_global 
+    
+    global_info_file = os.path.join(iter_path,"net_prop","Z_List-info_global.txt")
+    
+    print global_info_file
+    
+    if os.path.exists(global_info_file):
+    
+    
+        global_info_values = get_values_from_global_info_file(global_info_file)
+        
+        print global_info_values
+        
+        df.update(global_info_values)
+        
+        print df
+        
+    ##################### info_dists
+    
+    path_length_file = os.path.join(iter_path,"net_prop","Z_List-info_dists.txt")
+
+    print path_length_file
+    
+    if os.path.exists(path_length_file):
+    
+        mean_path_length,diameter,global_efficiency = get_path_length_from_info_dists_file(path_length_file)
+        
+        print mean_path_length,diameter
+        
+        df['Mean_path_length'] = str(mean_path_length)
+        df['Diameter'] = str(diameter)
+        df['Global_efficiency'] = str(global_efficiency)
+    
+    print df
+            
+
+def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
+
+    from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes
+    from neuropype_graph.utils_dtype_coord import where_in_coords
+    
+    #### Z_List
+    Pajek_file = os.path.join(local_dir,"prep_rada","Z_List.net")
+    
+    if os.path.exists(coords_file) and os.path.exists(Pajek_file) and os.path.exists(labels_file):
+                        
+        #### labels
+        labels = np.array([line.strip() for line in open(labels_file)], dtype = str)
+        
+        #### MNI coordinates
+        coords = np.array(np.loadtxt(coords_file),dtype = int)
+        
+        print coords.shape
+            
+        #### nodes in the connected graph
+        
+        node_corres = read_Pajek_corres_nodes(Pajek_file)
+        
+        print np.min(node_corres),np.max(node_corres)
+        
+        print node_corres.shape
+            
+                
+        
+        ### node_coords
+        node_coords = coords[node_corres,:]
+        
+        print node_coords.shape
+        
+        node_labels = labels[node_corres,:].reshape(-1,1)
+        print node_labels.shape
+        
+        
+        ### where_in_gm_mask 
+        where_in_gm_mask = where_in_coords(node_coords,gm_coords)
+        
+        where_in_gm_mask = where_in_gm_mask.reshape(where_in_gm_mask.shape[0],1)
+        
+        #print where_in_gm_mask
+        print where_in_gm_mask.shape
+        
+        list_df.append(pd.DataFrame(np.concatenate((where_in_gm_mask,node_labels,node_coords),axis = 1),columns = ['Where_in_GM_mask','labels','MNI_x','MNI_y','MNI_z']))
+            
+    #### info nodes
+    info_nodes_file = os.path.join(local_dir,"net_prop","Z_List-info_nodes.txt")
+    
+    if os.path.exists(info_nodes_file) :
+        
+        ## loading info_nodes
+        df_node_info = pd.read_table(info_nodes_file)
+        
+        print "Info nodes:" 
+        print df_node_info.shape
+        
+        list_df.append(df_node_info)
+        
+    else:
+        print "Info nodes not found:" 
+        print info_nodes_file
+    
+    #### modules /community_vect    
+    partition_file = os.path.join(local_dir,"community_rada","Z_List.lol")
+    
+    if os.path.exists(partition_file) :
+        
+        
+        ##loading partition_file
+        community_vect = read_lol_file(partition_file)
+        
+        print "community_vect:" 
+        print community_vect.shape
+            
+        list_df.append(pd.DataFrame(community_vect,columns = ['Module']))
+        
+    #### node roles    
+    roles_file = os.path.join(local_dir,"node_roles","node_roles.txt")
+    
+    part_coeff_file = os.path.join(local_dir,"node_roles","all_participation_coeff.txt")
+    
+    Z_com_degree_file = os.path.join(local_dir,"node_roles","all_Z_com_degree.txt")
+    
+    if os.path.exists(roles_file) and os.path.exists(part_coeff_file) and os.path.exists(Z_com_degree_file):
+        
+        #### loding node roles
+        
+        node_roles = np.array(np.loadtxt(roles_file),dtype = int)
+        
+        print "node_roles:" 
+        print node_roles.shape
+        
+        
+        print "part_coeff:" 
+        part_coeff = np.loadtxt(part_coeff_file)
+        
+        part_coeff = part_coeff.reshape(part_coeff.shape[0],1)
+        
+        print part_coeff.shape
+        
+        
+        
+        print "Z_com_degree:" 
+        Z_com_degree = np.loadtxt(Z_com_degree_file)
+        
+        Z_com_degree = Z_com_degree.reshape(Z_com_degree.shape[0],1)
+        
+        print Z_com_degree.shape
+        
+        list_df.append(pd.DataFrame(np.concatenate((node_roles,part_coeff,Z_com_degree),axis = 1),columns = ['Role_quality','Role_quantity','Participation_coefficient','Z_community_degree']))
+        
+
+def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session", start_col = 0, stop_col = 0):
     """
     args:
     compute significance of permutation over a df generated by gather_permuts 
@@ -60,43 +300,34 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
     
     ################################################## computing diff df
     
-    #### orig diff
-    #if stop_col == 0:
-        #orig_df = permut_df[permut_df[permut_col] == -1].iloc[:,start_col:]
-        
-    #else:
-        #orig_df = permut_df[permut_df[permut_col] == -1].iloc[:,start_col:stop_col]
-        
-    #print orig_df
-    
-    #orig_diff = orig_df.loc[0,].values - orig_df.loc[1,].values
-    
-    #print orig_diff
-    
-    #sign_orig_df = np.sign(orig_diff)
-    
-    #print sign_orig_df
-    
-    ### diff_df 
-    
     if stop_col == 0:
         data_cols = permut_df.columns[start_col:]
         
     else:
         data_cols = permut_df.columns[start_col:stop_col]
         
+    print data_cols
+    
     all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
     all_p_lower = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
-                             
+    
+    cols = []
+    
     for index_col,col in enumerate(data_cols):
         
-        print col
+        
+        print index_col,col
+        
+        #print permut_df
+        
+        print permut_col,session_col
         
         df_col = permut_df.pivot(index = permut_col, columns = session_col, values = col)
         
         print df_col
         
-        df_col["Diff"] = df_col.iloc[:,0] - df_col.iloc[:,1]
+        
+        df_col["Diff"] = pd.to_numeric(df_col.iloc[:,0]) - pd.to_numeric(df_col.iloc[:,1])
         
         print df_col["Diff"]
         print df_col.shape
@@ -106,16 +337,28 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
             print "sum_higher:",sum_higher
             all_p_higher[index_col] = (sum_higher+1)/float(df_col.shape[0])
             
-        else :
+        elif df_col["Diff"].iloc[0] < 0 :
             sum_lower = np.sum((df_col["Diff"].iloc[0] > df_col["Diff"].iloc[1:]).values.astype(int))
             print "sum_lower:",sum_lower
             all_p_lower[index_col] = (sum_lower+1)/float(df_col.shape[0])
+        
+        else :
+            print "not able to do diff"
+            
+        cols.append(col)
         
         #print df_col["Diff"] < df_col["Diff"][0]
     print all_p_higher
     print all_p_lower
     
-    return all_p_higher,all_p_lower
+    print all_p_higher, all_p_lower
+        
+    df_res = pd.DataFrame([all_p_higher, all_p_lower],columns= cols)
+    df_res.index = ["Higher","Lower"]
+        
+    print df_res
+    
+    return df_res
 
 def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
