@@ -80,69 +80,6 @@ def compute_rada_df(iter_path,df):
     print df
             
 
-def compute_nodes_rada_df(iter_path,df):
-
-    from neuropype_graph.utils_mod import get_modularity_value_from_lol_file
-    from neuropype_graph.utils_mod import get_values_from_global_info_file
-    from neuropype_graph.utils_mod import get_path_length_from_info_dists_file
-        
-    ########### modularity
-    
-    modularity_file = os.path.join(iter_path,"community_rada","Z_List.lol")
-
-    print modularity_file
-    
-
-    
-    
-    if os.path.exists(modularity_file):
-    
-        mod_val = get_modularity_value_from_lol_file(modularity_file)
-    #else:
-        #mod_val = np.nan
-            
-        print mod_val
-        
-        df['Modularity'] = mod_val
-        
-    print df
-    
-    #################### info_global 
-    
-    global_info_file = os.path.join(iter_path,"net_prop","Z_List-info_global.txt")
-    
-    print global_info_file
-    
-    if os.path.exists(global_info_file):
-    
-    
-        global_info_values = get_values_from_global_info_file(global_info_file)
-        
-        print global_info_values
-        
-        df.update(global_info_values)
-        
-        print df
-        
-    ##################### info_dists
-    
-    path_length_file = os.path.join(iter_path,"net_prop","Z_List-info_dists.txt")
-
-    print path_length_file
-    
-    if os.path.exists(path_length_file):
-    
-        mean_path_length,diameter,global_efficiency = get_path_length_from_info_dists_file(path_length_file)
-        
-        print mean_path_length,diameter
-        
-        df['Mean_path_length'] = str(mean_path_length)
-        df['Diameter'] = str(diameter)
-        df['Global_efficiency'] = str(global_efficiency)
-    
-    print df
-            
-
 def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
 
     from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes
