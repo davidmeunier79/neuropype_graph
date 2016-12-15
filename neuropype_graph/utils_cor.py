@@ -718,11 +718,26 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
         
         if np.isnan(Z_cor_mat[i,j]):
             
+            print i,j
+            
             print keep_val
             print s1
             print s2
             print cor_mat[i,j]
+            
             0/0
+        elif np.isinf(Z_cor_mat[i,j]):
+            
+            print "find infinity"
+            print i,j
+            
+            print s1
+            print s2
+            
+            print cor_mat[i,j]
+            
+            0/0
+        
         Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
         
         if cor_mat[i,j] > 0:
@@ -1871,6 +1886,75 @@ def return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords):
         possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
         
     return corres_correl_mat,possible_edge_mat
+
+
+
+def return_corres_correl_mat_labels(Z_cor_mat,corres_labels,gm_mask_labels):
+
+    where_in_gm = where_in_labels(corres_labels.tolist(),gm_mask_labels.tolist())
+    
+    print Z_cor_mat.shape
+    
+    #print where_in_gm
+    
+    #print np.min(where_in_gm)
+    #print np.max(where_in_gm)
+    #print where_in_gm.shape
+    
+    
+    print np.min(where_in_gm),np.max(where_in_gm),where_in_gm.shape
+    
+    
+    corres_correl_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = float)
+    possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    for i,j in it.product(range(len(where_in_gm)),repeat = 2):
+    
+        #print i,j
+        
+        #print where_in_gm[i],where_in_gm[j]
+        #print corres_correl_mat[where_in_gm[i],where_in_gm[j]]
+        #print Z_cor_mat[i,j]
+        
+        corres_correl_mat[where_in_gm[i],where_in_gm[j]] = Z_cor_mat[i,j]
+        
+        #print corres_correl_mat[where_in_gm[i],where_in_gm[j]]
+        
+        possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        
+    print corres_correl_mat.shape
+    
+    return corres_correl_mat,possible_edge_mat
+
+
+
+
+
+    
+    
+    
+    #if (where_in_gm.shape[0] != community_vect.shape[0]):
+        #print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
+    
+    #coclass_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+        
+    #possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    #for i,j in it.combinations(range(where_in_gm.shape[0]),2):
+    
+        #coclass_mat[where_in_gm[i],where_in_gm[j]] = np.int(community_vect[i] == community_vect[j])
+        #coclass_mat[where_in_gm[j],where_in_gm[i]] = np.int(community_vect[i] == community_vect[j])
+        
+        #possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        #possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
+        
+    #return coclass_mat,possible_edge_mat
+    
+
+
+
+
+
 
 ##def return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords):
     
