@@ -260,16 +260,24 @@ class PlotIGraphSignedIntMat(BaseInterface):
         
 ############################################################################################### PrepareCormat #####################################################################################################
 
-from neuropype_graph.utils_cor import return_corres_correl_mat
+from neuropype_graph.utils_cor import return_corres_correl_mat,return_corres_correl_mat_labels
 #,return_hierachical_order
         
 class PrepareCormatInputSpec(BaseInterfaceInputSpec):
     
     cor_mat_files = traits.List(File(exists=True), desc='list of all correlation matrice files (in npy format) for each subject', mandatory=True)
     
-    coords_files = traits.List(File(exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True)
+    #coords_files = traits.List(File(exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True)
     
-    gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=True)
+    #gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=True)
+    
+    coords_files = traits.List(File(exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['labels_files'])
+    
+    labels_files = traits.List(File(exists=True), desc='list of labels (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['coords_files'])
+    
+    gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=False, xor = ['gm_mask_labels_file'])
+    
+    gm_mask_labels_file = File(exists=True, desc='Labels for all possible nodes - in case coords are varying from one indiv to the other (source space for example)', mandatory=False, xor = ['gm_mask_coords_file'])
     
     
 class PrepareCormatOutputSpec(TraitedSpec):
@@ -291,70 +299,157 @@ class PrepareCormat(BaseInterface):
 
     def _run_interface(self, runtime):
                 
-        print 'in prepare_coclass'
+        print 'in prepare_cormat'
+        
         cor_mat_files = self.inputs.cor_mat_files
-        coords_files = self.inputs.coords_files
-        gm_mask_coords_file = self.inputs.gm_mask_coords_file
         
+        if isdefined(self.inputs.gm_mask_coords_file) and isdefined(self.inputs.coords_files):
         
-    #import numpy as np
-    #import os
-
-    ##import nibabel as nib
-        print 'loading gm mask corres'
-        
-        gm_mask_coords = np.loadtxt(gm_mask_coords_file)
-        
-        print gm_mask_coords.shape
+            coords_files = self.inputs.coords_files
             
-        #### read matrix from the first group
-        #print Z_cor_mat_files
+            gm_mask_coords_file = self.inputs.gm_mask_coords_file
         
-        sum_cormat = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
-        print sum_cormat.shape
-        
-                
-        group_cormat = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
-        print group_cormat.shape
-        
-        
-        group_vect = np.zeros((gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
-        print group_vect.shape
-        
-        if len(cor_mat_files) != len(coords_files):
-            print "warning, length of cor_mat_files, coords_files are imcompatible {} {} {}".format(len(cor_mat_files),len(coords_files))
-        
-        for index_file in range(len(cor_mat_files)):
+            print 'loading gm mask corres'
             
-            print cor_mat_files[index_file]
+            gm_mask_coords = np.loadtxt(gm_mask_coords_file)
             
-            if os.path.exists(cor_mat_files[index_file]) and os.path.exists(coords_files[index_file]):
+            print gm_mask_coords.shape
+                
+            #### read matrix from the first group
+            #print Z_cor_mat_files
             
-                Z_cor_mat = np.load(cor_mat_files[index_file])
-                print Z_cor_mat.shape
-                
-                
-                coords = np.loadtxt(coords_files[index_file])
-                print coords.shape
-                
-                
-                
-                corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
-                
-                print corres_cor_mat.shape
-                print group_cormat.shape
-                
-                sum_cormat += corres_cor_mat
-                
-                group_cormat[:,:,index_file] = corres_cor_mat
-                
-                group_vect[:,index_file] = np.sum(corres_cor_mat,axis = 0)
-                
-                
-            else:
-                print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
+            sum_cormat = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
+            print sum_cormat.shape
+            
+                    
+            group_cormat = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
+            print group_cormat.shape
             
             
+            group_vect = np.zeros((gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
+            print group_vect.shape
+            
+            if len(cor_mat_files) != len(coords_files):
+                print "warning, length of cor_mat_files, coords_files are imcompatible {} {} {}".format(len(cor_mat_files),len(coords_files))
+            
+            for index_file in range(len(cor_mat_files)):
+                
+                print cor_mat_files[index_file]
+                
+                if os.path.exists(cor_mat_files[index_file]) and os.path.exists(coords_files[index_file]):
+                
+                    Z_cor_mat = np.load(cor_mat_files[index_file])
+                    print Z_cor_mat.shape
+                    
+                    
+                    coords = np.loadtxt(coords_files[index_file])
+                    print coords.shape
+                    
+                    
+                    
+                    corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
+                    
+                    corres_cor_mat = corres_cor_mat + np.transpose(corres_cor_mat)
+                    
+                    print corres_cor_mat.shape
+                    print group_cormat.shape
+                    
+                    sum_cormat += corres_cor_mat
+                    
+                    group_cormat[:,:,index_file] = corres_cor_mat
+                    
+                    group_vect[:,index_file] = np.sum(corres_cor_mat,axis = 0)
+                    
+                    
+                else:
+                    print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
+                
+                
+        
+        elif isdefined(self.inputs.gm_mask_labels_file) and isdefined(self.inputs.labels_files):    
+                
+            labels_files = self.inputs.labels_files
+            
+            gm_mask_labels_file = self.inputs.gm_mask_labels_file
+            
+            
+            print 'loading gm mask labels'
+            
+            #gm_mask_labels = [line.strip() for line in open(gm_mask_labels_file)]
+            
+            #print len(gm_mask_labels)
+                
+            gm_mask_labels = np.array([line.strip() for line in open(gm_mask_labels_file)],dtype = 'str')
+            
+            print gm_mask_labels.shape
+            
+            
+            
+            
+            #### read matrix from the first group
+            #print Z_cor_mat_files
+            
+            sum_cormat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = float)
+            print sum_cormat.shape
+            
+                    
+            group_cormat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0],len(cor_mat_files)),dtype = float)
+            print group_cormat.shape
+            
+            
+            group_vect = np.zeros((gm_mask_labels.shape[0],len(cor_mat_files)),dtype = float)
+            print group_vect.shape
+            
+            if len(cor_mat_files) != len(labels_files):
+                print "warning, length of cor_mat_files, labels_files are imcompatible {} {} {}".format(len(cor_mat_files),len(labels_files))
+            
+            print cor_mat_files
+            
+            for index_file in range(len(cor_mat_files)):
+                
+                print cor_mat_files[index_file]
+                
+                if os.path.exists(cor_mat_files[index_file]) and os.path.exists(labels_files[index_file]):
+                
+                    Z_cor_mat = np.load(cor_mat_files[index_file])
+                    print Z_cor_mat
+                    print Z_cor_mat.shape
+                    
+                    labels = np.array([line.strip() for line in open(labels_files[index_file])],dtype = 'str')
+                    print "labels_subj:"
+                    print labels.shape
+                    
+                    
+                    corres_cor_mat,possible_edge_mat = return_corres_correl_mat_labels(Z_cor_mat,labels,gm_mask_labels)
+                    
+                    corres_cor_mat = corres_cor_mat + np.transpose(corres_cor_mat)
+                    
+                    print corres_cor_mat
+                    print group_cormat.shape
+                    
+                    sum_cormat += corres_cor_mat
+                    
+                    group_cormat[:,:,index_file] = corres_cor_mat
+                    
+                    group_vect[:,index_file] = np.sum(corres_cor_mat,axis = 0)
+                    
+                    
+                else:
+                    print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
+                
+                
+            print group_cormat
+            
+        else:
+            print "Error, neither coords nor labels are defined properly"
+            
+            print self.inputs.gm_mask_coords_file
+            print self.inputs.gm_mask_labels_file
+            print self.inputs.coords_files
+            
+            0/0
+            
+        
         group_cormat_file= os.path.abspath('group_cormat.npy')
         
         np.save(group_cormat_file,group_cormat)
@@ -443,7 +538,6 @@ class SwapLists(BaseInterface):
             if nb_args_per_list == -1:
                 nb_args_per_list =len(list_of_lists[i])
             else:
-            
                 assert nb_args_per_list == len(list_of_lists[i]),"Error list length {} != than list {} length {}".format(nb_args_per_list ,i,len(list_of_lists[i]))
         
             if nb_files_per_list == -1:
@@ -452,6 +546,7 @@ class SwapLists(BaseInterface):
                 assert nb_files_per_list == len(list_of_lists[i][0]),"Error list length {} != than list {} length {}".format(nb_files_per_list,i,len(list_of_lists[i][0]))
                 
         print nb_files_per_list
+        
         
         
         ########## generating 0 or 1 for each subj:
@@ -477,13 +572,17 @@ class SwapLists(BaseInterface):
         print len(self.permut_lists_of_lists)
         print len(self.permut_lists_of_lists[0])
         
+        
         for index_file,permut in enumerate(is_permut):
             
-            print "index_file:"
+            print "index_file:",
             print index_file
             
-            print "permut:"
+            print "permut:",
             print permut
+            
+            print "nb_set_to_shuffle:",
+            print nb_set_to_shuffle
             
             for j in range(nb_set_to_shuffle):
                 
@@ -498,7 +597,10 @@ class SwapLists(BaseInterface):
                 for i in range(nb_args_per_list):
                     self.permut_lists_of_lists[j][i].append(list_of_lists[rel_shift][i][index_file])
                 
-        print self.permut_lists_of_lists
+        #print self.permut_lists_of_lists
+        
+        print len(self.permut_lists_of_lists)
+        print len(self.permut_lists_of_lists[0])
         
         return runtime
         
@@ -507,6 +609,71 @@ class SwapLists(BaseInterface):
         outputs = self._outputs().get()
         
         outputs["permut_lists_of_lists"] = self.permut_lists_of_lists
+        
+        return outputs
+    
+
+############################ ShuffleMatrix ####################################################################################################
+import itertools as iter
+
+class ShuffleMatrixInputSpec(BaseInterfaceInputSpec):
+    
+    original_matrix_file = File(exists=True, desc='original matrix in npy format', mandatory=True)
+    
+    seed = traits.Int(-1, desc='value for seed', mandatory=True, usedefault = True)
+    
+class ShuffleMatrixOutputSpec(TraitedSpec):
+    
+    shuffled_matrix_file = File(exists=True, desc='shuffled matrix in npy format', mandatory=True)
+    
+    
+class ShuffleMatrix(BaseInterface):
+    
+    """
+    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    """
+    input_spec = ShuffleMatrixInputSpec
+    output_spec = ShuffleMatrixOutputSpec
+
+    def _run_interface(self, runtime):
+                
+        print 'in prepare_coclass'
+        original_matrix_file = self.inputs.original_matrix_file
+        seed = self.inputs.seed
+        
+        path, fname, ext = split_f(original_matrix_file)
+        
+        original_matrix = np.load(original_matrix_file)
+        
+        print matrix.shape
+        
+        shuffled_matrix = original_matrix
+        
+        if seed != -1:
+            
+            np.random.seed(seed)
+            
+            for i,j in iter.combination(range(original_matrix.shape[0],2)):
+                print i,j
+                
+                new_indexes = np.random.random_int(range(original_matrix.shape[0],2))
+                
+                print new_indexes
+                0/0
+                
+                
+            
+        shuffled_matrix_file = os.path.abspath("shuffeld_" + fname + ".npy")
+        
+        np.save(shuffled_matrix_file,shuffled_matrix)
+            
+        return runtime
+        
+    def _list_outputs(self):
+        
+        outputs = self._outputs().get()
+        
+        outputs["shuffled_matrix_file"] = os.path.abspath("shuffeld_" + fname + ".npy")
         
         return outputs
     
