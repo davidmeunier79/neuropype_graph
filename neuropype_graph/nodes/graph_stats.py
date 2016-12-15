@@ -3,6 +3,8 @@
 import numpy as np
 import os
 
+import itertools as iter
+
 from nipype.interfaces.base import BaseInterface, \
     BaseInterfaceInputSpec, traits, File, TraitedSpec, isdefined
     
@@ -486,7 +488,6 @@ class PrepareCormat(BaseInterface):
         return outputs
     
 ############################ SwapLists ####################################################################################################
-import itertools as iter
 
 class SwapListsInputSpec(BaseInterfaceInputSpec):
     
@@ -645,25 +646,32 @@ class ShuffleMatrix(BaseInterface):
         
         original_matrix = np.load(original_matrix_file)
         
-        print matrix.shape
+        print original_matrix
+        print original_matrix.shape
         
-        shuffled_matrix = original_matrix
         
-        if seed != -1:
+        if seed == -1:
+            
+            shuffled_matrix = original_matrix
+            
+        else:
+            
             
             np.random.seed(seed)
             
-            for i,j in iter.combination(range(original_matrix.shape[0],2)):
+            shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
+        
+            for i,j in iter.combinations(range(original_matrix.shape[0]),2):
                 print i,j
                 
-                new_indexes = np.random.random_int(range(original_matrix.shape[0],2))
+                new_indexes = np.random.randint(low = original_matrix.shape[0],size = 2)
                 
                 print new_indexes
-                0/0
                 
+                shuffled_matrix[i,j] = shuffled_matrix[j,i] = original_matrix[new_indexes[0],new_indexes[1]]
                 
             
-        shuffled_matrix_file = os.path.abspath("shuffeld_" + fname + ".npy")
+        shuffled_matrix_file = os.path.abspath("shuffled_matrix.npy")
         
         np.save(shuffled_matrix_file,shuffled_matrix)
             
@@ -673,7 +681,7 @@ class ShuffleMatrix(BaseInterface):
         
         outputs = self._outputs().get()
         
-        outputs["shuffled_matrix_file"] = os.path.abspath("shuffeld_" + fname + ".npy")
+        outputs["shuffled_matrix_file"] = os.path.abspath("shuffled_matrix.npy")
         
         return outputs
     
