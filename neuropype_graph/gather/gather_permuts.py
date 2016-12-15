@@ -80,7 +80,7 @@ def compute_rada_df(iter_path,df):
     print df
             
 
-def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
+def compute_nodes_rada_df(local_dir,gm_coords,coords_file,labels_file):
 
     from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes
     from neuropype_graph.utils_dtype_coord import where_in_coords
@@ -88,6 +88,8 @@ def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
     #### Z_List
     Pajek_file = os.path.join(local_dir,"prep_rada","Z_List.net")
     
+    list_df = []
+            
     if os.path.exists(coords_file) and os.path.exists(Pajek_file) and os.path.exists(labels_file):
                         
         #### labels
@@ -126,7 +128,9 @@ def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
         print where_in_gm_mask.shape
         
         list_df.append(pd.DataFrame(np.concatenate((where_in_gm_mask,node_labels,node_coords),axis = 1),columns = ['Where_in_GM_mask','labels','MNI_x','MNI_y','MNI_z']))
-            
+    else:
+        print "Missing {},{} or {}".format(Pajek_file,coords_file,labels_file)
+        
     #### info nodes
     info_nodes_file = os.path.join(local_dir,"net_prop","Z_List-info_nodes.txt")
     
@@ -193,6 +197,7 @@ def compute_nodes_rada_df(local_dir,list_df,gm_coords,coords_file,labels_file)
         
         list_df.append(pd.DataFrame(np.concatenate((node_roles,part_coeff,Z_com_degree),axis = 1),columns = ['Role_quality','Role_quantity','Participation_coefficient','Z_community_degree']))
         
+    return list_df
 
 def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session", start_col = 0, stop_col = 0):
     """
