@@ -86,6 +86,8 @@ def return_all_iter_cormats(cormat_path ,iterables ,iternames, gm_mask_coords_fi
                             
     return np.array(all_iter_cormats),pd_all_descriptors
 
+###################################### stats over cormats, mean and T-Test of F-Test ###############################
+
 def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
     print "In compute_mean_cormats"
@@ -182,6 +184,8 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
         print dict_signif.keys()
         
     return dict_signif,dict_p_val,dict_stats
+
+
 
 if __name__ =='__main__':
 	
