@@ -649,14 +649,13 @@ class ShuffleMatrix(BaseInterface):
         print original_matrix
         print original_matrix.shape
         
-        
         if seed == -1:
-            
+            print "keeping original matrix"
             shuffled_matrix = original_matrix
             
         else:
             
-            
+            print "randomizing " + str(seed)
             np.random.seed(seed)
             
             shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
@@ -671,6 +670,8 @@ class ShuffleMatrix(BaseInterface):
                 shuffled_matrix[i,j] = shuffled_matrix[j,i] = original_matrix[new_indexes[0],new_indexes[1]]
                 
             
+        print shuffled_matrix
+        
         shuffled_matrix_file = os.path.abspath("shuffled_matrix.npy")
         
         np.save(shuffled_matrix_file,shuffled_matrix)

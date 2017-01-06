@@ -234,15 +234,7 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
     
     print nb_permuts
     
-    ### all unique values should have 2 different samples
-    count_elements = Counter(permut_df[permut_col].values)
-    
-    print count_elements
-    
-    assert all(val == 2 for val in count_elements.values()), "Error, all permut indexes should have 2 and only 2 lines: {}".format(count_elements)
-    
-    ################################################## computing diff df
-    
+    ################# strating from columns
     if stop_col == 0:
         data_cols = permut_df.columns[start_col:]
         
@@ -251,57 +243,99 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         
     print data_cols
     
-    all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
-    all_p_lower = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
-    
     cols = []
-    
-    for index_col,col in enumerate(data_cols):
+
+
+    if session_col == -1 or len(permut_df[session_col].unique()) == 1:
         
+        all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
         
-        print index_col,col
-        
-        #print permut_df
-        
-        print permut_col,session_col
-        
-        df_col = permut_df.pivot(index = permut_col, columns = session_col, values = col)
-        
-        print df_col
-        
-        
-        df_col["Diff"] = pd.to_numeric(df_col.iloc[:,0]) - pd.to_numeric(df_col.iloc[:,1])
-        
-        print df_col["Diff"]
-        print df_col.shape
-        
-        if df_col["Diff"].iloc[0] > 0:
-            sum_higher = np.sum((df_col["Diff"].iloc[1:] > df_col["Diff"].iloc[0]).values.astype(int))
-            print "sum_higher:",sum_higher
-            all_p_higher[index_col] = (sum_higher+1)/float(df_col.shape[0])
+        for index_col,col in enumerate(data_cols):
             
-        elif df_col["Diff"].iloc[0] < 0 :
-            sum_lower = np.sum((df_col["Diff"].iloc[0] > df_col["Diff"].iloc[1:]).values.astype(int))
-            print "sum_lower:",sum_lower
-            all_p_lower[index_col] = (sum_lower+1)/float(df_col.shape[0])
-        
-        else :
-            print "not able to do diff"
+            print index_col,col
             
-        cols.append(col)
+            #print permut_df
+            print permut_df[col].iloc[0]
+            print permut_df[col].iloc[0] > permut_df[col].iloc[1:] 
+            sum_higher = np.sum((permut_df[col].iloc[1:] > permut_df[col].iloc[0]).values.astype(int))
+            print sum_higher
+            all_p_higher[index_col] = (sum_higher+1)/float(permut_df[col].shape[0])
+            print all_p_higher[index_col] 
+            
+            cols.append(str(col))
+            
+            
+        print all_p_higher
+        print cols
         
-        #print df_col["Diff"] < df_col["Diff"][0]
-    print all_p_higher
-    print all_p_lower
+        df_res = pd.DataFrame(all_p_higher.reshape(1,-1),columns = cols)
+        df_res.index = ["Higher"]
+            
+        print df_res
+        
+        return df_res
     
-    print all_p_higher, all_p_lower
+    else:
+        ### all unique values should have 2 different samples
+        count_elements = Counter(permut_df[permut_col].values)
         
-    df_res = pd.DataFrame([all_p_higher, all_p_lower],columns= cols)
-    df_res.index = ["Higher","Lower"]
+        print count_elements
         
-    print df_res
-    
-    return df_res
+        assert all(val == 2 for val in count_elements.values()), "Error, all permut indexes should have 2 and only 2 lines: {}".format(count_elements)
+        
+        ################################################## computing diff df
+            
+        all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
+        all_p_lower = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
+        
+        
+        for index_col,col in enumerate(data_cols):
+            
+            
+            print index_col,col
+            
+            #print permut_df
+            
+            print permut_col,session_col
+            
+        
+            df_col = permut_df.pivot(index = permut_col, columns = session_col, values = col)
+            
+            print df_col
+            0/0
+            
+            df_col["Diff"] = pd.to_numeric(df_col.iloc[:,0]) - pd.to_numeric(df_col.iloc[:,1])
+            
+            print df_col["Diff"]
+            print df_col.shape
+            
+            if df_col["Diff"].iloc[0] > 0:
+                sum_higher = np.sum((df_col["Diff"].iloc[1:] > df_col["Diff"].iloc[0]).values.astype(int))
+                print "sum_higher:",sum_higher
+                all_p_higher[index_col] = (sum_higher+1)/float(df_col.shape[0])
+                
+            elif df_col["Diff"].iloc[0] < 0 :
+                sum_lower = np.sum((df_col["Diff"].iloc[0] > df_col["Diff"].iloc[1:]).values.astype(int))
+                print "sum_lower:",sum_lower
+                all_p_lower[index_col] = (sum_lower+1)/float(df_col.shape[0])
+            
+            else :
+                print "not able to do diff"
+                
+            cols.append(col)
+                
+            #print df_col["Diff"] < df_col["Diff"][0]
+        print all_p_higher
+        print all_p_lower
+        
+        print all_p_higher, all_p_lower
+            
+        df_res = pd.DataFrame([all_p_higher, all_p_lower],columns= cols)
+        df_res.index = ["Higher","Lower"]
+            
+        print df_res
+        
+        return df_res
 
 
 def compute_signif_node_prop(orig_df, list_permut_df, columns):
