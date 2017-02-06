@@ -658,18 +658,38 @@ class ShuffleMatrix(BaseInterface):
             print "randomizing " + str(seed)
             np.random.seed(seed)
             
+            np.fill_diagonal(original_matrix,np.nan)
+        
             shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
         
             for i,j in iter.combinations(range(original_matrix.shape[0]),2):
                 print i,j
                 
-                new_indexes = np.random.randint(low = original_matrix.shape[0],size = 2)
+                bool_ok = False
                 
-                print new_indexes
+                while not bool_ok:
+                        
+                    new_indexes = np.random.randint(low = original_matrix.shape[0],size = 2)
+                    
+                    print new_indexes
+                    
+                    if not np.isnan(original_matrix[new_indexes[0],new_indexes[1]]):
+                                            
+                        shuffled_matrix[i,j] = shuffled_matrix[j,i] = original_matrix[new_indexes[0],new_indexes[1]]
+                        
+                        original_matrix[new_indexes[0],new_indexes[1]] = original_matrix[new_indexes[1],new_indexes[0]] = np.nan
+                                        
+                        bool_ok = True
+                    
+                    print bool_ok,np.sum(np.isnan(original_matrix))
+                    
+                print "**********************************"
+                    
+                                        
                 
-                shuffled_matrix[i,j] = shuffled_matrix[j,i] = original_matrix[new_indexes[0],new_indexes[1]]
                 
             
+        print original_matrix
         print shuffled_matrix
         
         shuffled_matrix_file = os.path.abspath("shuffled_matrix.npy")
@@ -685,4 +705,73 @@ class ShuffleMatrix(BaseInterface):
         outputs["shuffled_matrix_file"] = os.path.abspath("shuffled_matrix.npy")
         
         return outputs
+    
+############################ ShuffleNetList ####################################################################################################
+import itertools as iter
+
+class ShuffleNetListInputSpec(BaseInterfaceInputSpec):
+    
+    orig_net_list_file = File(exists=True, desc='original net list in txt format', mandatory=True)
+    
+    seed = traits.Int(-1, desc='value for seed', mandatory=True, usedefault = True)
+    
+class ShuffleNetListOutputSpec(TraitedSpec):
+    
+    shuffled_net_list_file = File(exists=True, desc='shuffled net list in txt format', mandatory=True)
+    
+    
+class ShuffleNetList(BaseInterface):
+    
+    """
+    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    """
+    input_spec = ShuffleNetListInputSpec
+    output_spec = ShuffleNetListOutputSpec
+
+    def _run_interface(self, runtime):
+                
+        print 'in prepare_coclass'
+        orig_net_list_file= self.inputs.orig_net_list_file
+        seed = self.inputs.seed
+        
+        path, fname, ext = split_f(orig_net_list_file)
+        
+        original_net_list = np.loadtxt(orig_net_list_file)
+        
+        print original_net_list
+        
+        if seed == -1:
+            print "keeping original matrix"
+            
+        else:
+            
+            print "randomizing " + str(seed)
+            np.random.seed(seed)
+            
+            np.random.shuffle(original_net_list[:,0])
+            np.random.shuffle(original_net_list[:,1])
+            
+            #print original_net_list[:,:2].shape
+            #np.random.shuffle(original_net_list[:,2])
+            
+            #print original_net_list[:,2]
+            #print original_net_list[:,2].shape
+            
+            
+        print original_net_list
+        
+        shuffled_net_list_file = os.path.abspath("shuffled_net_list.txt")
+        
+        np.savetxt(shuffled_net_list_file,original_net_list,fmt = "%d %d %d")
+            
+        return runtime
+        
+    def _list_outputs(self):
+        
+        outputs = self._outputs().get()
+        
+        outputs["shuffled_net_list_file"] = os.path.abspath("shuffled_net_list.txt")
+        
+        return outputs
+    
     
