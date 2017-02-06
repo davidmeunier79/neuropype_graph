@@ -31,9 +31,8 @@ class PlotIGraphModulesInputSpec(BaseInterfaceInputSpec):
     
 class PlotIGraphModulesOutputSpec(TraitedSpec):
     
-    Z_list_single_modules_files = traits.List(File(exists=True), desc="graphical representation in space of each module independantly")    
-    Z_list_all_modules_files = traits.List(File(exists=True), desc="graphical representation in space from different point of view of all modules together")
-    Z_list_all_modules_FR_file = traits.File(exists=True, desc="graphical topological representation of all modules together")
+    #Z_list_single_modules_files = traits.List(File(exists=True), desc="graphical representation in space of each module independantly")    
+    all_modules_files = traits.List(File(exists=True), desc="graphical representation in space (possibly, if coords is given) from different point of view of all modules together + (surely) topological representation")
     
 class PlotIGraphModules(BaseInterface):
     
@@ -134,23 +133,27 @@ class PlotIGraphModules(BaseInterface):
         
         print "plotting 3D modules with igraph"
         
-        Z_list_single_modules_files = plot_3D_igraph_single_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles,nb_min_nodes_by_module = 5)
-        Z_list_all_modules_files = plot_3D_igraph_all_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles)
-        Z_list_all_modules_FR_file = plot_3D_igraph_all_modules(community_vect,Z_list,node_labels= node_labels,node_roles = node_roles, layout = 'FR')
+        #Z_list_single_modules_files = plot_3D_igraph_single_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles,nb_min_nodes_by_module = 5)
         
-        self.Z_list_single_modules_files = Z_list_single_modules_files
-        self.Z_list_all_modules_files = Z_list_all_modules_files
-        self.Z_list_all_modules_FR_file = Z_list_all_modules_FR_file
-                
+        print node_coords.size
+        
+        if node_coords.size != 0:
+        
+            self.all_modules_files = plot_3D_igraph_all_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles)
+        else:
+            self.all_modules_files = []
+           
+        FR_module_file = plot_3D_igraph_all_modules(community_vect,Z_list,node_labels= node_labels,node_roles = node_roles, layout = 'FR')
+        
+        self.all_modules_files.append(FR_module_file)
+        
         return runtime
         
     def _list_outputs(self):
         
         outputs = self._outputs().get()
         
-        outputs["Z_list_single_modules_files"] = self.Z_list_single_modules_files
-        outputs["Z_list_all_modules_files"] =self.Z_list_all_modules_files 
-        outputs["Z_list_all_modules_FR_file"] =self.Z_list_all_modules_FR_file 
+        outputs["all_modules_files"] =self.all_modules_files 
         
         
         return outputs
