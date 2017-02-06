@@ -1049,6 +1049,8 @@ class ComputeConfCorMatInputSpec(BaseInterfaceInputSpec):
     
     ts_file = File(exists=True, desc='Numpy files with time series to be correlated',mandatory=True)
 
+    transpose_ts = traits.Bool(True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True)
+                              
     weight_file = File(exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False)
     
     conf_interval_prob = traits.Float(0.05, usedefault = True, desc='Confidence interval', mandatory=True)
@@ -1081,6 +1083,7 @@ class ComputeConfCorMat(BaseInterface):
         
         ts_file = self.inputs.ts_file
         weight_file = self.inputs.weight_file
+        transpose_ts = self.inputs.transpose_ts
         conf_interval_prob = self.inputs.conf_interval_prob
             
         plot_mat = self.inputs.plot_mat
@@ -1094,7 +1097,10 @@ class ComputeConfCorMat(BaseInterface):
         
         print data_matrix.shape
         
-        print np.transpose(data_matrix).shape
+        if transpose_ts:
+            data_matrix = np.transpose(data_matrix)
+            print data_matrix.shape
+        
         
         if isdefined(weight_file):
         
@@ -1105,59 +1111,18 @@ class ComputeConfCorMat(BaseInterface):
             print weight_vect.shape
         
         else:
-            weight_vect = np.ones(shape = (data_matrix.shape[1]))
+            weight_vect = np.ones(shape = (data_matrix.shape[0]))
         
         print "compute return_Z_cor_mat"
         
-        cor_mat,Z_cor_mat,conf_cor_mat,Z_conf_cor_mat = return_conf_cor_mat(np.transpose(data_matrix),weight_vect,conf_interval_prob)
+        cor_mat,Z_cor_mat,conf_cor_mat,Z_conf_cor_mat = return_conf_cor_mat(data_matrix,weight_vect,conf_interval_prob)
         
-        #print cor_mat.shape
+        print Z_cor_mat.shape
         
         cor_mat = cor_mat + np.transpose(cor_mat)
         
         
         Z_cor_mat = Z_cor_mat + np.transpose(Z_cor_mat)
-        
-        #sum_nan = np.sum(np.array(np.isnan(cor_mat), dtype = int),axis = 0)
-        #sort_order =  np.argsort(sum_nan)
-        
-        #print sum_nan[sort_order]
-        
-        #print cor_mat[sort_order[-2],:]
-        
-        #a, = np.where(sum_nan == 1283)
-        
-        #print a
-        
-        #print a.shape
-        #non_nan, = np.where(np.isnan(np.sum(cor_mat, axis = 0)))
-        
-        #print non_nan
-        
-        #nan, = np.where(np.sum(np.isnan(cor_mat), axis = 0) != 0)
-        
-        ##print nan
-        
-        #print "saving non_nan indexes as npy"
-        
-        #non_nan_file = os.path.abspath('non_nan_' + fname + '.npy')
-        
-        #np.save(non_nan_file,non_nan)
-        
-        
-        #tmp = cor_mat[:,non_nan]
-        
-        #non_nan_cor_mat = tmp[non_nan,:]
-        
-        #new_non_nan = np.where(np.sum(np.isnan(non_nan_cor_mat), axis = 0) != 0)
-        
-        #print new_non_nan
-        
-        #0/0
-        
-        #non_nan_conf_cor_mat = conf_cor_mat[:,non_nan][non_nan,:]
-        
-        #non_nan_Z_cor_mat = Z_cor_mat[:,non_nan][non_nan,:]
         
         print "saving cor_mat as npy"
         
