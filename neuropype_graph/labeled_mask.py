@@ -515,11 +515,32 @@ def compute_labelled_mask_from_anat_ROIs(ref_img_file,ROI_dir,list_ROI_img_files
     each ROI is represented by a different IMG file and should start by 'ROI_'. Resampling is done based on the shape of ref_img_file
     """
     
+    
+    
     ref_image = nib.load(ref_img_file)
     
     ref_image_data = ref_image.get_data()
     
     ref_image_data_shape = ref_image_data.shape
+    
+    ### case ref is 4D
+    if len(ref_image_data_shape) != 3:
+        
+        mean_ref_data = np.mean(ref_image_data,axis = 3)
+        
+        mean_ref_img_file = os.path.join(ROI_dir,"mean_ref.nii")
+        
+        print mean_ref_data.shape
+        
+        nib.save(nib.Nifti1Image(mean_ref_data,ref_image.get_affine(),ref_image.get_header()),mean_ref_img_file)
+    
+        ### reloading mean_file as ref_file
+        ref_image = nib.load(mean_ref_img_file)
+    
+        ref_image_data = ref_image.get_data()
+    
+        ref_image_data_shape = ref_image_data.shape
+    
     
     if len(list_ROI_img_files) == 0:
             
@@ -733,7 +754,7 @@ def segment_atlas_in_cubes(ROI_dir,ROI_cube_size,min_nb_voxels_in_neigh):
     
     reslice_atlas_affine = resliced_atlas.get_affine()
     
-    
+    c
     print resliced_atlas_data.shape
     
     
