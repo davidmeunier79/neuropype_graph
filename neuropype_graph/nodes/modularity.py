@@ -83,11 +83,14 @@ class ComputeNetList(BaseInterface):
             
             all_sorted_indexes = (-np.abs(Z_list[:,2])).argsort()
             
-            
+            print all_sorted_indexes
             sorted_indexes =  all_sorted_indexes[:N]
             
             max_thr_for_den_file = os.path.abspath('max_thr_for_den.txt')
             
+            if  N == Z_list.shape[0]:
+                N = N-1
+                
             max_thr_for_den = np.array(Z_list[all_sorted_indexes[N],2])
             
             with open(max_thr_for_den_file,"w") as f:
