@@ -90,6 +90,8 @@ def compute_nodes_rada_df(local_dir,gm_coords,coords_file,labels_file):
     #### Z_List
     Pajek_files = glob.glob(os.path.join(local_dir,"prep_rada","*.net"))
     
+    assert len(Pajek_files) == 1, "Error, no .net file found in {} prep_rada".format(local_dir)
+    
     if len(Pajek_files) == 1:
         
         Pajek_file = Pajek_files[0]
@@ -257,7 +259,7 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
     
     print nb_permuts
     
-    ################# strating from columns
+    ################# selecting columns
     
     if len(columns) != 0:
         data_cols = columns
@@ -272,23 +274,27 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
             
     print data_cols
     
+    ################## looping over selected columns
+    all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
+    all_p_lower = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
+        
     cols = []
 
-
     if session_col == -1 or len(permut_df[session_col].unique()) == 1:
-        
-        all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
         
         for index_col,col in enumerate(data_cols):
             
             print index_col,col
             
-            #print permut_df
-            print permut_df[col].iloc[0]
-            print permut_df[col].iloc[0] > permut_df[col].iloc[1:] 
             sum_higher = np.sum((permut_df[col].iloc[1:] > permut_df[col].iloc[0]).values.astype(int))
-            print sum_higher
             all_p_higher[index_col] = (sum_higher+1)/float(permut_df[col].shape[0])
+            
+            sum_lower = np.sum((permut_df[col].iloc[1:] < permut_df[col].iloc[0]).values.astype(int))
+            all_p_lower[index_col] = (sum_lower+1)/float(permut_df[col].shape[0])
+            
+            #print permut_df[col]
+            #print permut_df[col].shape[0]
+            
             print all_p_higher[index_col] 
             
             cols.append(str(col))
@@ -297,12 +303,12 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         print all_p_higher
         print cols
         
-        df_res = pd.DataFrame(all_p_higher.reshape(1,-1),columns = cols)
-        df_res.index = ["Higher"]
+        #df_res = pd.DataFrame(all_p_higher.reshape(1,-1),columns = cols)
+        #df_res.index = ["Higher"]
             
-        print df_res
+        #print df_res
         
-        return df_res
+        #return df_res
     
     else:
         ### all unique values should have 2 different samples
@@ -317,9 +323,6 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         
         ################################################## computing diff df
             
-        all_p_higher = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
-        all_p_lower = np.zeros(shape = (len(data_cols)), dtype = 'float64') -1
-        
         
         for index_col,col in enumerate(data_cols):
             
@@ -338,15 +341,37 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
             df_col["Diff"] = pd.to_numeric(df_col.iloc[:,0]) - pd.to_numeric(df_col.iloc[:,1])
             
             print df_col["Diff"]
-            print df_col.shape
             
-            if df_col["Diff"].iloc[0] > 0:
-                sum_higher = np.sum((df_col["Diff"].iloc[1:] > df_col["Diff"].iloc[0]).values.astype(int))
+            non_nan_indexes, = np.where(np.isnan(df_col["Diff"]) == False)
+            
+            print non_nan_indexes
+            
+            diff_col = df_col["Diff"].values[non_nan_indexes]
+            
+            
+            if not all(val == 2 for val in count_elements.values()):
+                print "Error, all permut indexes should have 2 and only 2 lines: {}".format(count_elements)
+                
+                print diff_col
+                print diff_col.shape
+                
+            #assert df_col.shape[0] == 201, "Error with shape {}".format(df_col.shape)
+            
+            if diff_col.shape[0] == 0:
+                
+                all_p_higher[index_col] = np.nan
+                all_p_lower[index_col] = np.nan
+                cols.append(col)
+                
+                continue
+            
+            if diff_col[0] > 0:
+                sum_higher = np.sum(np.array(diff_col[1:] > diff_col[0],dtype = int))
                 print "sum_higher:",sum_higher
                 all_p_higher[index_col] = (sum_higher+1)/float(df_col.shape[0])
                 
-            elif df_col["Diff"].iloc[0] < 0 :
-                sum_lower = np.sum((df_col["Diff"].iloc[0] > df_col["Diff"].iloc[1:]).values.astype(int))
+            elif diff_col[0] < 0 :
+                sum_lower = np.sum(np.array(diff_col[1:] < diff_col[0],dtype = int))
                 print "sum_lower:",sum_lower
                 all_p_lower[index_col] = (sum_lower+1)/float(df_col.shape[0])
             
@@ -360,13 +385,13 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         print all_p_lower
         
         print all_p_higher, all_p_lower
-            
-        df_res = pd.DataFrame([all_p_higher, all_p_lower],columns= cols)
-        df_res.index = ["Higher","Lower"]
-            
-        print df_res
         
-        return df_res
+    df_res = pd.DataFrame([all_p_higher, all_p_lower],columns= cols)
+    df_res.index = ["Higher","Lower"]
+        
+    print df_res
+    
+    return df_res
     
 def compute_signif_node_prop(orig_df, list_permut_df, columns):
 
