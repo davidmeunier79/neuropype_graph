@@ -29,10 +29,8 @@ class StatsPairBinomialOutputSpec(TraitedSpec):
 class StatsPairBinomial(BaseInterface):
     
     """
-    Plot coclassification matrix with igraph
-    - labels are optional, 
-    - threshold is optional (default, 50 = half the group)
-    - coordinates are optional, if no coordiantes are specified, representation in topological (Fruchterman-Reingold) space
+    StatsPairBinomialInputSpec
+    
     """
     input_spec = StatsPairBinomialInputSpec
     output_spec = StatsPairBinomialOutputSpec

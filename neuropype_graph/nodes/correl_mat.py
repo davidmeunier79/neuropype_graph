@@ -913,8 +913,12 @@ class MergeRunsOutputSpec(TraitedSpec):
     
 class MergeRuns(BaseInterface):
     """
+    Description:
+    
     Merge time series,regressor files and coord files
     Could be done with different cases
+    
+    
     """
     input_spec = MergeRunsInputSpec
     output_spec = MergeRunsOutputSpec
@@ -1070,8 +1074,44 @@ class ComputeConfCorMatOutputSpec(TraitedSpec):
     #Z_conf_cor_mat_file = File(exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation")
     
 class ComputeConfCorMat(BaseInterface):
+    
     """
+    
+    Description:
+    
     Compute correlation between time series, with a given confidence interval. If weight_file is specified, used for weighted correlation
+    
+    Inputs:
+    
+    ts_file:
+        type = File, exists=True, desc='Numpy files with time series to be correlated',mandatory=True
+
+    transpose_ts:
+        type = Bool, default=True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True
+                              
+    weight_file:
+        type = File, exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False
+    
+    conf_interval_prob:
+        type = Float, default = 0.05, usedefault = True, desc='Confidence interval', mandatory=True
+    
+    plot_mat:
+        type = Bool, default = True, usedefault = True, desc='Confidence interval', mandatory=False
+    
+    labels_file:
+        type = File, exists=True, desc='Name of the nodes (used only if plot = true)', mandatory=False
+    
+    Outputs:
+    
+    cor_mat_file:
+        type = File, exists=True, desc="npy file containing the R values of correlation"
+    
+    Z_cor_mat_file:
+        type = File, exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation"
+    
+    conf_cor_mat_file:
+        type = File, exists=True, desc="npy file containing the confidence interval around R values"
+    
     """
     input_spec = ComputeConfCorMatInputSpec
     output_spec = ComputeConfCorMatOutputSpec
@@ -1411,7 +1451,42 @@ class PrepareMeanCorrel(BaseInterface):
     #import nibabel as nib
     
     """
+    Decription:
+    
     Return average of correlation values within the same common space (defined in gm_mask_coords), only when the nodes are defined for a given values 
+    
+    Input:
+    
+    gm_mask_coords_file
+        type = File, exists=True, desc='reference coordinates',mandatory=True
+                
+    cor_mat_files
+        type = List of Files, exists=True, desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True
+
+    coords_files:
+        type = List of Files, exists=True, desc='Txt files with coordinates (corresponding to the space also described in ', mandatory=True
+    
+    labels_file:
+        type = File, exists=True, desc='reference labels',mandatory=False
+    
+    plot_mat:
+        type = Bool; default = True, usedefault = True, mandatory = False
+        
+        
+    Outputs: 
+    
+    group_cor_mat_matrix_file: 
+        type = File,exists=True, desc="npy file containing all correlation matrices in 3D"
+    
+    sum_cor_mat_matrix_file
+        type = File,exists=True, desc="npy file containing the sum of all correlation matrices"
+    
+    sum_possible_edge_matrix_file:
+        type = File, exists=True, desc="npy file containing the number of correlation matrices where both nodes where actually defined in the mask"
+    
+    avg_cor_mat_matrix_file:
+        type = File, exists=True, desc="npy file containing the average of all correlation matrices"
+    
     """
     
     input_spec = PrepareMeanCorrelInputSpec
