@@ -1082,37 +1082,39 @@ class ComputeConfCorMat(BaseInterface):
     Compute correlation between time series, with a given confidence interval. If weight_file is specified, used for weighted correlation
     
     Inputs:
-    
-    ts_file:
-        type = File, exists=True, desc='Numpy files with time series to be correlated',mandatory=True
+        
+        ts_file:
+            type = File, exists=True, desc='Numpy files with time series to be correlated',mandatory=True
 
-    transpose_ts:
-        type = Bool, default=True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True
-                              
-    weight_file:
-        type = File, exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False
-    
-    conf_interval_prob:
-        type = Float, default = 0.05, usedefault = True, desc='Confidence interval', mandatory=True
-    
-    plot_mat:
-        type = Bool, default = True, usedefault = True, desc='Confidence interval', mandatory=False
-    
-    labels_file:
-        type = File, exists=True, desc='Name of the nodes (used only if plot = true)', mandatory=False
-    
+        transpose_ts:
+            type = Bool, default=True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True
+                                
+        weight_file:
+            type = File, exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False
+        
+        conf_interval_prob:
+            type = Float, default = 0.05, usedefault = True, desc='Confidence interval', mandatory=True
+        
+        plot_mat:
+            type = Bool, default = True, usedefault = True, desc='Confidence interval', mandatory=False
+        
+        labels_file:
+            type = File, exists=True, desc='Name of the nodes (used only if plot = true)', mandatory=False
+        
     Outputs:
-    
-    cor_mat_file:
-        type = File, exists=True, desc="npy file containing the R values of correlation"
-    
-    Z_cor_mat_file:
-        type = File, exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation"
-    
-    conf_cor_mat_file:
-        type = File, exists=True, desc="npy file containing the confidence interval around R values"
-    
+        
+        cor_mat_file:
+            type = File, exists=True, desc="npy file containing the R values of correlation"
+        
+        Z_cor_mat_file:
+            type = File, exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation"
+        
+        conf_cor_mat_file:
+            type = File, exists=True, desc="npy file containing the confidence interval around R values"
+        
     """
+    
+    
     input_spec = ComputeConfCorMatInputSpec
     output_spec = ComputeConfCorMatOutputSpec
 
