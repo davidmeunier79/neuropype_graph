@@ -99,7 +99,7 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
     #regress_covar = pe.MapNode(interface = RegressCovar(filtered = False, normalized = False),iterfield = ['masked_ts_file','rp_file','mean_wm_ts_file','mean_csf_ts_file'],name='regress_covar')
     regress_covar = pe.Node(interface = RegressCovar(),iterfield = ['masked_ts_file','rp_file','mean_wm_ts_file','mean_csf_ts_file'],name='regress_covar')
     
-    pipeline.connect(extract_mean_ROI_ts, ('mean_masked_ts_file',show_files), regress_covar, 'masked_ts_file')
+    pipeline.connect(extract_mean_ROI_ts, 'mean_masked_ts_file', regress_covar, 'masked_ts_file')
     pipeline.connect(inputnode, 'rp_file', regress_covar, 'rp_file')
 
     pipeline.connect(compute_wm_ts, 'mean_masked_ts_file', regress_covar, 'mean_wm_ts_file')
@@ -111,7 +111,7 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
     
     compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
     
-    pipeline.connect(regress_covar, ('resid_ts_file',show_length), compute_conf_cor_mat, 'ts_file')
+    pipeline.connect(regress_covar, 'resid_ts_file', compute_conf_cor_mat, 'ts_file')
     pipeline.connect(filter_ROI_mask_with_GM, 'filtered_labels_rois_file', compute_conf_cor_mat, 'labels_file')
     
     return pipeline
@@ -158,7 +158,7 @@ def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_we
             #### extract regressor of interest from SPM.mat
             extract_cond = pe.Node(interface = FindSPMRegressor(only_positive_values = True), name='extract_cond')
             
-            pipeline.connect(inputnode, ('spm_mat_file',show_files), extract_cond, 'spm_mat_file')
+            pipeline.connect(inputnode, 'spm_mat_file', extract_cond, 'spm_mat_file')
             pipeline.connect(inputnode, 'regress_names', extract_cond, 'regressor_name')
             pipeline.connect(inputnode, 'run_index', extract_cond, 'run_index')
             
