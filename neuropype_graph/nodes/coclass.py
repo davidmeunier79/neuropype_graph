@@ -56,21 +56,18 @@ class PrepareCoclass(BaseInterface):
         
         node_corres_files = self.inputs.node_corres_files
         
-        coords_files = self.inputs.coords_files
-        labels_files = self.inputs.labels_files
-        
-        gm_mask_coords_file = self.inputs.gm_mask_coords_file
-        gm_mask_labels_file = self.inputs.gm_mask_labels_file
-        
         #print gm_mask_coords_file
         #print coords_files
         
         #print gm_mask_labels_file
         #print labels_files
         
-        if isdefined(gm_mask_coords_file) and isdefined(coords_files):
+        if isdefined(self.inputs.gm_mask_coords_file) and isdefined(self.inputs.coords_files):
         
+            coords_files = self.inputs.coords_files
             
+            gm_mask_coords_file = self.inputs.gm_mask_coords_file
+        
             print 'loading gm mask corres'
             
             gm_mask_coords = np.loadtxt(gm_mask_coords_file)
@@ -137,9 +134,13 @@ class PrepareCoclass(BaseInterface):
                 else:
                     print "Warning, one or more files between " + mod_files[index_file] + ',' + node_corres_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
               
-        elif isdefined(gm_mask_labels_file) and isdefined(labels_files):    
+        elif isdefined(self.inputs.gm_mask_labels_file) and isdefined(self.inputs.labels_files):    
+                
+            labels_files = self.inputs.labels_files
             
+            gm_mask_labels_file = self.inputs.gm_mask_labels_file
             
+                
             print 'loading gm mask labels'
             
             #gm_mask_labels = [line.strip() for line in open(gm_mask_labels_file)]
