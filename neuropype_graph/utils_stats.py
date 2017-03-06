@@ -303,6 +303,107 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     return signif_signed_adj_mat, p_val_mat, T_stat_mat
 
 
+def compute_pairwise_oneway_ttest_fdr(X, cor_alpha, uncor_alpha, old_order = True):
+    
+    
+    if old_order:
+            
+        # number of nodes
+        N = X.shape[0]
+    
+    
+        #print X.shape
+        
+        list_diff = []
+        
+        for i,j in it.combinations(range(N), 2):
+            
+            X_nonan = X[i,j,np.logical_not(np.isnan(X[i,j,:]))]
+                
+            #print len(X_nonan),len(Y_nonan)
+            
+            if len(X_nonan) < 2 :
+            #if len(X_nonan) < 1 or len(Y_nonan) < 1:
+                #list_diff.append([i,j,1.0,0.0])
+                continue
+            
+            t_stat,p_val = stat.ttest_1samp(X_nonan,0.0)
+                
+            if np.isnan(p_val):
+                
+                print "Warning, unable to compute T-test: "
+                print t_stat,p_val,X_nonan
+                
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)),t_stat])
+    else:
+        # number of nodes
+        assert X.shape[1] == X.shape[2] and Y.shape[1] == Y.shape[2], "Error, X {}{} and/or Y {}{} are not squared".format(X.shape[1],X.shape[2], Y.shape[1], Y.shape[2])
+        
+        N = X.shape[1]
+    
+        if paired:
+            assert X.shape[0] == Y.shape[0], "Error, X and Y are paired but do not have the same number od samples{}{}".format(X.shape[0],Y.shape[0])
+            
+        #print X.shape
+        
+        list_diff = []
+        
+        for i,j in it.combinations(range(N), 2):
+            
+            X_nonan = X[np.logical_not(np.isnan(X[:,i,j])),i,j]
+                
+            #print len(X_nonan),len(Y_nonan)
+            
+            if len(X_nonan) < 2:
+            #if len(X_nonan) < 1 or len(Y_nonan) < 1:
+                #list_diff.append([i,j,1.0,0.0])
+                continue
+            
+            t_stat,p_val = stat.ttest_1samp(X_nonan,0.0)
+            
+            if np.isnan(p_val):
+                
+                print "Warning, unable to compute T-test: "
+                print t_stat,p_val,X_nonan,
+                
+            list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)),t_stat])
+            
+        
+    print list_diff
+        
+    assert len(list_diff) != 0, "Error, list_diff is empty"
+    
+    np_list_diff = np.array(list_diff)
+   
+    print np_list_diff
+    
+    signif_code = return_signif_code(np_list_diff[:,2],uncor_alpha = uncor_alpha,fdr_alpha = cor_alpha, bon_alpha = cor_alpha)
+    
+    print np.sum(signif_code == 0.0),np.sum(signif_code == 1.0),np.sum(signif_code == 2.0),np.sum(signif_code == 3.0),np.sum(signif_code == 4.0)
+    
+    np_list_diff[:,3] = np_list_diff[:,3] * signif_code
+    
+    print np.sum(np_list_diff[:,3] == 0.0)
+    print np.sum(np_list_diff[:,3] == 1.0),np.sum(np_list_diff[:,3] == 2.0),np.sum(np_list_diff[:,3] == 3.0),np.sum(np_list_diff[:,3] == 4.0)
+    print np.sum(np_list_diff[:,3] == -1.0),np.sum(np_list_diff[:,3] == -2.0),np.sum(np_list_diff[:,3] == -3.0),np.sum(np_list_diff[:,3] == -4.0)
+    
+    
+    signif_signed_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    T_stat_mat = np.zeros((N,N),dtype = 'float')
+    
+    signif_i = np.array(np_list_diff[:,0],dtype = int)
+    signif_j = np.array(np_list_diff[:,1],dtype = int)
+    
+    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = np.array(np_list_diff[:,3],dtype = int)
+    
+    p_val_mat[signif_i,signif_j] = p_val_mat[signif_j,signif_i] = np_list_diff[:,2]
+    T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_j,signif_i] = np_list_diff[:,4]
+    
+    print T_stat_mat
+    
+    return signif_signed_adj_mat, p_val_mat, T_stat_mat
+
     
 def compute_pairwise_mannwhitney_fdr(X,Y,t_test_thresh_fdr,uncor_alpha = 0.01):
     
