@@ -92,12 +92,18 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
     print "In compute_mean_cormats"
     
+    dict_mean = {}
+    
+    if 'all' in descript_columns:
+        
+        dict_mean['all'] = np.mean(all_cormats,axis = 0)
+        
+    descript_columns.remove(['all'])
+    
     for column in descript_columns:
     
         assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
 
-    dict_mean = {}
-    
     for elem, lines in all_descriptors.groupby(by = descript_columns):
     
         print elem
