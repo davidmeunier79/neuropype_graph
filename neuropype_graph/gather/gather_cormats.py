@@ -98,7 +98,7 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
         
         dict_mean['all'] = np.mean(all_cormats,axis = 0)
         
-    descript_columns.remove('all')
+        descript_columns.remove('all')
     
     for column in descript_columns:
     
