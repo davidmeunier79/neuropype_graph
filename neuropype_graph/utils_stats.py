@@ -60,8 +60,9 @@ def return_signif_code(p_values,uncor_alpha = 0.05,fdr_alpha = 0.05,bon_alpha = 
     ##print signif_code
     
     ################ FPcor #############################
-    
-    signif_code[p_values < 1.0/N] = 2
+    if uncor_alpha < 1.0/N:
+        
+        signif_code[p_values < 1.0/N] = 2
     
     ################ fdr ###############################
     seq = np.arange(N,0,-1)
