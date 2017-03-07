@@ -21,21 +21,26 @@ import os
 
 import nibabel as nib
 
-from dmgraphanalysis_nodes.utils_plot import plot_signals,plot_sep_signals
+from neuropype_graph.utils_plot import plot_signals,plot_sep_signals
         
 ######################################################################################## ExtractTS ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_indexed_mask_data
+from neuropype_graph.utils_cor import mean_select_indexed_mask_data
 
 class ExtractTSInputSpec(BaseInterfaceInputSpec):
     indexed_rois_file = File(exists=True, desc='indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True)
     
     file_4D = File(exists=True, desc='4D volume to be extracted', mandatory=True)
     
-    coord_rois_file = File(exists=True, desc='ROI coordinates', mandatory= False )
+    coord_rois_file = File(desc='ROI coordinates')
     
-    min_BOLD_intensity = traits.Float(default = 50.0, desc='BOLD signal below this value will be set to zero',mandatory=False,usedefault = True)
+    min_BOLD_intensity = traits.Float(50.0, desc='BOLD signal below this value will be set to zero',usedefault = True)
 
+    percent_signal = traits.Float(0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",usedefault = True)
+    
+    plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
+    
+    
 class ExtractTSOutputSpec(TraitedSpec):
     
     mean_masked_ts_file = File(exists=True, desc="mean ts in .npy (pickle format)")
@@ -55,13 +60,13 @@ class ExtractTS(BaseInterface):
         #import os
         #import numpy as np
         #import nibabel as nib
-        
-        #from dmgraphanalysis.utils_plot import plot_signals
-        
+                
         coord_rois_file = self.inputs.coord_rois_file
         indexed_rois_file = self.inputs.indexed_rois_file
         file_4D = self.inputs.file_4D
         min_BOLD_intensity = self.inputs.min_BOLD_intensity
+        
+        plot_fig = self.inputs.plot_fig
         
         ## loading ROI coordinates
         coord_rois = np.loadtxt(coord_rois_file)
@@ -83,7 +88,7 @@ class ExtractTS(BaseInterface):
         print "orig_ts shape:"
         print orig_ts.shape
             
-        mean_masked_ts,subj_coord_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50)
+        mean_masked_ts,subj_coord_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity, percent_signal = 0.5)
         
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
         subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')
@@ -98,13 +103,14 @@ class ExtractTS(BaseInterface):
         subj_coord_rois_file = os.path.abspath("subj_coord_rois.txt")
         np.savetxt(subj_coord_rois_file,subj_coord_rois,fmt = '%.3f')
         
-        
-        print "plotting mean_masked_ts"
-        
-        plot_mean_masked_ts_file = os.path.abspath('mean_masked_ts.eps')    
-        
-        plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
-        
+        if plot_fig == True:
+                
+            print "plotting mean_masked_ts"
+            
+            plot_mean_masked_ts_file = os.path.abspath('mean_masked_ts.eps')    
+            
+            plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
+            
         return runtime
         
         #return mean_masked_ts_file,subj_coord_rois_file
@@ -121,27 +127,29 @@ class ExtractTS(BaseInterface):
 
 ######################################################################################## IntersectMask ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_indexed_mask_data
+from neuropype_graph.utils_cor import mean_select_indexed_mask_data
 
 class IntersectMaskInputSpec(BaseInterfaceInputSpec):
     
     
     indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True)
-    filter_mask_file = File(exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True)
+    filter_mask_file = File( exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True)
     
-    coords_rois_file = File(exists=True, desc='ijk coords txt file', mandatory=False)
-    labels_rois_file = File(exists=True, desc='labels txt file', mandatory=False)
-    MNI_coords_rois_file = File(exists=True, desc='MNI coords txt file', mandatory=False)
+    coords_rois_file = File(desc='ijk coords txt file')
+    labels_rois_file = File( desc='labels txt file')
+    MNI_coords_rois_file = File(desc='MNI coords txt file')
+    
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
-    #filter_thr = traits.Float(0.9,  desc='Value to threshold filter_mask',mandatory = False,usedefault = True)
                           
 class IntersectMaskOutputSpec(TraitedSpec):
     
     filtered_indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)')
     
-    filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')
+    
+    filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')    
+    #
     filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
-    filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
+    #filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
     
     
 
@@ -164,7 +172,7 @@ class IntersectMask(BaseInterface):
         
         import nipype.interfaces.spm as spm
 
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         indexed_rois_file = self.inputs.indexed_rois_file
         filter_mask_file = self.inputs.filter_mask_file
@@ -234,28 +242,31 @@ class IntersectMask(BaseInterface):
         print len(index_corres)
         
         print "reorder_indexed_rois:"
-        reorder_indexed_rois_data = np.zeros(shape = filtered_indexed_rois_data.shape) - 1
+        reorder_indexed_rois_data = np.zeros(shape = filtered_indexed_rois_data.shape,dtype = 'int64') - 1
         
         for i,index in enumerate(index_corres):
             
-            #print i,index
+            print i,index
             
             if np.sum(np.array(filtered_indexed_rois_data == index,dtype = int)) != 0:
                 
+                print np.sum(np.array(filtered_indexed_rois_data == index,dtype = int))
                 reorder_indexed_rois_data[filtered_indexed_rois_data == index] = i
             else:
                 print "Warning could not find value %d in filtered_indexed_rois_data"%index
             
                                        
-        print np.unique(reorder_indexed_rois_data)                               
-    
+        print np.unique(reorder_indexed_rois_data)  
+        
         reorder_indexed_rois_img_file = os.path.abspath("reorder_filtered_indexed_rois.nii")
         nib.save(nib.Nifti1Image(reorder_indexed_rois_data,indexed_rois_img.get_affine(),indexed_rois_img.get_header()),reorder_indexed_rois_img_file)
     
     
-        if os.path.exists(coords_rois_file):
+        if isdefined(coords_rois_file):
             
             ## loading ROI coordinates
+            print "coords_rois_file: "
+            print coords_rois_file
             coords_rois = np.loadtxt(coords_rois_file)
             
             print "coords_rois: " 
@@ -269,7 +280,7 @@ class IntersectMask(BaseInterface):
             filtered_coords_rois_file = os.path.abspath("filtered_coords_rois.txt")
             np.savetxt(filtered_coords_rois_file,filtered_coords_rois, fmt = "%d")
             
-        if os.path.exists(MNI_coords_rois_file):
+        if isdefined(MNI_coords_rois_file):
             
             ## loading ROI coordinates
             MNI_coords_rois = np.loadtxt(MNI_coords_rois_file)
@@ -285,13 +296,14 @@ class IntersectMask(BaseInterface):
             filtered_MNI_coords_rois_file = os.path.abspath("filtered_MNI_coords_rois.txt")
             np.savetxt(filtered_MNI_coords_rois_file,filtered_MNI_coords_rois, fmt = "%f")
             
-        if os.path.exists(labels_rois_file):
+        if isdefined(labels_rois_file):
     
     
             print 'extracting node labels'
                 
             labels_rois = [line.strip() for line in open(labels_rois_file)]
             print labels_rois
+            print len(labels_rois)
             
             np_labels_rois = np.array(labels_rois,dtype = 'str')
             
@@ -314,8 +326,10 @@ class IntersectMask(BaseInterface):
         
         outputs["filtered_indexed_rois_file"] = os.path.abspath("reorder_filtered_indexed_rois.nii")
     
-        outputs["filtered_MNI_coords_rois_file"] = os.path.abspath("filtered_MNI_coords_rois.txt")
-        outputs["filtered_coords_rois_file"] = os.path.abspath("filtered_coords_rois.txt")
+        if isdefined(self.inputs.coords_rois_file):
+            outputs["filtered_coords_rois_file"] = os.path.abspath("filtered_coords_rois.txt")
+            
+        #outputs["filtered_MNI_coords_rois_file"] = os.path.abspath("filtered_MNI_coords_rois.txt")
         outputs["filtered_labels_rois_file"] = os.path.abspath("filtered_labels_rois.txt")
     
         return outputs
@@ -324,7 +338,7 @@ class IntersectMask(BaseInterface):
 
 ############################################################################################### ExtractMeanTS #####################################################################################################
 
-from dmgraphanalysis_nodes.utils_cor import mean_select_mask_data
+from neuropype_graph.utils_cor import mean_select_mask_data
 
 class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
     mask_file = File(xor = ['filter_mask_file'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True)
@@ -337,6 +351,7 @@ class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
     
     suffix = traits.String(desc='Suffix added to describe the extracted time series',mandatory=False)
 
+    plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
     
 class ExtractMeanTSOutputSpec(TraitedSpec):
     
@@ -359,6 +374,8 @@ class ExtractMeanTS(BaseInterface):
         mask_file = self.inputs.mask_file
         filter_mask_file = self.inputs.filter_mask_file
         filter_thr = self.inputs.filter_thr
+        plot_fig = self.inputs.plot_fig
+        
         
         if isdefined(self.inputs.suffix):
             suffix = self.inputs.suffix
@@ -405,13 +422,14 @@ class ExtractMeanTS(BaseInterface):
         mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.txt')    
         np.savetxt(mean_masked_ts_file,mean_masked_ts,fmt = '%.3f')
         
-        
-        print "plotting mean_masked_ts"
-        
-        plot_mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.eps')    
-        
-        plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
-        
+        if plot_fig == True:
+                
+            print "plotting mean_masked_ts"
+            
+            plot_mean_masked_ts_file = os.path.abspath('mean_' + suffix + '_ts.eps')    
+            
+            plot_signals(plot_mean_masked_ts_file,mean_masked_ts)
+            
         return runtime
         
         #return mean_masked_ts_file,subj_coord_rois_file
@@ -458,7 +476,7 @@ class ConcatTS(BaseInterface):
         #import numpy as np
         #import nibabel as nib
         
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         all_ts_file = self.inputs.all_ts_file
         
@@ -567,7 +585,7 @@ class SeparateTS(BaseInterface):
         #import numpy as np
         #import nibabel as nib
         
-        #from dmgraphanalysis.utils_plot import plot_signals
+        #from neuropype_graph.utils_plot import plot_signals
         
         all_ts_file = self.inputs.all_ts_file
         
@@ -608,8 +626,8 @@ class SeparateTS(BaseInterface):
 ################################################################################# RegressCovar ######################################################################################################################
  
 
-#from dmgraphanalysis_nodes.utils_cor import regress_movement_wm_csf_parameters
-from dmgraphanalysis_nodes.utils_cor import regress_parameters,regress_filter_normalize_parameters
+#from neuropype_graph.utils_cor import regress_movement_wm_csf_parameters
+from neuropype_graph.utils_cor import regress_parameters,regress_filter_normalize_parameters
 
 class RegressCovarInputSpec(BaseInterfaceInputSpec):
     masked_ts_file = File(exists=True, desc='time series in npy format', mandatory=True)
@@ -779,7 +797,8 @@ class FindSPMRegressorInputSpec(BaseInterfaceInputSpec):
      
     only_positive_values = traits.Bool(True, usedefault = True , desc = "Return only positive values of the regressor (negative values are set to 0)")
     
-    concatenate_runs = traits.Int(None, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    #concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    concatenated_runs = traits.Bool(False, usedefault = True , desc = "If concatenate runs, need to search for the lenghth of the session")
     
 class FindSPMRegressorOutputSpec(TraitedSpec):
     
@@ -801,14 +820,11 @@ class FindSPMRegressor(BaseInterface):
         import numpy as np
         import os
 
-        #print spm_mat_file
-        
-        
         spm_mat_file = self.inputs.spm_mat_file
         regressor_name = self.inputs.regressor_name
         run_index = self.inputs.run_index
         only_positive_values = self.inputs.only_positive_values
-        concatenate_runs = self.inputs.concatenate_runs
+        concatenated_runs = self.inputs.concatenated_runs
         
         
         print spm_mat_file
@@ -836,33 +852,28 @@ class FindSPMRegressor(BaseInterface):
 
         print regressor_vect
         
+        assert np.sum(regressor_vect) != 0, "Error, empty regressor {}".format(cond_name)
+        
         if only_positive_values == True:
             
             regressor_vect[regressor_vect < 0] = 0
         
-        if concatenate_runs != None:
+        if concatenated_runs:
             
-            print run_index,concatenate_runs
+            print run_index
             print regressor_vect.shape[0]
             
-            nb_samples = regressor_vect.shape[0]/concatenate_runs
             
-            print nb_samples
+            samples = d['SPM']['xX'][0][0]['K'][0][0]['row'][0][run_index-1][0]-1
             
-            begin_interval = (run_index-1)*nb_samples
-            end_interval = run_index*nb_samples
+            print samples
             
-            if 0 <= begin_interval and end_interval <= regressor_vect.shape[0]:
+            regressor_vect = regressor_vect[samples]
             
-                print begin_interval,end_interval
+            print regressor_vect
             
-                regressor_vect = regressor_vect[begin_interval:end_interval]
-            
-            else:
-                
-                print "Warning, error with interval [%d,%d]"%(begin_interval,end_interval)
-        
             print regressor_vect.shape
+            
             
         print "Saving extract_cond"
         regressor_file = os.path.abspath('extract_cond.txt')
@@ -902,8 +913,12 @@ class MergeRunsOutputSpec(TraitedSpec):
     
 class MergeRuns(BaseInterface):
     """
+    Description:
+    
     Merge time series,regressor files and coord files
     Could be done with different cases
+    
+    
     """
     input_spec = MergeRunsInputSpec
     output_spec = MergeRunsOutputSpec
@@ -1030,14 +1045,16 @@ class MergeRuns(BaseInterface):
 
         ################################################################################# ComputeConfCorMat ######################################################################################################################
  
-from dmgraphanalysis_nodes.utils_cor import return_conf_cor_mat
+from neuropype_graph.utils_cor import return_conf_cor_mat
 
-from dmgraphanalysis_nodes.utils_plot import plot_hist,plot_cormat
+from neuropype_graph.utils_plot import plot_hist,plot_cormat
         
 class ComputeConfCorMatInputSpec(BaseInterfaceInputSpec):
     
     ts_file = File(exists=True, desc='Numpy files with time series to be correlated',mandatory=True)
 
+    transpose_ts = traits.Bool(True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True)
+                              
     weight_file = File(exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False)
     
     conf_interval_prob = traits.Float(0.05, usedefault = True, desc='Confidence interval', mandatory=True)
@@ -1057,9 +1074,47 @@ class ComputeConfCorMatOutputSpec(TraitedSpec):
     #Z_conf_cor_mat_file = File(exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation")
     
 class ComputeConfCorMat(BaseInterface):
+    
     """
+    
+    Description:
+    
     Compute correlation between time series, with a given confidence interval. If weight_file is specified, used for weighted correlation
+    
+    Inputs:
+        
+        ts_file:
+            type = File, exists=True, desc='Numpy files with time series to be correlated',mandatory=True
+
+        transpose_ts:
+            type = Bool, default=True,usedefault = True,desc =  'whether to transpose timeseries', mandatory = True
+                                
+        weight_file:
+            type = File, exists=True, desc='Weight of the correlation (normally, condition regressor file)', mandatory=False
+        
+        conf_interval_prob:
+            type = Float, default = 0.05, usedefault = True, desc='Confidence interval', mandatory=True
+        
+        plot_mat:
+            type = Bool, default = True, usedefault = True, desc='Confidence interval', mandatory=False
+        
+        labels_file:
+            type = File, exists=True, desc='Name of the nodes (used only if plot = true)', mandatory=False
+        
+    Outputs:
+        
+        cor_mat_file:
+            type = File, exists=True, desc="npy file containing the R values of correlation"
+        
+        Z_cor_mat_file:
+            type = File, exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation"
+        
+        conf_cor_mat_file:
+            type = File, exists=True, desc="npy file containing the confidence interval around R values"
+        
     """
+    
+    
     input_spec = ComputeConfCorMatInputSpec
     output_spec = ComputeConfCorMatOutputSpec
 
@@ -1070,6 +1125,7 @@ class ComputeConfCorMat(BaseInterface):
         
         ts_file = self.inputs.ts_file
         weight_file = self.inputs.weight_file
+        transpose_ts = self.inputs.transpose_ts
         conf_interval_prob = self.inputs.conf_interval_prob
             
         plot_mat = self.inputs.plot_mat
@@ -1083,7 +1139,10 @@ class ComputeConfCorMat(BaseInterface):
         
         print data_matrix.shape
         
-        print np.transpose(data_matrix).shape
+        if transpose_ts:
+            data_matrix = np.transpose(data_matrix)
+            print data_matrix.shape
+        
         
         if isdefined(weight_file):
         
@@ -1094,56 +1153,18 @@ class ComputeConfCorMat(BaseInterface):
             print weight_vect.shape
         
         else:
-            weight_vect = np.ones(shape = (data_matrix.shape[1]))
+            weight_vect = np.ones(shape = (data_matrix.shape[0]))
         
         print "compute return_Z_cor_mat"
         
-        cor_mat,Z_cor_mat,conf_cor_mat,Z_conf_cor_mat = return_conf_cor_mat(np.transpose(data_matrix),weight_vect,conf_interval_prob)
+        cor_mat,Z_cor_mat,conf_cor_mat,Z_conf_cor_mat = return_conf_cor_mat(data_matrix,weight_vect,conf_interval_prob)
         
-        #print cor_mat.shape
+        print Z_cor_mat.shape
         
-        #cor_mat = cor_mat + np.transpose(cor_mat)
-        
-        #sum_nan = np.sum(np.array(np.isnan(cor_mat), dtype = int),axis = 0)
-        #sort_order =  np.argsort(sum_nan)
-        
-        #print sum_nan[sort_order]
-        
-        #print cor_mat[sort_order[-2],:]
-        
-        #a, = np.where(sum_nan == 1283)
-        
-        #print a
-        
-        #print a.shape
-        #non_nan, = np.where(np.isnan(np.sum(cor_mat, axis = 0)))
-        
-        #print non_nan
-        
-        #nan, = np.where(np.sum(np.isnan(cor_mat), axis = 0) != 0)
-        
-        ##print nan
-        
-        #print "saving non_nan indexes as npy"
-        
-        #non_nan_file = os.path.abspath('non_nan_' + fname + '.npy')
-        
-        #np.save(non_nan_file,non_nan)
+        cor_mat = cor_mat + np.transpose(cor_mat)
         
         
-        #tmp = cor_mat[:,non_nan]
-        
-        #non_nan_cor_mat = tmp[non_nan,:]
-        
-        #new_non_nan = np.where(np.sum(np.isnan(non_nan_cor_mat), axis = 0) != 0)
-        
-        #print new_non_nan
-        
-        #0/0
-        
-        #non_nan_conf_cor_mat = conf_cor_mat[:,non_nan][non_nan,:]
-        
-        #non_nan_Z_cor_mat = Z_cor_mat[:,non_nan][non_nan,:]
+        Z_cor_mat = Z_cor_mat + np.transpose(Z_cor_mat)
         
         print "saving cor_mat as npy"
         
@@ -1396,7 +1417,7 @@ class SelectNonNAN(BaseInterface):
 
 ##################################################### PrepareMeanCorrel ###############################################################################
 
-from dmgraphanalysis_nodes.utils_cor import return_corres_correl_mat
+from neuropype_graph.utils_cor import return_corres_correl_mat
 
 class PrepareMeanCorrelInputSpec(BaseInterfaceInputSpec):
     
@@ -1432,7 +1453,42 @@ class PrepareMeanCorrel(BaseInterface):
     #import nibabel as nib
     
     """
+    Decription:
+    
     Return average of correlation values within the same common space (defined in gm_mask_coords), only when the nodes are defined for a given values 
+    
+    Input:
+    
+    gm_mask_coords_file
+        type = File, exists=True, desc='reference coordinates',mandatory=True
+                
+    cor_mat_files
+        type = List of Files, exists=True, desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True
+
+    coords_files:
+        type = List of Files, exists=True, desc='Txt files with coordinates (corresponding to the space also described in ', mandatory=True
+    
+    labels_file:
+        type = File, exists=True, desc='reference labels',mandatory=False
+    
+    plot_mat:
+        type = Bool; default = True, usedefault = True, mandatory = False
+        
+        
+    Outputs: 
+    
+    group_cor_mat_matrix_file: 
+        type = File,exists=True, desc="npy file containing all correlation matrices in 3D"
+    
+    sum_cor_mat_matrix_file
+        type = File,exists=True, desc="npy file containing the sum of all correlation matrices"
+    
+    sum_possible_edge_matrix_file:
+        type = File, exists=True, desc="npy file containing the number of correlation matrices where both nodes where actually defined in the mask"
+    
+    avg_cor_mat_matrix_file:
+        type = File, exists=True, desc="npy file containing the average of all correlation matrices"
+    
     """
     
     input_spec = PrepareMeanCorrelInputSpec
@@ -1448,10 +1504,11 @@ class PrepareMeanCorrel(BaseInterface):
             
             print 'loading gm mask corres'
             
-            gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+            gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
             
+            print gm_mask_coords
             print gm_mask_coords.shape
-                
+            
             #### read matrix from the first group
             #print Z_cor_mat_files
             
@@ -1478,11 +1535,11 @@ class PrepareMeanCorrel(BaseInterface):
                     print Z_cor_mat.shape
                     
                     
-                    coords = np.loadtxt(coords_files[index_file])
-                    #print coords.shape
+                    coords = np.array(np.loadtxt(coords_files[index_file]),dtype = int)
                     
-                    
-                    
+                    print coords
+                    print coords.shape
+                                        
                     corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
                     
                     
@@ -1526,7 +1583,7 @@ class PrepareMeanCorrel(BaseInterface):
             avg_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
             
             
-            if (np.sum(np.array(sum_possible_edge_matrix == 0)) != 0):
+            if np.sum(np.array(sum_possible_edge_matrix == 0)) == 0:
             
                     avg_cor_mat_matrix = np.divide(np.array(sum_cor_mat_matrix,dtype = float),np.array(sum_possible_edge_matrix,dtype = float))
                             
@@ -1539,6 +1596,11 @@ class PrepareMeanCorrel(BaseInterface):
             
             else:
                     print "!!!!!!!!!!!!!!!!!!!!!!Breaking!!!!!!!!!!!!!!!!!!!!!!!!, found 0 elements in sum_cor_mat_matrix"
+                    
+                    print sum_possible_edge_matrix
+                    print np.array(sum_possible_edge_matrix == 0)
+                    print np.sum(np.array(sum_possible_edge_matrix == 0))
+                    
                     return
                 
                 
@@ -1580,7 +1642,118 @@ class PrepareMeanCorrel(BaseInterface):
         return outputs
 
 
+
+##################################################### PreparePermutMeanCorrel ###############################################################################
+
+class PreparePermutMeanCorrelInputSpec(BaseInterfaceInputSpec):
+       
+    cor_mat_files = traits.List(File(exists=True), desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True)
+
+    permut_group_sizes = traits.List(traits.Int, desc = 'How to split the groups after shuffling', mandatory = True)
+    
+    seed = traits.Int(0, usedefault = True, decs = 'Start of random process')
+    
+    #variance_adjst = traits.Bool(False, usedefault = True, desc = "is between-subject variance adjusted taken into account?")
+    
+    
+class PreparePermutMeanCorrelOutputSpec(TraitedSpec):
+    
+    permut_mean_cormat_files = traits.List(File(exists=True),desc="npy files containing the average of permuted correlation matrices")
+    
+class PreparePermutMeanCorrel(BaseInterface):
+    
+    import numpy as np
+    import os
+
+    #import nibabel as nib
+    
+    """
+    Return average of correlation values after shuffling orig datasets
+    """
+    
+    input_spec = PreparePermutMeanCorrelInputSpec
+    output_spec = PreparePermutMeanCorrelOutputSpec
+
+    def _run_interface(self, runtime):
+               
+            print self.inputs.seed
+            
+            np.random.seed(self.inputs.seed)
+            
+            cormats = [np.load(cor_mat_file) for cor_mat_file in self.inputs.cor_mat_files]
+            
+            print cormats
+            
+            assert len(cormats) == sum(self.inputs.permut_group_sizes), "Warning, len(cormats) {0} != sum permut_group_sizes {1}".format(len(cormats),sum(self.inputs.permut_group_sizes))
+            
+            subj_indexes = np.arange(len(cormats))
+            
+            np.random.shuffle(subj_indexes)
+            
+            print subj_indexes
+            
+            subj_indexes_file = os.path.abspath("subj_indexes.txt")
+
+            f = open(subj_indexes_file,"w+")
+            
+            #f.write(subj_indexes.tolist())
+            
+            np.savetxt(f,subj_indexes,fmt = "%d")
+                  
+                  
+            min_index = 0
+            
+            cormats = np.array(cormats)
+            
+            print cormats.shape
+            
+            self.permut_mean_cormat_files = []
+            
+            for i,cur_nb_subj_by_gender in enumerate(self.inputs.permut_group_sizes):
                 
+                print cur_nb_subj_by_gender
+                
+                cur_range = np.arange(min_index,min_index+cur_nb_subj_by_gender)
+                
+                print cur_range
+                
+                rand_indexes = subj_indexes[cur_range]
+                
+                print rand_indexes
+                
+                #f.write(rand_indexes)
+                
+                np.savetxt(f,rand_indexes,fmt = "%d")
+                
+                permut_cormats = cormats[rand_indexes,:,:]
+                
+                permut_mean_cormat = np.mean(permut_cormats,axis = 0)
+                
+                print permut_mean_cormat.shape
+                
+                permut_mean_cormat_file = os.path.abspath("permut_mean_cormat_" + str(i) + ".npy")
+                
+                np.save(permut_mean_cormat_file,permut_mean_cormat)
+                
+                self.permut_mean_cormat_files.append(permut_mean_cormat_file)
+                
+                min_index+=cur_nb_subj_by_gender
+            f.close()
+            
+            return runtime
+                    
+
+    def _list_outputs(self):
+        
+        outputs = self._outputs().get()
+        
+        outputs["permut_mean_cormat_files"] = self.permut_mean_cormat_files
+        
+        #print outputs
+        
+        return outputs
+
+                    
 
 #def prepare_signif_correlation_matrices(cor_mat_files,conf_cor_mat_files,coords_files,gm_mask_coords_file):
 
@@ -1590,7 +1763,6 @@ class PrepareMeanCorrel(BaseInterface):
 
     ##import nibabel as nib
     
-    #from dmgraphanalysis.utils_cor import return_corres_correl_mat
     ##from utils_cor import read_Pajek_corres_nodes,read_lol_file
     
     #print 'loading gm mask corres'

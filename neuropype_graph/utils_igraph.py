@@ -12,7 +12,7 @@ import igraph as ig
 from utils_dtype_coord import where_in_coords,find_index_in_coords
 import math
 
-from dmgraphanalysis_nodes.utils_color import igraph_colors,new_igraph_colors,static_igraph_colors
+from neuropype_graph.utils_color import igraph_colors,new_igraph_colors,static_igraph_colors
 
 def add_vertex_colors(g_all,community_vect,list_colors = static_igraph_colors):
     

@@ -11,9 +11,9 @@ import sys, os
 #from  define_variables import *
 
 
-from dmgraphanalysis_nodes.labeled_mask import compute_recombined_HO_template
+from neuropype_graph.labeled_mask import compute_recombined_HO_template
 
-from dmgraphanalysis_nodes.utils_dtype_coord import *
+from neuropype_graph.utils_dtype_coord import *
     
 import glob
 

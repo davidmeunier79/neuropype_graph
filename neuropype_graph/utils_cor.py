@@ -208,16 +208,18 @@ def mean_select_mask_data(data_img,data_mask):
     
     return np.array(mean_mask_data_matrix)
     
-def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50):
+def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50,percent_signal = 0.5):
         
         ### extrating ts by averaging the time series of all voxel with the same index
-        sequence_roi_index = np.array(np.unique(indexed_mask_rois_data),dtype = int)
+        sequence_roi_index = np.unique(indexed_mask_rois_data)
+        
+        print sequence_roi_index
         
         if sequence_roi_index[0] == -1.0:
             sequence_roi_index = sequence_roi_index[1:]
         
         #print "sequence_roi_index:"
-        #print sequence_roi_index
+        print sequence_roi_index
         
         if sequence_roi_index.shape[0] != coord_rois.shape[0]:
             print "Warning, indexes in template_ROI are incompatible with ROI coords"
@@ -243,7 +245,8 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
             #print all_voxel_roi_ts.shape
             
             ### testing if at least 50% of the voxels in the ROIs have values always higher than min bold intensity
-            if np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]) > 0.5:
+            
+            if np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]) > percent_signal:
                 
                 #print "Roi selected: " + str(roi_index)
                 #print "coord_rois shape: "
@@ -254,7 +257,7 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
                 subj_coord_rois.append(coord_rois[roi_index,])
                 mean_masked_ts.append(mean_roi_ts)
             else:
-                print "ROI " + str(roi_index) + " was not selected"
+                print "ROI {} was not selected : {} {} ".format(roi_index, np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
                 
                 
             ### testing if mean_roi_ts if always higher than minimal BOLD intensity
@@ -269,6 +272,8 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_
             #else:
                 #print "ROI " + str(roi_index) + " was not selected"
                 
+        assert len(mean_masked_ts) != 0, "min_BOLD_intensity {} and percent_signal are to restrictive".format(min_BOLD_intensity,percent_signal)
+            
             
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
         subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')
@@ -668,7 +673,7 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
     t1 = time.time()
     
     if ts_mat.shape[0] != len(regressor_vect):
-        "Warning, incompatible regressor length {} {}".format(ts_mat.shape[0], len(regressor_vect))
+        print "Warning, incompatible regressor length {} {}".format(ts_mat.shape[0], len(regressor_vect))
         return
 
     
@@ -699,11 +704,39 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
     
     for i,j in it.combinations(range(n), 2):
     
-        s1 = ts_mat2[:,i]
-        s2 = ts_mat2[:,j]
+        keep_val = np.logical_not(np.logical_or(np.isnan(ts_mat2[:,i]),np.isnan(ts_mat2[:,j])))
+            
+        print keep_val
+        
+        
+        s1 = ts_mat2[keep_val,i]
+        s2 = ts_mat2[keep_val,j]
+            
         
         cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
         Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
+        
+        if np.isnan(Z_cor_mat[i,j]):
+            
+            print i,j
+            
+            print keep_val
+            print s1
+            print s2
+            print cor_mat[i,j]
+            
+            0/0
+        elif np.isinf(Z_cor_mat[i,j]):
+            
+            print "find infinity"
+            print i,j
+            
+            print s1
+            print s2
+            
+            print cor_mat[i,j]
+            
+            0/0
         
         Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
         
@@ -711,6 +744,28 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
             conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
         else:
             conf_cor_mat[i,j] = - cor_mat[i,j] + np.tanh(Z_cor_mat[i,j] + norm/np.sqrt(deg_freedom))
+            
+        #if np.sum(np.logical_or(np.isnan(ts_mat2[:,i]),np.isnan(ts_mat2[:,j]))) != 0:
+            
+            #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
+    
+    
+    #for i,j in it.combinations(range(n), 2):
+    
+        #s1 = ts_mat2[:,i]
+        #s2 = ts_mat2[:,j]
+        
+        
+        
+        #cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
+        #Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
+        
+        #Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
+        
+        #if cor_mat[i,j] > 0:
+            #conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
+        #else:
+            #conf_cor_mat[i,j] = - cor_mat[i,j] + np.tanh(Z_cor_mat[i,j] + norm/np.sqrt(deg_freedom))
             
         
         #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
@@ -1634,7 +1689,9 @@ def return_coclass_mat(community_vect,corres_coords,gm_mask_coords):
     
     print where_in_gm
     
-    print np.min(where_in_gm),np.max(where_in_gm),where_in_gm.shape
+    print np.min(where_in_gm)
+    print np.max(where_in_gm)
+    print where_in_gm.shape
     
     if (where_in_gm.shape[0] != community_vect.shape[0]):
         print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
@@ -1653,7 +1710,43 @@ def return_coclass_mat(community_vect,corres_coords,gm_mask_coords):
         
     return coclass_mat,possible_edge_mat
     
+def where_in_labels(corres_labels,gm_mask_labels):
+
+    return np.array([gm_mask_labels.index(lab) for lab in corres_labels],dtype  = 'int64')
+
+def return_coclass_mat_labels(community_vect,corres_labels,gm_mask_labels):
+
+    print corres_labels.shape[0],community_vect.shape[0]
     
+    if (corres_labels.shape[0] != community_vect.shape[0]):
+        print "warning, length of corres_labels and community_vect are imcompatible {} {}".format(corres_labels.shape[0],community_vect.shape[0])
+    
+    where_in_gm = where_in_labels(corres_labels.tolist(),gm_mask_labels.tolist())
+    
+    print where_in_gm
+    
+    print np.min(where_in_gm)
+    print np.max(where_in_gm)
+    print where_in_gm.shape
+    
+    if (where_in_gm.shape[0] != community_vect.shape[0]):
+        print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
+    
+    coclass_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+        
+    possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    for i,j in it.combinations(range(where_in_gm.shape[0]),2):
+    
+        coclass_mat[where_in_gm[i],where_in_gm[j]] = np.int(community_vect[i] == community_vect[j])
+        coclass_mat[where_in_gm[j],where_in_gm[i]] = np.int(community_vect[i] == community_vect[j])
+        
+        possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
+        
+    return coclass_mat,possible_edge_mat
+    
+
 
 #def return_coclass_mat_list_by_module(community_vect,corres_coords,gm_mask_coords):
 
@@ -1793,6 +1886,75 @@ def return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords):
         possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
         
     return corres_correl_mat,possible_edge_mat
+
+
+
+def return_corres_correl_mat_labels(Z_cor_mat,corres_labels,gm_mask_labels):
+
+    where_in_gm = where_in_labels(corres_labels.tolist(),gm_mask_labels.tolist())
+    
+    print Z_cor_mat.shape
+    
+    #print where_in_gm
+    
+    #print np.min(where_in_gm)
+    #print np.max(where_in_gm)
+    #print where_in_gm.shape
+    
+    
+    print np.min(where_in_gm),np.max(where_in_gm),where_in_gm.shape
+    
+    
+    corres_correl_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = float)
+    possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    for i,j in it.product(range(len(where_in_gm)),repeat = 2):
+    
+        #print i,j
+        
+        #print where_in_gm[i],where_in_gm[j]
+        #print corres_correl_mat[where_in_gm[i],where_in_gm[j]]
+        #print Z_cor_mat[i,j]
+        
+        corres_correl_mat[where_in_gm[i],where_in_gm[j]] = Z_cor_mat[i,j]
+        
+        #print corres_correl_mat[where_in_gm[i],where_in_gm[j]]
+        
+        possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        
+    print corres_correl_mat.shape
+    
+    return corres_correl_mat,possible_edge_mat
+
+
+
+
+
+    
+    
+    
+    #if (where_in_gm.shape[0] != community_vect.shape[0]):
+        #print "warning, length of where_in_gm and community_vect are imcompatible {} {}".format(where_in_gm.shape[0],community_vect.shape[0])
+    
+    #coclass_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+        
+    #possible_edge_mat = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+    
+    #for i,j in it.combinations(range(where_in_gm.shape[0]),2):
+    
+        #coclass_mat[where_in_gm[i],where_in_gm[j]] = np.int(community_vect[i] == community_vect[j])
+        #coclass_mat[where_in_gm[j],where_in_gm[i]] = np.int(community_vect[i] == community_vect[j])
+        
+        #possible_edge_mat[where_in_gm[i],where_in_gm[j]] = 1
+        #possible_edge_mat[where_in_gm[j],where_in_gm[i]] = 1
+        
+    #return coclass_mat,possible_edge_mat
+    
+
+
+
+
+
 
 ##def return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords):
     

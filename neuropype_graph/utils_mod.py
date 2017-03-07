@@ -5,6 +5,7 @@ Support function for net handling
 import sys
 import time
 
+import pandas as pd
 import numpy as np
 import scipy.sparse as sp 
 
@@ -29,7 +30,21 @@ def get_modularity_value_from_lol_file(modularity_file):
         print "Unable to find modularity line in file, returning -1"
         
         return -1.0
-
+    
+def get_max_degree_from_node_info_file(info_nodes_file):
+    """
+    Return max degree AND index and name of max degree (radatools based)  
+    """
+    df = pd.read_table(info_nodes_file)
+    
+    print df
+    
+    print df['Degree'].max()
+    
+    print df[df['Degree'] == df['Degree'].max()]
+    
+    return df['Degree'].max(),df[df['Degree'] == df['Degree'].max()].Index.values[0],df[df['Degree'] == df['Degree'].max()].Name.values[0]
+    
 def get_values_from_global_info_file(global_info_file):
     
     global_values = {}

@@ -1,0 +1,242 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome to Neuropype_graph’s documentation! &mdash; Neuropype_graph 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Neuropype_graph 0.1 documentation" href="#"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Neuropype_graph
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">Neuropype_graph</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>Welcome to Neuropype_graph&#8217;s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="welcome-to-neuropype-graph-s-documentation">
+<h1>Welcome to Neuropype_graph&#8217;s documentation!<a class="headerlink" href="#welcome-to-neuropype-graph-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+<div class="section" id="computeconfcormat">
+<h1>ComputeConfCorMat<a class="headerlink" href="#computeconfcormat" title="Permalink to this headline">¶</a></h1>
+<p>Definition of Nodes for computing correlation matrices</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ComputeConfCorMat</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span></dt>
+<dd><p>Description:</p>
+<p>Compute correlation between time series, with a given confidence interval. If weight_file is specified, used for weighted correlation</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Numpy files with time series to be correlated&#8217;,mandatory=True</dd>
+<dt>transpose_ts:</dt>
+<dd>type = Bool, default=True,usedefault = True,desc =  &#8216;whether to transpose timeseries&#8217;, mandatory = True</dd>
+<dt>weight_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Weight of the correlation (normally, condition regressor file)&#8217;, mandatory=False</dd>
+<dt>conf_interval_prob:</dt>
+<dd>type = Float, default = 0.05, usedefault = True, desc=&#8217;Confidence interval&#8217;, mandatory=True</dd>
+<dt>plot_mat:</dt>
+<dd>type = Bool, default = True, usedefault = True, desc=&#8217;Confidence interval&#8217;, mandatory=False</dd>
+<dt>labels_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Name of the nodes (used only if plot = true)&#8217;, mandatory=False</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the R values of correlation&#8221;</dd>
+<dt>Z_cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the Z-values (after Fisher&#8217;s R-to-Z trasformation) of correlation&#8221;</dd>
+<dt>conf_cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the confidence interval around R values&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, David Meunier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

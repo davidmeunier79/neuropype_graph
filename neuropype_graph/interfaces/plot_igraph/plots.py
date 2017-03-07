@@ -16,8 +16,8 @@ from nipype.interfaces.base import BaseInterface, \
          
 ######################################################################################## PlotIGraphModules ##################################################################################################################
 
-from dmgraphanalysis_nodes.utils_net import read_lol_file,read_Pajek_corres_nodes_and_sparse_matrix
-from dmgraphanalysis_nodes.plot_igraph import plot_3D_igraph_all_modules,plot_3D_igraph_single_modules
+from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes_and_sparse_matrix
+from neuropype_graph.plot_igraph import plot_3D_igraph_all_modules,plot_3D_igraph_single_modules
 
 import csv
 
@@ -31,9 +31,8 @@ class PlotIGraphModulesInputSpec(BaseInterfaceInputSpec):
     
 class PlotIGraphModulesOutputSpec(TraitedSpec):
     
-    Z_list_single_modules_files = traits.List(File(exists=True), desc="graphical representation in space of each module independantly")    
-    Z_list_all_modules_files = traits.List(File(exists=True), desc="graphical representation in space from different point of view of all modules together")
-    Z_list_all_modules_FR_file = traits.File(exists=True, desc="graphical topological representation of all modules together")
+    #Z_list_single_modules_files = traits.List(File(exists=True), desc="graphical representation in space of each module independantly")    
+    all_modules_files = traits.List(File(exists=True), desc="graphical representation in space (possibly, if coords is given) from different point of view of all modules together + (surely) topological representation")
     
 class PlotIGraphModules(BaseInterface):
     
@@ -89,11 +88,6 @@ class PlotIGraphModules(BaseInterface):
             
             print 'extracting node coords'
             
-            #with open(coords_file, 'Ur') as f:
-                #coords_list = list(tuple(map(int,rec))[0:2] for rec in csv.reader(f, delimiter=' '))
-            
-            
-            
             coords = np.array(np.loadtxt(coords_file),dtype = 'float')
             print coords.shape
             
@@ -120,7 +114,7 @@ class PlotIGraphModules(BaseInterface):
             print len(node_labels)
             
         else :
-            node_labels = []
+            node_labels = node_corres.tolist()
             
         if isdefined(node_roles_file):
         
@@ -139,23 +133,27 @@ class PlotIGraphModules(BaseInterface):
         
         print "plotting 3D modules with igraph"
         
-        Z_list_single_modules_files = plot_3D_igraph_single_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles,nb_min_nodes_by_module = 5)
-        Z_list_all_modules_files = plot_3D_igraph_all_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles)
-        Z_list_all_modules_FR_file = plot_3D_igraph_all_modules(community_vect,Z_list,node_labels= node_labels,node_roles = node_roles, layout = 'FR')
+        #Z_list_single_modules_files = plot_3D_igraph_single_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles,nb_min_nodes_by_module = 5)
         
-        self.Z_list_single_modules_files = Z_list_single_modules_files
-        self.Z_list_all_modules_files = Z_list_all_modules_files
-        self.Z_list_all_modules_FR_file = Z_list_all_modules_FR_file
-                
+        print node_coords.size
+        
+        if node_coords.size != 0:
+        
+            self.all_modules_files = plot_3D_igraph_all_modules(community_vect,Z_list,node_coords,node_labels,node_roles = node_roles)
+        else:
+            self.all_modules_files = []
+           
+        FR_module_file = plot_3D_igraph_all_modules(community_vect,Z_list,node_labels= node_labels,node_roles = node_roles, layout = 'FR')
+        
+        self.all_modules_files.append(FR_module_file)
+        
         return runtime
         
     def _list_outputs(self):
         
         outputs = self._outputs().get()
         
-        outputs["Z_list_single_modules_files"] = self.Z_list_single_modules_files
-        outputs["Z_list_all_modules_files"] =self.Z_list_all_modules_files 
-        outputs["Z_list_all_modules_FR_file"] =self.Z_list_all_modules_FR_file 
+        outputs["all_modules_files"] =self.all_modules_files 
         
         
         return outputs
@@ -164,7 +162,7 @@ class PlotIGraphModules(BaseInterface):
 
 from nipype.utils.filemanip import split_filename as split_f
 
-from dmgraphanalysis_nodes.plot_igraph import plot_3D_igraph_bin_mat
+from neuropype_graph.plot_igraph import plot_3D_igraph_bin_mat
     
 class PlotIGraphCoclassInputSpec(BaseInterfaceInputSpec):
     
@@ -252,8 +250,8 @@ class PlotIGraphCoclass(BaseInterface):
         
 ############################################################################################### PlotIGraphConjCoclass #####################################################################################################
 
-from dmgraphanalysis_nodes.plot_igraph import plot_3D_igraph_int_mat
-from dmgraphanalysis_nodes.utils import check_np_shapes
+from neuropype_graph.plot_igraph import plot_3D_igraph_int_mat
+from neuropype_graph.utils import check_np_shapes
 
 class PlotIGraphConjCoclassInputSpec(BaseInterfaceInputSpec):
     
@@ -291,8 +289,6 @@ class PlotIGraphConjCoclass(BaseInterface):
         threshold = self.inputs.threshold
         gm_mask_coords_file = self.inputs.gm_mask_coords_file
             
-        #from dmgraphanalysis.utils_plot import plot_ranged_cormat
-        
         
         #from nipype.utils.filemanip import split_filename as split_f
         
