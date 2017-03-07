@@ -100,28 +100,31 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
         
         descript_columns.remove('all')
     
-    for column in descript_columns:
-    
-        assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
+    if len(descript_columns) != 0:
+            
+            
+        for column in descript_columns:
+        
+            assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
 
-    for elem, lines in all_descriptors.groupby(by = descript_columns):
-    
-        print elem
-        #print lines
-        print lines.index
+        for elem, lines in all_descriptors.groupby(by = descript_columns):
         
-        print all_cormats.shape
-        
-        elem_cormats = all_cormats[lines.index,:,:]
-        
-        print elem_cormats.shape
-        
-        mean_elem = np.mean(elem_cormats,axis = 0)
-        
-        print mean_elem.shape
-        
-        dict_mean[elem] = mean_elem
-        
+            print elem
+            #print lines
+            print lines.index
+            
+            print all_cormats.shape
+            
+            elem_cormats = all_cormats[lines.index,:,:]
+            
+            print elem_cormats.shape
+            
+            mean_elem = np.mean(elem_cormats,axis = 0)
+            
+            print mean_elem.shape
+            
+            dict_mean[elem] = mean_elem
+            
     return dict_mean
 
 
