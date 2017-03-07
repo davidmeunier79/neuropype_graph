@@ -109,7 +109,7 @@ def plot_3D_igraph_int_mat_modules(plot_nbs_adj_mat_file,int_matrix,coords = np.
     ig.plot(g, plot_nbs_adj_mat_file, layout = layout2D , edge_curved = False)
     
 
-def plot_3D_igraph_bin_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = []):
+def plot_3D_igraph_bin_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = [],color = "blue"):
     
     g = return_base_weighted_graph(int_matrix)
     
@@ -145,7 +145,7 @@ def plot_3D_igraph_bin_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]
         
         for w in g.es['weight']:
             
-            edge_col.append('blue')
+            edge_col.append(color)
            
         g.es['color'] = edge_col
         
@@ -160,6 +160,8 @@ def plot_3D_igraph_bin_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]
 def plot_3D_igraph_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = [], edge_colors = ['Gray','Blue','Red'], node_col_labels = np.array([]),nodes_sizes = np.array([]),view_from = '_from_left'):
     
     g = return_base_weighted_graph(int_matrix)
+    
+    print g
     
     print labels
     
@@ -239,9 +241,15 @@ def plot_3D_igraph_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]
     ig.plot(g, plot_nbs_adj_mat_file, layout = layout2D , edge_curved = False)
     
     
-def plot_3D_igraph_signed_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = [], edge_colors = ['Gray','Blue','Red']):
+def plot_3D_igraph_signed_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.array([]),labels = []):
+    
+    print np.sum(int_matrix == 1)
+    print np.sum(int_matrix == 0)
+    print np.sum(int_matrix == -1)
     
     g = return_base_weighted_graph(int_matrix)
+    
+    print g.es['weight']
     
     print labels
     
@@ -299,10 +307,11 @@ def plot_3D_igraph_signed_int_mat(plot_nbs_adj_mat_file,int_matrix,coords = np.a
             elif int(w) == 4:
                 edge_col.append('red')
                 
+            print w,int(w)
+            
         
         #g_all.es['names'] = edge_list_names
         #g_all.vs['names'] = node_list_names
-        
         g.es['color'] = edge_col
         
         ig.plot(g, plot_nbs_adj_mat_file, layout = layout2D , vertex_size = 0.2,    edge_width =  1)
