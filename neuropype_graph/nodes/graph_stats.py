@@ -311,7 +311,7 @@ class PrepareCormat(BaseInterface):
         
             print 'loading gm mask corres'
             
-            gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+            gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file), dtype = 'int')
             
             print gm_mask_coords.shape
                 
@@ -342,7 +342,7 @@ class PrepareCormat(BaseInterface):
                     print Z_cor_mat.shape
                     
                     
-                    coords = np.loadtxt(coords_files[index_file])
+                    coords = np.array(np.loadtxt(coords_files[index_file]),dtype = 'int')
                     print coords.shape
                     
                     
@@ -658,7 +658,7 @@ class ShuffleMatrix(BaseInterface):
             
             np.fill_diagonal(original_matrix,np.nan)
         
-            shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
+            shuffled_matrix = np.zefros(shape = original_matrix.shape,dtype = original_matrix.dtype)
         
             for i,j in iter.combinations(range(original_matrix.shape[0]),2):
                 print i,j
