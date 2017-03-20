@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Correl Mat &mdash; Neuropype_graph 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Neuropype_graph 0.1 documentation" href="index.html" />
+    <link rel="next" title="CoClass" href="coclass.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="includeme.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="coclass.html" title="CoClass"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="includeme.html" title="&lt;no title&gt;"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Neuropype_graph 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="correl-mat">
+<h1>Correl Mat<a class="headerlink" href="#correl-mat" title="Permalink to this headline">¶</a></h1>
+<p>Functions used for the generation of weighted correlation matrices</p>
+<div class="section" id="computeconfcormat">
+<h2>ComputeConfCorMat<a class="headerlink" href="#computeconfcormat" title="Permalink to this headline">¶</a></h2>
+<p>Definition of Nodes for computing correlation matrices</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ComputeConfCorMat</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span></dt>
+<dd><p>Description:</p>
+<p>Compute correlation between time series, with a given confidence interval. If weight_file is specified, used for weighted correlation</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Numpy files with time series to be correlated&#8217;,mandatory=True</dd>
+<dt>transpose_ts:</dt>
+<dd>type = Bool, default=True,usedefault = True,desc =  &#8216;whether to transpose timeseries&#8217;, mandatory = True</dd>
+<dt>weight_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Weight of the correlation (normally, condition regressor file)&#8217;, mandatory=False</dd>
+<dt>conf_interval_prob:</dt>
+<dd>type = Float, default = 0.05, usedefault = True, desc=&#8217;Confidence interval&#8217;, mandatory=True</dd>
+<dt>plot_mat:</dt>
+<dd>type = Bool, default = True, usedefault = True, desc=&#8217;Confidence interval&#8217;, mandatory=False</dd>
+<dt>labels_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;Name of the nodes (used only if plot = true)&#8217;, mandatory=False</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the R values of correlation&#8221;</dd>
+<dt>Z_cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the Z-values (after Fisher&#8217;s R-to-Z trasformation) of correlation&#8221;</dd>
+<dt>conf_cor_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;npy file containing the confidence interval around R values&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="extractts">
+<h2>ExtractTS<a class="headerlink" href="#extractts" title="Permalink to this headline">¶</a></h2>
+<p>Definition of Nodes for computing correlation matrices</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ExtractTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span></dt>
+<dd><p>Description: Extract time series from a labelled mask in Nifti Format where all ROIs have the same index</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>indexed_rois_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)&#8217;, mandatory=True</dd>
+<dt>file_4D:</dt>
+<dd>type = File, exists=True, desc=&#8216;4D volume to be extracted&#8217;, mandatory=True</dd>
+<dt>coord_rois_file:</dt>
+<dd>type = File, desc=&#8217;ROI coordinates&#8217;</dd>
+<dt>min_BOLD_intensity:</dt>
+<dd>type = Float, default = 50.0, desc=&#8217;BOLD signal below this value will be set to zero&#8217;,usedefault = True</dd>
+<dt>percent_signal:</dt>
+<dd>type = Float, default = 0.5, desc  = &#8220;Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI&#8221;,usedefault = True</dd>
+<dt>plot_fig:</dt>
+<dd>type = Bool, defaults = False, desc = &#8220;Plotting mean signal or not&#8221;, usedefault = True)</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>mean_masked_ts_file: </dt>
+<dd>type = File, exists=True, desc=&#8221;mean ts in .npy (pickle format)&#8221;</dd>
+<dt>subj_coord_rois_file: </dt>
+<dd>type = File, exists=True, desc=&#8221;ROI coordinates retained for the subject&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Correl Mat</a><ul>
+<li><a class="reference internal" href="#computeconfcormat">ComputeConfCorMat</a></li>
+<li><a class="reference internal" href="#extractts">ExtractTS</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="includeme.html"
+                        title="previous chapter">&lt;no title&gt;</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="coclass.html"
+                        title="next chapter">CoClass</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/correl_mat.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="coclass.html" title="CoClass"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="includeme.html" title="&lt;no title&gt;"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Neuropype_graph 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2017, David Meunier.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
+  </body>
+</html>
