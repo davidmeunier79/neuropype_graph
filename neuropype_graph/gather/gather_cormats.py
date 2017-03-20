@@ -102,7 +102,6 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
     
     if len(descript_columns) != 0:
             
-            
         for column in descript_columns:
         
             assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
