@@ -292,7 +292,26 @@ class PrepareCormatOutputSpec(TraitedSpec):
 class PrepareCormat(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+        
+        Average correlation matrices, within a common reference (based on labels, or coordiantes
+        
+    Inputs:
+    
+        cor_mat_files:
+            type = List of File, (exists=True), desc='list of all correlation matrice files (in npy format) for each subject', mandatory=True
+
+        coords_files:
+            type = List of File, (exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['labels_files']
+
+        labels_files = traits.List(File(exists=True), desc='list of labels (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['coords_files'])
+
+        gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=False, xor = ['gm_mask_labels_file'])
+
+        gm_mask_labels_file = File(exists=True, desc='Labels for all possible nodes - in case coords are varying from one indiv to the other (source space for example)', mandatory=False, xor = ['gm_mask_coords_file'])
+
+        
+    
     """
     input_spec = PrepareCormatInputSpec
     output_spec = PrepareCormatOutputSpec
@@ -311,7 +330,7 @@ class PrepareCormat(BaseInterface):
         
             print 'loading gm mask corres'
             
-            gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+            gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file), dtype = 'int')
             
             print gm_mask_coords.shape
                 
@@ -342,7 +361,7 @@ class PrepareCormat(BaseInterface):
                     print Z_cor_mat.shape
                     
                     
-                    coords = np.loadtxt(coords_files[index_file])
+                    coords = np.array(np.loadtxt(coords_files[index_file]),dtype = 'int')
                     print coords.shape
                     
                     
@@ -658,7 +677,7 @@ class ShuffleMatrix(BaseInterface):
             
             np.fill_diagonal(original_matrix,np.nan)
         
-            shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
+            shuffled_matrix = np.zefros(shape = original_matrix.shape,dtype = original_matrix.dtype)
         
             for i,j in iter.combinations(range(original_matrix.shape[0]),2):
                 print i,j

@@ -367,7 +367,7 @@ def create_indexed_mask(ref_img_file, MNI_coords_list, ROI_dir, ROI_mask_prefix,
         print "directory already created"
         
     #ROI_coords_labelled_mask_file = os.path.join(path,"All_labelled_ROI2-neigh_"+str(neighbourhood)+".nii")
-    indexed_mask_file = os.path.join(ROI_dir,"2indexed_mask-"+ ROI_mask_prefix +".nii")
+    indexed_mask_file = os.path.join(ROI_dir,"indexed_mask-"+ ROI_mask_prefix +".nii")
     
     ###save ROI_coords_labelled_mask
     

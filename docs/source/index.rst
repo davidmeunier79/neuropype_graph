@@ -6,12 +6,17 @@
 Welcome to Neuropype_graph's documentation!
 ===========================================
 
-Contents:
+Nodes:
 
 .. toctree::
    :maxdepth: 2
-
-
+   
+   includeme
+   
+   correl_mat
+   coclass
+   modularity
+   graph_stats
 
 Indices and tables
 ==================
@@ -20,10 +25,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
-
-ComputeConfCorMat
-=================
-.. automodule:: neuropype_graph.nodes.correl_mat
-   :members: ComputeConfCorMat
-   :noindex:
+.. Correl Mat
+.. ==========
+.. * :ref:`correl_mat`
+.. 

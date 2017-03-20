@@ -45,7 +45,29 @@ class ComputeNetListOutputSpec(TraitedSpec):
 class ComputeNetList(BaseInterface):
     
     """
-    Format correlation matrix to a list format i j weight (integer)
+    Description:
+    
+        Format correlation matrix to a list: format i j weight (integer = float * 1000)
+        
+    Inputs:
+    
+        Z_cor_mat_file:
+            type = File, exists=True, desc='Normalized correlation matrix', mandatory=True
+    
+        coords_file:
+            type = File, exists=True, desc='Corresponding coordiantes', mandatory=False
+    
+        threshold:
+            type = Float, xor = ['density'], mandatory = False
+    
+        density:
+            type = Float, xor = ['threshold'], mandatory = False
+    
+    Outputs:
+            
+        net_List_file:
+            type = File, exists=True, desc="net list for radatools"
+    
     """
 
     input_spec = ComputeNetListInputSpec
@@ -97,8 +119,6 @@ class ComputeNetList(BaseInterface):
                 
                 f.write("max_thr_for_den:{}".format(max_thr_for_den))
 
-                f.close
-            
             Z_list = Z_list[sorted_indexes,:]
             
             print Z_list

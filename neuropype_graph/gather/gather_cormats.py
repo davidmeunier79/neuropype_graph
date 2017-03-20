@@ -92,30 +92,38 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
     print "In compute_mean_cormats"
     
-    for column in descript_columns:
-    
-        assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
-
     dict_mean = {}
     
-    for elem, lines in all_descriptors.groupby(by = descript_columns):
+    if 'all' in descript_columns:
+        
+        dict_mean['all'] = np.mean(all_cormats,axis = 0)
+        
+        descript_columns.remove('all')
     
-        print elem
-        #print lines
-        print lines.index
+    if len(descript_columns) != 0:
+            
+        for column in descript_columns:
         
-        print all_cormats.shape
+            assert column in all_descriptors.columns, "Error, {} not in {}".format(column,all_descriptors.columns)
+
+        for elem, lines in all_descriptors.groupby(by = descript_columns):
         
-        elem_cormats = all_cormats[lines.index,:,:]
-        
-        print elem_cormats.shape
-        
-        mean_elem = np.mean(elem_cormats,axis = 0)
-        
-        print mean_elem.shape
-        
-        dict_mean[elem] = mean_elem
-        
+            print elem
+            #print lines
+            print lines.index
+            
+            print all_cormats.shape
+            
+            elem_cormats = all_cormats[lines.index,:,:]
+            
+            print elem_cormats.shape
+            
+            mean_elem = np.mean(elem_cormats,axis = 0)
+            
+            print mean_elem.shape
+            
+            dict_mean[elem] = mean_elem
+            
     return dict_mean
 
 

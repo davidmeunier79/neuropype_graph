@@ -50,17 +50,48 @@ class ExtractTSOutputSpec(TraitedSpec):
 
 class ExtractTS(BaseInterface):
     
-    """Extract time series from a labelled mask in Nifti Format where all ROIs have the same index"""
+    """
+    
+    Description: Extract time series from a labelled mask in Nifti Format where all ROIs have the same index
+    
+    Inputs:
+    
+        indexed_rois_file:
+            type = File, exists=True, desc='indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True
+        
+        file_4D:
+            type = File, exists=True, desc='4D volume to be extracted', mandatory=True
+        
+        coord_rois_file:
+            type = File, desc='ROI coordinates'
+        
+        min_BOLD_intensity:
+            type = Float, default = 50.0, desc='BOLD signal below this value will be set to zero',usedefault = True
+
+        percent_signal:
+            type = Float, default = 0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",usedefault = True
+        
+        plot_fig:
+            type = Bool, defaults = False, desc = "Plotting mean signal or not", usedefault = True)
+        
+    Outputs:
+        
+        mean_masked_ts_file: 
+            type = File, exists=True, desc="mean ts in .npy (pickle format)"
+    
+        subj_coord_rois_file: 
+            type = File, exists=True, desc="ROI coordinates retained for the subject"
+            
+            
+    
+
+    """
 
     input_spec = ExtractTSInputSpec
     output_spec = ExtractTSOutputSpec
 
     def _run_interface(self, runtime):
-            
-        #import os
-        #import numpy as np
-        #import nibabel as nib
-                
+              
         coord_rois_file = self.inputs.coord_rois_file
         indexed_rois_file = self.inputs.indexed_rois_file
         file_4D = self.inputs.file_4D
@@ -76,11 +107,7 @@ class ExtractTS(BaseInterface):
         
         ## loading ROI indexed mask
         indexed_rois_img = nib.load(indexed_rois_file)
-        
         indexed_mask_rois_data = indexed_rois_img.get_data()
-        
-        #print "indexed_mask_rois_data: "
-        #print indexed_mask_rois_data.shape
         
         ### loading time series
         orig_ts = nib.load(file_4D).get_data()
@@ -132,24 +159,27 @@ from neuropype_graph.utils_cor import mean_select_indexed_mask_data
 class IntersectMaskInputSpec(BaseInterfaceInputSpec):
     
     
-    indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)', mandatory=True)
+    indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)', mandatory=True)
+    
     filter_mask_file = File( exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True)
     
     coords_rois_file = File(desc='ijk coords txt file')
+    
     labels_rois_file = File( desc='labels txt file')
+    
     MNI_coords_rois_file = File(desc='MNI coords txt file')
     
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
                           
 class IntersectMaskOutputSpec(TraitedSpec):
     
-    filtered_indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)')
-    
+    filtered_indexed_rois_file = File(exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)')
     
     filtered_coords_rois_file = File(exists=False, desc='filtered ijk coords txt file')    
-    #
+    
     filtered_labels_rois_file = File(exists=False, desc='filtered labels txt file')
-    #filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
+    
+    filtered_MNI_coords_rois_file = File(exists=False, desc='filtered MNI coords txt file')
     
     
 
@@ -157,8 +187,45 @@ class IntersectMaskOutputSpec(TraitedSpec):
 class IntersectMask(BaseInterface):
     
     """
-    Keep only values of indexed mask where filtermask is present
-    Optionnally, keep only ijk_coords, MNI_coords and labels that are kept in filtered mask
+    Description:
+        Keep only values of indexed mask where filtermask is present
+        Optionnally, keep only ijk_coords, MNI_coords and labels that are kept in filtered mask
+        
+    Inputs:
+            
+        indexed_rois_file:
+        
+            type = File, exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)', mandatory=True
+            
+        filter_mask_file:
+            type = File, exists=True, desc='nii file with (binary) mask - e.g. grey matter mask', mandatory=True
+        
+        coords_rois_file:
+            type = File, desc='ijk coords txt file'
+            
+        labels_rois_file:
+            type = File, desc='labels txt file'
+            
+        MNI_coords_rois_file:
+            type = File, desc='MNI coords txt file'
+        
+        filter_thr:
+            type = Float, default = 0.99, usedefault = True, desc='Value to threshold filter_mask'
+                        
+    Outputs:
+    
+        filtered_indexed_rois_file:
+            type = File, exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)'
+        
+        filtered_coords_rois_file:
+            type = File, exists=False, desc='filtered ijk coords txt file' 
+        
+        filtered_labels_rois_file:
+            type = File, exists=False, desc='filtered labels txt file'
+        
+        filtered_MNI_coords_rois_file:
+            type = File, exists=False, desc='filtered MNI coords txt file'
+        
     """
 
     input_spec = IntersectMaskInputSpec
@@ -1047,7 +1114,7 @@ class MergeRuns(BaseInterface):
  
 from neuropype_graph.utils_cor import return_conf_cor_mat
 
-from neuropype_graph.utils_plot import plot_hist,plot_cormat
+from neuropype_graph.utils_plot import plot_hist,plot_cormat,plot_ranged_cormat
         
 class ComputeConfCorMatInputSpec(BaseInterfaceInputSpec):
     
@@ -1217,6 +1284,8 @@ class ComputeConfCorMat(BaseInterface):
             
             plot_cormat(plot_heatmap_cor_mat_file,cor_mat,list_labels = labels)
             
+            
+            
             #### histogram 
             
             print 'plotting cor_mat histogram'
@@ -1236,6 +1305,14 @@ class ComputeConfCorMat(BaseInterface):
             plot_heatmap_Z_cor_mat_file =  os.path.abspath('heatmap_Z_cor_mat_' + fname + '.eps')
             
             plot_cormat(plot_heatmap_Z_cor_mat_file,Z_cor_mat,list_labels = labels)
+            
+            #### heatmap 
+            
+            print 'plotting cor_mat heatmap'
+            
+            plot_heatmap_ranged_Z_cor_mat_file =  os.path.abspath('heatmap_ranged_cor_mat_' + fname + '.eps')
+            
+            plot_ranged_cormat(plot_heatmap_ranged_Z_cor_mat_file,Z_cor_mat,fix_full_range = [0.0,3.5],list_labels = labels)
             
             #### histogram 
             
