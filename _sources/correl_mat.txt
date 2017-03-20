@@ -9,6 +9,7 @@ ComputeConfCorMat
 *****************
 .. automodule:: neuropype_graph.nodes.correl_mat
    :members: ComputeConfCorMat
+        
    :noindex:
 
 ExtractTS
