@@ -292,7 +292,26 @@ class PrepareCormatOutputSpec(TraitedSpec):
 class PrepareCormat(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+        
+        Average correlation matrices, within a common reference (based on labels, or coordiantes
+        
+    Inputs:
+    
+        cor_mat_files:
+            type = List of File, (exists=True), desc='list of all correlation matrice files (in npy format) for each subject', mandatory=True
+
+        coords_files:
+            type = List of File, (exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['labels_files']
+
+        labels_files = traits.List(File(exists=True), desc='list of labels (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['coords_files'])
+
+        gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=False, xor = ['gm_mask_labels_file'])
+
+        gm_mask_labels_file = File(exists=True, desc='Labels for all possible nodes - in case coords are varying from one indiv to the other (source space for example)', mandatory=False, xor = ['gm_mask_coords_file'])
+
+        
+    
     """
     input_spec = PrepareCormatInputSpec
     output_spec = PrepareCormatOutputSpec
