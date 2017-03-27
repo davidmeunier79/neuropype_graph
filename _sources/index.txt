@@ -27,6 +27,8 @@ Interfaces:
    :maxdepth: 2
    
    radatools
+   
+   plot_igraph
     
 
 Indices and tables
