@@ -3,6 +3,9 @@ neuropype_graph
 
 Neuropype project for graph analysis, can be used from neuropype_ephy and nipype
 
+Documentation
+-------------
+
 http://davidmeunier79.github.io/neuropype_graph/
 
 Radatools
