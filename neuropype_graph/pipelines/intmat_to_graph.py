@@ -138,6 +138,28 @@ except ImportError:
     
 def create_pipeline_intmat_to_graph_threshold(main_path,analysis_name = "int_graph_thr_pipe",threshold = 50, mod = False, plot = False,radatools_optim = ""):
 
+    """
+    
+    Description:
+    
+    Pipeline from integer matrices (normally coclassification matrices) to graph analysis
+    
+    Threshold is value based, normally a pourcentage (threshold, 50 -> 50%)
+    
+    Inputs (inputnode):
+    
+        * int_mat_file
+        * coords_file
+        * labels_file
+    
+    
+    Comments:
+    
+    Used for coclassification, not so much used anymore
+    
+    
+    """
+    
     pipeline = pe.Workflow(name=analysis_name)
     pipeline.base_dir = main_path
 

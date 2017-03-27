@@ -188,13 +188,13 @@ class IntersectMask(BaseInterface):
     
     """
     Description:
-        Keep only values of indexed mask where filtermask is present
-        Optionnally, keep only ijk_coords, MNI_coords and labels that are kept in filtered mask
+    
+    Keep only values of indexed mask where filter_mask is present.
+    Optionnally, keep only ijk_coords, MNI_coords and labels that are kept in filtered mask
         
     Inputs:
             
         indexed_rois_file:
-        
             type = File, exists=True, desc='nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)', mandatory=True
             
         filter_mask_file:
@@ -408,27 +408,57 @@ class IntersectMask(BaseInterface):
 from neuropype_graph.utils_cor import mean_select_mask_data
 
 class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
+    
+    file_4D = File(exists=True, desc='4D volume to be extracted', mandatory=True)
+    
     mask_file = File(xor = ['filter_mask_file'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True)
     
     filter_mask_file = File(xor = ['mask_file'],requires = ['filter_thr'], exists=True, desc='mask file where all voxels belonging to the selected region have values higher than threshold', mandatory=True)
     
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
     
-    file_4D = File(exists=True, desc='4D volume to be extracted', mandatory=True)
-    
-    suffix = traits.String(desc='Suffix added to describe the extracted time series',mandatory=False)
+    suffix = traits.String("suf",desc='Suffix added to describe the extracted time series',mandatory=False,usedefault = True)
 
     plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
     
 class ExtractMeanTSOutputSpec(TraitedSpec):
     
-    mean_masked_ts_file = File(exists=True, desc="mean ts in .npy (pickle format)")
+    mean_masked_ts_file = File(exists=True, desc="mean ts in .npy format")
     
 
 class ExtractMeanTS(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+    
+    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1 (mask_file), or from a percent mask (filter_mask_file) with values higher than threshold (filter_thr)
+    
+    Inputs:
+        
+        file_4D:
+            type = File, exists=True, desc='4D volume to be extracted', mandatory=True
+        
+        mask_file:
+            type = File, xor = ['filter_mask_file'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True
+        
+        filter_mask_file:
+            type = File, xor = ['mask_file'],requires = ['filter_thr'], exists=True, desc='mask file where all voxels belonging to the selected region have values higher than threshold', mandatory=True
+        
+        filter_thr:
+            type = Float, default = 0.99, usedefault = True, desc='Value to threshold filter_mask'
+        
+        suffix:
+            type = String, default = "suf",desc='Suffix added to describe the extracted time series',mandatory=False,usedefault = True
+
+        plot_fig:
+            type = Bool, default = False, desc = "Plotting mean signal or not", usedefault = True
+        
+    Outputs:
+    
+        mean_masked_ts_file:
+            type = File, exists=True, desc="mean ts in .npy format"
+    
+
     """
     input_spec = ExtractMeanTSInputSpec
     output_spec = ExtractMeanTSOutputSpec
@@ -444,11 +474,7 @@ class ExtractMeanTS(BaseInterface):
         plot_fig = self.inputs.plot_fig
         
         
-        if isdefined(self.inputs.suffix):
-            suffix = self.inputs.suffix
-        else:
-            suffix = "suf"
-            
+        suffix = self.inputs.suffix            
             
         print "loading img data " + file_4D
 
@@ -459,21 +485,27 @@ class ExtractMeanTS(BaseInterface):
         print img_data.shape
 
         
-        ### Reading 4D volume file to extract time series
+        ### Reading 3D mask file
         if isdefined(mask_file):
         
             print "loading mask data " + mask_file
 
             mask_data = nib.load(mask_file).get_data()
             
-        elif isdefined(filter_mask_file):
+        elif isdefined(filter_mask_file) and isdefined(filter_thr):
             print "loading filter mask data " + filter_mask_file
-
+            
             filter_mask_data = nib.load(filter_mask_file).get_data()
+            
             mask_data = np.zeros(shape = filter_mask_data.shape, dtype = 'int')
             
             mask_data[filter_mask_data > filter_thr] = 1
             
+        else:
+            print("Error, either mask_file or (filter_mask_file and filter_thr) should be defined")
+            
+            return
+        
         print np.unique(mask_data)
         print mask_data.shape
         
@@ -532,23 +564,35 @@ class ConcatTSOutputSpec(TraitedSpec):
 
 class ConcatTS(BaseInterface):
     
-    """Concenate time series """
+    """
+    Description:
+    
+    Concatenate time series 
+    
+    Inputs:
+    
+        all_ts_file:
+            type = File, exists=True, desc='npy file containing all ts to be concatenated', mandatory=True
+            
+    Outputs:
+        
+        concatenated_ts_file:
+            type = File, exists=True, desc="ts after concatenation"
+        
+    Comments:
+    
+    Not sure where it is used
+    """
 
     input_spec = ConcatTSInputSpec
     output_spec = ConcatTSOutputSpec
 
     def _run_interface(self, runtime):
             
-        #import os
-        #import numpy as np
-        #import nibabel as nib
-        
-        #from neuropype_graph.utils_plot import plot_signals
-        
         all_ts_file = self.inputs.all_ts_file
         
         
-        ## loading ROI coordinates
+        ## loading time series
         all_ts = np.load(all_ts_file)
         
         print "all_ts: " 
@@ -563,8 +607,6 @@ class ConcatTS(BaseInterface):
         np.save(concatenated_ts_file,concatenated_ts)
         
         return runtime
-        
-        #return mean_masked_ts_file,subj_coord_rois_file
         
     def _list_outputs(self):
         
@@ -587,7 +629,26 @@ class MergeTSOutputSpec(TraitedSpec):
 
 class MergeTS(BaseInterface):
     
-    """Merges time series from several files """
+    """
+    Description:
+    
+    Merges time series from several files 
+    
+    Inputs:
+    
+        all_ts_files:
+            type = List of Files, exists=True, desc='list of npy files containing all ts to be merged', mandatory=True
+            
+    Outputs:
+        
+        merged_ts_file: 
+            type = File, exists=True, desc="ts after merge"
+        
+    Comments:
+    
+    Used for multiple-session merges
+    
+    """
 
     input_spec = MergeTSInputSpec
     output_spec = MergeTSOutputSpec
@@ -641,7 +702,26 @@ class SeparateTSOutputSpec(TraitedSpec):
     
 class SeparateTS(BaseInterface):
     
-    """Extract time series from a labelled mask in Nifti Format where all ROIs have the same index"""
+    """
+    Description:
+    
+    Save all time series from a npy file to several single time series npy files
+    
+    Inputs:
+    
+        all_ts_file:
+            type = File, exists=True, desc='npy file containing all ts to be concatenated', mandatory=True
+            
+    Outputs:
+    
+        separated_ts_files
+            type = List of Files, exists=True, desc="ts files after separation"
+    
+    
+    Comments:
+    
+    Not sure where it is used...
+    """
 
     input_spec = SeparateTSInputSpec
     output_spec = SeparateTSOutputSpec
@@ -715,8 +795,38 @@ class RegressCovarOutputSpec(TraitedSpec):
     
 class RegressCovar(BaseInterface):
     """
-    Regress parameters of non-interest (i.e. movement parameters, white matter, csf) from signal
-    Optionnally filter and normalize (z-score) the residuals
+    Description:
+    
+    Regress parameters of non-interest (i.e. movement parameters, white matter, csf) from signal.
+    Optionnally filter and normalize (z-score) the residuals.
+    
+    Inputs:
+        
+        masked_ts_file:
+            type = File, exists=True, desc='Time series in npy format', mandatory=True
+        
+        rp_file: 
+            type = File, exists=True, desc='Movement parameters in txt format, SPM style', mandatory=True
+        
+        mean_wm_ts_file:
+            type = File: exists=True, desc='White matter signal', mandatory=False
+            
+        
+        mean_csf_ts_file:   
+            type = File, exists=True, desc='Cerebro-spinal fluid (ventricules) signal', mandatory=False
+        
+        filtered:
+            type= Bool, default = True, usedefault = True , desc = "Filter the signal  after regression?"
+        
+        normalized
+            type = Bool(True, usedefault = True , desc = "Normalize the signal after regression?"
+            
+    Outputs:
+    
+        resid_ts_file:
+            type = File, exists=True, desc="residuals of time series after regression of all paramters"
+    
+        
     """
     input_spec = RegressCovarInputSpec
     output_spec = RegressCovarOutputSpec
@@ -742,7 +852,6 @@ class RegressCovar(BaseInterface):
         print rp_file
         
         rp = np.genfromtxt(rp_file)
-        #rp = np.loadtxt(rp_file,dtype = np.float)
         
         print rp.shape
         
@@ -756,7 +865,6 @@ class RegressCovar(BaseInterface):
             
             print mean_csf_ts.shape
             
-            #rp = np.concatenate((rp,mean_csf_ts),axis = 1)
             rp = np.concatenate((rp,mean_csf_ts.reshape(mean_csf_ts.shape[0],1)),axis = 1)
             
             print rp.shape
@@ -770,8 +878,6 @@ class RegressCovar(BaseInterface):
             
             mean_wm_ts = np.loadtxt(mean_wm_ts_file)
             
-            
-            #rp = np.concatenate((rp,mean_csf_ts),axis = 1)
             rp = np.concatenate((rp,mean_wm_ts.reshape(mean_wm_ts.shape[0],1)),axis = 1)
             
             print rp.shape
@@ -829,13 +935,6 @@ class RegressCovar(BaseInterface):
             
             plot_sep_signals(plot_resid_ts_file,resid_data_matrix)
             
-            
-            #print "plotting diff filtered and non filtered data"
-            
-            #plot_diff_filt_ts_file = os.path.abspath('diff_filt_ts.eps')
-            
-            #plot_signals(plot_diff_filt_ts_file,np.array(resid_filt_data_matrix - resid_data_matrix,dtype = 'float'))
-            
         else:
             
             print "Warning, not implemented (RegressCovar)"
@@ -864,7 +963,6 @@ class FindSPMRegressorInputSpec(BaseInterfaceInputSpec):
      
     only_positive_values = traits.Bool(True, usedefault = True , desc = "Return only positive values of the regressor (negative values are set to 0)")
     
-    #concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
     concatenated_runs = traits.Bool(False, usedefault = True , desc = "If concatenate runs, need to search for the lenghth of the session")
     
 class FindSPMRegressorOutputSpec(TraitedSpec):
@@ -873,8 +971,35 @@ class FindSPMRegressorOutputSpec(TraitedSpec):
     
 class FindSPMRegressor(BaseInterface):
     """
-    Regress parameters of non-interest (i.e. movement parameters, white matter, csf) from signal
-    Optionnally filter and normalize (z-score) the residuals
+    
+    Description:
+    
+    Find regressor in SPM.mat and save it as timeseries txt file
+    
+    Inputs:
+        
+        spm_mat_file:
+            type = File, exists=True, desc='SPM design matrix after generate model', mandatory=True
+        
+        regressor_name:
+            type = String, exists=True, desc='Name of the regressor in SPM design matrix to be looked after', mandatory=True
+        
+        run_index:
+            type = Int, default = 1 , usedefault = True , desc = "Run (session) index, default is one in SPM"
+        
+        only_positive_values:
+            type = Bool, default = True, usedefault = True , desc = "Return only positive values of the regressor (negative values are set to 0); Otherwise return all values"
+        
+        concatenated_runs:  
+            type = Bool, default = False , usedefault = True , desc = "If concatenate runs, need to search for the length of the session"
+            
+            Deprecation: #concatenate_runs = traits.Int(1, usedefault = True , desc = "If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)")
+    Outputs:
+        
+        regressor_file:
+            type = File,exists=True, desc="txt file containing the regressor"
+        
+
     """
     input_spec = FindSPMRegressorInputSpec
     output_spec = FindSPMRegressorOutputSpec

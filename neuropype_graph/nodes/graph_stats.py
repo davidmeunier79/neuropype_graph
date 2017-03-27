@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+.. module:: grapĥ_stats
+   :platform: Unix
+   :synopsis: Preparing, computing stats and permutations
 
+.. moduleauthor:: David Meunier <david.meunier@inserm.fr>
+
+
+"""
 import numpy as np
 import os
 
@@ -169,93 +177,6 @@ class StatsPairTTest(BaseInterface):
         
         return outputs
 
-        
-############################################################################################### PlotIGraphSignedIntMat #####################################################################################################
-
-from neuropype_graph.plot_igraph import plot_3D_igraph_signed_int_mat
-from neuropype_graph.utils import check_np_shapes
-
-#from dmgraphanalysis.utils_plot import plot_cormat
-    
-    
-class PlotIGraphSignedIntMatInputSpec(BaseInterfaceInputSpec):
-    
-    signed_int_mat_file = File(exists=True,  desc='signed int matrix in npy format', mandatory=True)
-    
-    labels_file = File(exists=True,  desc='labels of nodes (txt file)', mandatory=False)
-    coords_file = File(exists=True,  desc='node coordinates in MNI space (txt file)', mandatory=False)
-    
-class PlotIGraphSignedIntMatOutputSpec(TraitedSpec):
-    
-    plot_3D_signed_int_mat_file = File(exists=True, desc="eps file with igraph spatial representation")
-    #plot_heatmap_signed_bin_mat_file = File(exists=True, desc="eps file heatmap representation")
-    
-class PlotIGraphSignedIntMat(BaseInterface):
-    
-    """
-    Plot coclassification matrix with igraph
-    - labels are optional, 
-    - threshold is optional (default, 50 = half the group)
-    - coordinates are optional, if no coordiantes are specified, representation in topological (Fruchterman-Reingold) space
-    """
-    input_spec = PlotIGraphSignedIntMatInputSpec
-    output_spec = PlotIGraphSignedIntMatOutputSpec
-
-    def _run_interface(self, runtime):
-                
-        print 'in plot_coclass'
-        
-        signed_int_mat_file = self.inputs.signed_int_mat_file
-        labels_file = self.inputs.labels_file
-        coords_file = self.inputs.coords_file
-            
-            
-        print 'load bin matrix'
-        
-        signed_int_mat = np.load(signed_int_mat_file)
-        
-        print signed_int_mat.shape
-        
-        if isdefined(labels_file):
-            
-            print 'loading labels'
-            labels = [line.strip() for line in open(labels_file)]
-            
-        else :
-            labels = []
-            
-        if isdefined(coords_file):
-            
-            print 'loading coords'
-            coords = np.array(np.loadtxt(coords_file),dtype = 'int64')
-            
-        else :
-            coords = np.array([])
-            
-            
-        print coords.shape
-        
-        
-        print 'plotting igraph 3D'
-        
-        ######## igraph 3D
-        plot_3D_signed_int_mat_file = os.path.abspath('plot_igraph_3D_signed_int_mat.eps')
-            
-        plot_3D_igraph_signed_int_mat(plot_3D_signed_int_mat_file,signed_int_mat,coords,labels)
-        
-                
-        return runtime
-        
-    def _list_outputs(self):
-        
-        outputs = self._outputs().get()
-        
-        outputs["plot_3D_signed_int_mat_file"] = os.path.abspath('plot_igraph_3D_signed_int_mat.eps')
-        #outputs["plot_heatmap_signed_int_mat_file"] = os.path.abspath('heatmap_signed_bin_mat.eps')
-        
-        return outputs
-        
-        
         
         
 ############################################################################################### PrepareCormat #####################################################################################################
@@ -520,7 +441,30 @@ class SwapListsOutputSpec(TraitedSpec):
 class SwapLists(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+    
+    Exchange lists of files in a random fashion (based on seed value)
+    Typically, cor_mat, coords -> 2, or Z_list, node_corres and labels -> 3
+    
+    If seed = -1, no swap is done (keep original values)
+    
+    Inputs:
+        
+        list_of_lists:
+            * type = List of List of  List of Files,
+            * exists=True, 
+            * desc='list of all correlation matrice files (in npy format) for each subject', 
+            * mandatory=True
+            
+        seed:
+            type = Int, default = -1, desc='value for seed', mandatory=True, usedefault = True
+            
+    Outputs:
+    
+        permut_lists_of_lists:
+            type = List of  List of List of Files ,exists=True, desc='swapped list of all correlation matrice files (in npy format) for each subject', mandatory=True
+            
+    
     """
     input_spec = SwapListsInputSpec
     output_spec = SwapListsOutputSpec
@@ -648,7 +592,27 @@ class ShuffleMatrixOutputSpec(TraitedSpec):
 class ShuffleMatrix(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+    
+    Compute randomisation of matrix, keeping the same distribution
+    
+    If seed = -1, no shuffling is done (keep original values)
+    
+    Inputs:
+        
+        original_matrix_file:
+            type = File, exists=True, desc='original matrix in npy format', mandatory=True
+        
+        seed:
+            type = Int, default = -1, desc='value for seed', mandatory=True, usedefault = True
+            
+    Outputs:
+        
+        shuffled_matrix_file:
+        
+            type = File, exists=True, desc='shuffled matrix in npy format', mandatory=True
+    
+    
     """
     input_spec = ShuffleMatrixInputSpec
     output_spec = ShuffleMatrixOutputSpec

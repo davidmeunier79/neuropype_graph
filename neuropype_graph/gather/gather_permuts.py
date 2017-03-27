@@ -29,9 +29,6 @@ def compute_rada_df(iter_path,df):
 
     print modularity_file
     
-
-    
-    
     if os.path.exists(modularity_file):
     
         mod_val = get_modularity_value_from_lol_file(modularity_file)

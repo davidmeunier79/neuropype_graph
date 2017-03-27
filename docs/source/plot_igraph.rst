@@ -9,9 +9,13 @@ http://igraph.org/redirect.html
 
 PlotIGraphModules
 *****************
+.. autoclass:: neuropype_graph.interfaces.plot_igraph.plots.PlotIGraphModules
 
-.. automodule:: neuropype_graph.interfaces.plot_igraph.plots
-
-   :members: PlotIGraphModules
-        
-   :noindex:
+PlotIGraphCoclass
+*****************
+.. autoclass:: neuropype_graph.interfaces.plot_igraph.plots.PlotIGraphCoclass
+              
+PlotIGraphConjCoclass
+*********************
+.. autoclass:: neuropype_graph.interfaces.plot_igraph.plots.PlotIGraphConjCoclass
+              

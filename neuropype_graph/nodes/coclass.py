@@ -44,7 +44,44 @@ class PrepareCoclassOutputSpec(TraitedSpec):
 class PrepareCoclass(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Prepare a list of coclassification matrices, in a similar reference given by a coord (resp label)  file based on individual coords (resp labels) files 
+    
+    Inputs:
+        
+        mod_files:
+            type = List of Files, exists=True, desc='list of all files representing modularity assignement (in rada, lol files) for each subject', mandatory=True
+        
+        node_corres_files:
+            type = List of Files, exists=True, desc='list of all Pajek files (in txt format) to extract correspondance between nodes in rada analysis and original subject coordinates for each subject (as obtained from PrepRada)', mandatory=True
+        
+        coords_files:
+            type = List of Files, exists=True, desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['labels_files']
+        
+        gm_mask_coords_file 
+            type = File,exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=False, xor = ['gm_mask_labels_file']
+        
+        labels_files:
+            type = List of Files, exists=True, desc='list of labels (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['coords_files']
+        
+        gm_mask_labels_file:
+            type = File, exists=True, desc='Labels for all possible nodes - in case coords are varying from one indiv to the other (source space for example)', mandatory=False, xor = ['gm_mask_coords_file']
+            
+    Outputs:
+            
+        group_coclass_matrix_file:
+            type = File,exists=True, desc="all coclass matrices of the group in .npy  format"
+        
+        sum_coclass_matrix_file:
+            type = File, exists=True, desc="sum of coclass matrix of the group in .npy format"
+        
+        sum_possible_edge_matrix_file:
+            type = File, exists=True, desc="sum of possible edges matrices of the group in .npy format"
+        
+        norm_coclass_matrix_file:
+            type = File, exists=True, desc="sum of coclass matrix normalized by possible edges matrix of the group in .npy format"
+        
+    
+        
     """
     input_spec = PrepareCoclassInputSpec
     output_spec = PrepareCoclassOutputSpec
@@ -55,12 +92,6 @@ class PrepareCoclass(BaseInterface):
         mod_files = self.inputs.mod_files
         
         node_corres_files = self.inputs.node_corres_files
-        
-        #print gm_mask_coords_file
-        #print coords_files
-        
-        #print gm_mask_labels_file
-        #print labels_files
         
         if isdefined(self.inputs.gm_mask_coords_file) and isdefined(self.inputs.coords_files):
         
@@ -280,7 +311,26 @@ class DiffMatricesOutputSpec(TraitedSpec):
 class DiffMatrices(BaseInterface):
     
     """
-    Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1
+    Description:
+    
+    Compute difference between two matrices, should have same shape
+    
+    Inputs:
+            
+        mat_file1:
+            type = File,exists=True, desc='Matrix in npy format', mandatory=True
+        
+        mat_file2:
+            type = File,exists=True, desc='Matrix in npy format', mandatory=True
+        
+    Outputs:
+        diff_mat_file:
+            type = File, exists=True, desc='Difference of Matrices (mat1 - mat2) in npy format', mandatory=True
+    
+    Comments:
+    
+    Not sure where it is used ...
+    
     """
     input_spec = DiffMatricesInputSpec
     output_spec = DiffMatricesOutputSpec
@@ -347,9 +397,30 @@ class PlotCoclassOutputSpec(TraitedSpec):
 class PlotCoclass(BaseInterface):
     
     """
-    Plot coclass matrix 
+    Description :
+    
+    Plot coclass matrix with matplotlib matshow
+    
     - labels are optional
     - range values are optional (default is min and max values of the matrix)
+    
+    Inputs:
+        
+        coclass_matrix_file:
+            type = File, exists=True,  desc='coclass matrix in npy format', mandatory=True
+        
+        labels_file:
+            type = File, exists=True,  desc='labels of nodes', mandatory=False
+        
+        list_value_range
+            type = ListInt, desc='force the range of the plot', mandatory=False
+    
+    Outputs:
+        
+        plot_coclass_matrix_file:
+            type = File, exists=True, desc="eps file with graphical representation"
+    
+        
     """
     input_spec = PlotCoclassInputSpec
     output_spec = PlotCoclassOutputSpec

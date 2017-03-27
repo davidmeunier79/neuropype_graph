@@ -128,38 +128,19 @@ class ComputeNetList(BaseInterface):
             Z_list = return_net_list(Z_cor_mat)
         
         ## Z correl_mat as list of edges
-        
         print "saving Z_list as list of edges"
         
         net_List_file = os.path.abspath('Z_List.txt')
         
         export_List_net_from_list(net_List_file,Z_list)
         
-        ### Z correl_mat as Louvain format
-        
-        #print "saving Z_list as Louvain format"
-        
-        #net_Louvain_file = os.path.abspath('Z_Louvain.txt')
-        
-        #export_Louvain_net_from_list(net_Louvain_file,Z_list,coords)
-        
-        #### saving coordinates for references
-        
-        #out_coords_file = os.path.abspath('coords.txt')
-        
-        #np.savetxt(out_coords_file,coords,fmt = "%d")
-        
         return runtime
-        
-        #return mean_masked_ts_file,subj_coord_rois_file
         
     def _list_outputs(self):
         
         outputs = self._outputs().get()
         
         outputs["net_List_file"] = os.path.abspath("Z_List.txt")
-        #outputs["net_Louvain_file"] = os.path.abspath("Z_Louvain.txt")
-        #outputs["out_coords_file"] = os.path.abspath("coords.txt")
         
         return outputs
     
@@ -250,11 +231,10 @@ from neuropype_graph.utils_mod import compute_roles
 
 class ComputeNodeRolesInputSpec(BaseInterfaceInputSpec):
     
-    rada_lol_file = traits.String(exists=True,desc='lol file, describing modular structure of the network', mandatory=True, position = 0, argstr="%s")
+    rada_lol_file = File(exists=True,desc='lol file, describing modular structure of the network', mandatory=True)
     Pajek_net_file = File(exists=True, desc='net description in Pajek format', mandatory=True)
     
-    role_type =  traits.Enum('Amaral_roles', '4roles', 
-    desc='definition of node roles, Amaral_roles = original 7 roles defined for transport network (useful for big network), 4_roles defines only provincial/connecteur from participation coeff',
+    role_type =  traits.Enum('Amaral_roles', '4roles',desc='definition of node roles, Amaral_roles = original 7 roles defined for transport network (useful for big network), 4_roles defines only provincial/connecteur from participation coeff',
     usedefault=True)
     
 class ComputeNodeRolesOutputSpec(TraitedSpec):
@@ -266,7 +246,33 @@ class ComputeNodeRolesOutputSpec(TraitedSpec):
 class ComputeNodeRoles(BaseInterface):
     
     """
-    compute node roles from lol modular partition and original network
+    Description:
+    
+    Compute node roles from lol modular partition and original network
+    
+    Inputs: 
+
+        rada_lol_file: 
+            type = File, exists=True,desc='lol file, describing modular structure of the network', mandatory=True
+            
+        
+        Pajek_net_file:
+            type = File(exists=True, desc='net description in Pajek format', mandatory=True
+
+        role_type:
+            One of Enum('Amaral_roles', '4roles'), desc='definition of node roles, Amaral_roles = original 7 roles defined for transport network (useful for big network), 4_roles = defines only provincial/connecteur from participation coeff', usedefault=True
+    
+    Outputs:
+    
+        node_roles_file:
+            type = File, exists=True, desc="node roles with an integer code"
+            
+        all_Z_com_degree_file:
+            type = File,exists=True, desc="value of quantity, describing the hub/non-hub role of the nodes"
+            
+        all_participation_coeff_file
+            type = File, exists=True, desc="value of quality, descibing the provincial/connector role of the nodes"
+    
     """
     input_spec = ComputeNodeRolesInputSpec
     output_spec = ComputeNodeRolesOutputSpec

@@ -28,7 +28,22 @@ except ImportError:
     can_plot_igraph = False
     
 def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_den_pipe", con_den = 1.0,multi = False,mod = True, plot = False, optim_seq = "WS trfr 100"):
-
+    """
+    Description:
+    
+    Pipeline from connectivity matrices to graph analysis
+    
+    Threshold is density based
+    
+    Inputs (inputnode):
+    
+        * conmat_file
+        * coords_file
+        * labels_file
+    
+    
+    """
+    
     pipeline = pe.Workflow(name= pipeline_name + "_den_" + str(con_den).replace(".","_"))
     pipeline.base_dir = main_path
     
@@ -151,11 +166,27 @@ def create_pipeline_conmat_to_graph_density( main_path, pipeline_name = "graph_d
 
     
 def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,con_thr = 1.0,multi = False,mod = True, plot = True):
-
+    """
+    Description:
+    
+    Pipeline from connectivity matrices to graph analysis
+    
+    Threshold is value based (con_thr)
+    
+    Inputs (inputnode):
+    
+        * conmat_file
+        * coords_file
+        * labels_file
+    
+    !Warning, need to be checked...
+    !Warning, should be merged with previous function create_pipeline_conmat_to_graph_density
+    
+    """
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
-    #inputnode = pe.Node(niu.IdentityInterface(fields=['conmat_file','coords_file','labels_file']),                        name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['conmat_file','coords_file','labels_file']), name='inputnode')
      
     if plot==True and can_plot_igraph==False:
         
@@ -251,6 +282,20 @@ def create_pipeline_conmat_to_graph_threshold(pipeline_name,main_path,con_thr = 
    
 def create_pipeline_net_list_to_graph( main_path, pipeline_name = "graph_net_pipe", multi = False,mod = True, plot = False, optim_seq = "WS trfr 100"):
 
+    """
+    Description:
+    
+    Pipeline from net_List (txt file) to graph analysis
+    
+    Inputs (inputnode):
+    
+        * net_List_file
+        * coords_file
+        * labels_file
+    
+    Could be used in the previous functions (create_pipeline_conmat_to_graph_density and create_pipeline_conmat_to_graph_threshold)
+    """
+    
     pipeline = pe.Workflow(name= pipeline_name)
     pipeline.base_dir = main_path
     

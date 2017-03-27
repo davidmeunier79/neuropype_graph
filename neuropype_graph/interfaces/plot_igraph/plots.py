@@ -199,7 +199,7 @@ class PlotIGraphCoclassInputSpec(BaseInterfaceInputSpec):
     
     threshold = traits.Int(50, usedefault = True, desc='What min coclass value is reresented by an edge on the graph', mandatory=False)
     
-    gm_mask_coords_file = File(exists=True,  desc='node coordiantes in MNI space (txt file)', mandatory=False)
+    gm_mask_coords_file = File(exists=True,  desc='node coordinates in MNI space (txt file)', mandatory=False)
     
 class PlotIGraphCoclassOutputSpec(TraitedSpec):
     
@@ -208,10 +208,36 @@ class PlotIGraphCoclassOutputSpec(TraitedSpec):
 class PlotIGraphCoclass(BaseInterface):
     
     """
+    Description
+    
     Plot coclassification matrix with igraph
     - labels are optional, 
     - threshold is optional (default, 50 = half the group)
-    - coordinates are optional, if no coordiantes are specified, representation in topological (Fruchterman-Reingold) space
+    - coordinates are optional, if no coordinates are specified, representation in topological (Fruchterman-Reingold) space
+    
+    Inputs:
+        
+        coclass_matrix_file:
+            type = File, exists=True,  desc='coclass matrix in npy format', mandatory=True
+        
+        labels_file:
+            type = File, exists=True,  desc='labels of nodes', mandatory=False
+        
+        threshold:
+            type = Int,default = 50, usedefault = True, desc='What min coclass value is reresented by an edge on the graph', mandatory=False
+        
+        gm_mask_coords_file:
+            type = File, exists=True,  desc='node coordinates in MNI space (txt file)', mandatory=False
+        
+    Outputs:
+        
+        plot_igraph_3D_coclass_matrix_file:
+            type = File, exists=True, desc="eps file with igraph graphical representation"
+    
+    Comments:
+    
+    Used for coclassification, not so much used anymore
+    
     """
     input_spec = PlotIGraphCoclassInputSpec
     output_spec = PlotIGraphCoclassOutputSpec
@@ -287,7 +313,7 @@ class PlotIGraphConjCoclassInputSpec(BaseInterfaceInputSpec):
     
     labels_file = File(exists=True,  desc='labels of nodes', mandatory=False)
     threshold = traits.Int(50, usedefault = True, desc='What min coclass value is reresented by an edge on the graph', mandatory=False)
-    gm_mask_coords_file = File(exists=True,  desc='node coordiantes in MNI space (txt file)', mandatory=False)
+    gm_mask_coords_file = File(exists=True,  desc='node coordinates in MNI space (txt file)', mandatory=False)
     
 class PlotIGraphConjCoclassOutputSpec(TraitedSpec):
     
@@ -297,10 +323,18 @@ class PlotIGraphConjCoclassOutputSpec(TraitedSpec):
 class PlotIGraphConjCoclass(BaseInterface):
     
     """
+    Description:
+    
     Plot coclassification matrix with igraph
     - labels are optional, 
     - threshold is optional (default, 50 = half the group)
-    - coordinates are optional, if no coordiantes are specified, representation in topological (Fruchterman-Reingold) space
+    - coordinates are optional, if no coordinates are specified, representation in topological (Fruchterman-Reingold) space
+    
+    
+    Comments:
+    
+    Not sure it is still used somewhere...
+    
     """
     input_spec = PlotIGraphConjCoclassInputSpec
     output_spec = PlotIGraphConjCoclassOutputSpec

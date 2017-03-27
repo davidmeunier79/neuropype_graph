@@ -30,7 +30,28 @@ from neuropype_graph.utils import show_files,show_length
 
 def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold = 0.9, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
 
-
+    """
+    Description:
+    
+    Pipeline from nifti 4D (after preprocessing) to connectivity matrices
+    
+    Inputs (inputnode):
+    
+        * nii_4D_file
+        * rp_file
+        * gm_anat_file
+        * wm_anat_file
+        * csf_anat_file
+        * ROI_coords_file
+        * ROI_MNI_coords_file
+        * ROI_labels_file
+    
+    Comments:
+    
+    Typically used after nipype preprocessing pipeline and before conmat_to_graph pipeline
+    
+    """
+    
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
@@ -121,6 +142,27 @@ def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold =
 def create_pipeline_nii_to_weighted_conmat(main_path, pipeline_name = "nii_to_weighted_conmat", concatenated_runs = True, conf_interval_prob = 0.05, mult_regnames = True, spm_reg = True):
 
 
+    """
+    Description:
+    
+    Pipeline from resid_ts_file (after preprocessing) to weighted connectivity matrices
+    Involves a regressor file as wiehgt for computing weighted correlations
+    
+    Inputs (inputnode):
+    
+        * resid_ts_file
+        * spm_mat_file (from a typical SPM level1 activation analysis)
+        * regress_names (names to look after in spm_mat_file)
+        * run_index
+        * ROI_labels_file
+        * reg_txt (if spm_reg = False)
+        
+    Comments:
+    
+    Typically used after previous pipeline (create_pipeline_nii_to_conmat) and before conmat_to_graph pipeline
+    
+    """
+    
     pipeline = pe.Workflow(name=pipeline_name)
     pipeline.base_dir = main_path
     
