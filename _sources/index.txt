@@ -27,10 +27,17 @@ Interfaces:
    :maxdepth: 2
    
    radatools
-   
    plot_igraph
     
-
+Pipelines:
+    
+.. toctree::
+   :maxdepth: 2
+   
+   nii_to_conmat
+   conmat_to_graph
+   intmat_to_graph
+    
 Indices and tables
 ==================
 

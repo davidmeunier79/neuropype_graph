@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Graph_stats &mdash; Neuropype_graph 0.1 documentation</title>
+  <title>nii_to_conmat &mdash; Neuropype_graph 0.1 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="Neuropype_graph 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Radatools" href="radatools.html"/>
-        <link rel="prev" title="Modularity" href="modularity.html"/> 
+        <link rel="next" title="conmat_to_graph" href="conmat_to_graph.html"/>
+        <link rel="prev" title="Plot_igraph" href="plot_igraph.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -84,24 +84,23 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="includeme.html">README :</a></li>
 </ul>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="correl_mat.html">Correl Mat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coclass.html">CoClass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modularity.html">Modularity</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Graph_stats</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#swaplists">SwapLists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#shufflematrix">ShuffleMatrix</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Graph_stats</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="radatools.html">Radatools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_igraph.html">Plot_igraph</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="nii_to_conmat.html">nii_to_conmat</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">nii_to_conmat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-pipeline-nii-to-conmat">create_pipeline_nii_to_conmat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-pipeline-nii-to-weighted-conmat">create_pipeline_nii_to_weighted_conmat</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="conmat_to_graph.html">conmat_to_graph</a></li>
-<li class="toctree-l1"><a class="reference internal" href="intmat_to_graph.html">intmat_to_graph</a></li>
 </ul>
 
             
@@ -132,11 +131,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Graph_stats</li>
+    <li>nii_to_conmat</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/graph_stats.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/nii_to_conmat.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -146,66 +145,55 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graph-stats">
-<h1>Graph_stats<a class="headerlink" href="#graph-stats" title="Permalink to this headline">¶</a></h1>
-<p>Preparing stats and permutations</p>
-<div class="section" id="swaplists">
-<h2>SwapLists<a class="headerlink" href="#swaplists" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="neuropype_graph.nodes.graph_stats.SwapLists">
-<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.graph_stats.</code><code class="descname">SwapLists</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.graph_stats.SwapLists" title="Permalink to this definition">¶</a></dt>
+  <div class="section" id="nii-to-conmat">
+<h1>nii_to_conmat<a class="headerlink" href="#nii-to-conmat" title="Permalink to this headline">¶</a></h1>
+<p>Nifti 4D to Connectity matrix</p>
+<div class="section" id="create-pipeline-nii-to-conmat">
+<h2>create_pipeline_nii_to_conmat<a class="headerlink" href="#create-pipeline-nii-to-conmat" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropype_graph.pipelines.nii_to_conmat.create_pipeline_nii_to_conmat">
+<code class="descclassname">neuropype_graph.pipelines.nii_to_conmat.</code><code class="descname">create_pipeline_nii_to_conmat</code><span class="sig-paren">(</span><em>main_path</em>, <em>ROI_mask_file</em>, <em>filter_gm_threshold=0.9</em>, <em>pipeline_name='nii_to_conmat'</em>, <em>conf_interval_prob=0.05</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.pipelines.nii_to_conmat.create_pipeline_nii_to_conmat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Description:</p>
-<p>Exchange lists of files in a random fashion (based on seed value)
-Typically, cor_mat, coords -&gt; 2, or Z_list, node_corres and labels -&gt; 3</p>
-<p>If seed = -1, no swap is done (keep original values)</p>
-<p>Inputs:</p>
+<p>Pipeline from nifti 4D (after preprocessing) to connectivity matrices</p>
+<p>Inputs (inputnode):</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>list_of_lists:</dt>
-<dd><ul class="first last simple">
-<li>type = List of List of  List of Files,</li>
-<li>exists=True,</li>
-<li>desc=&#8217;list of all correlation matrice files (in npy format) for each subject&#8217;,</li>
-<li>mandatory=True</li>
+<div><ul class="simple">
+<li>nii_4D_file</li>
+<li>rp_file</li>
+<li>gm_anat_file</li>
+<li>wm_anat_file</li>
+<li>csf_anat_file</li>
+<li>ROI_coords_file</li>
+<li>ROI_MNI_coords_file</li>
+<li>ROI_labels_file</li>
 </ul>
-</dd>
-<dt>seed:</dt>
-<dd>type = Int, default = -1, desc=&#8217;value for seed&#8217;, mandatory=True, usedefault = True</dd>
-</dl>
 </div></blockquote>
-<p>Outputs:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>permut_lists_of_lists:</dt>
-<dd>type = List of  List of List of Files ,exists=True, desc=&#8217;swapped list of all correlation matrice files (in npy format) for each subject&#8217;, mandatory=True</dd>
-</dl>
-</div></blockquote>
+<p>Comments:</p>
+<p>Typically used after nipype preprocessing pipeline and before conmat_to_graph pipeline</p>
 </dd></dl>
 
 </div>
-<div class="section" id="shufflematrix">
-<h2>ShuffleMatrix<a class="headerlink" href="#shufflematrix" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="neuropype_graph.nodes.graph_stats.ShuffleMatrix">
-<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.graph_stats.</code><code class="descname">ShuffleMatrix</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.graph_stats.ShuffleMatrix" title="Permalink to this definition">¶</a></dt>
+<div class="section" id="create-pipeline-nii-to-weighted-conmat">
+<h2>create_pipeline_nii_to_weighted_conmat<a class="headerlink" href="#create-pipeline-nii-to-weighted-conmat" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropype_graph.pipelines.nii_to_conmat.create_pipeline_nii_to_weighted_conmat">
+<code class="descclassname">neuropype_graph.pipelines.nii_to_conmat.</code><code class="descname">create_pipeline_nii_to_weighted_conmat</code><span class="sig-paren">(</span><em>main_path</em>, <em>pipeline_name='nii_to_weighted_conmat'</em>, <em>concatenated_runs=True</em>, <em>conf_interval_prob=0.05</em>, <em>mult_regnames=True</em>, <em>spm_reg=True</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.pipelines.nii_to_conmat.create_pipeline_nii_to_weighted_conmat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Description:</p>
-<p>Compute randomisation of matrix, keeping the same distribution</p>
-<p>If seed = -1, no shuffling is done (keep original values)</p>
-<p>Inputs:</p>
+<p>Pipeline from resid_ts_file (after preprocessing) to weighted connectivity matrices
+Involves a regressor file as wiehgt for computing weighted correlations</p>
+<p>Inputs (inputnode):</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>original_matrix_file:</dt>
-<dd>type = File, exists=True, desc=&#8217;original matrix in npy format&#8217;, mandatory=True</dd>
-<dt>seed:</dt>
-<dd>type = Int, default = -1, desc=&#8217;value for seed&#8217;, mandatory=True, usedefault = True</dd>
-</dl>
+<div><ul class="simple">
+<li>resid_ts_file</li>
+<li>spm_mat_file (from a typical SPM level1 activation analysis)</li>
+<li>regress_names (names to look after in spm_mat_file)</li>
+<li>run_index</li>
+<li>ROI_labels_file</li>
+<li>reg_txt (if spm_reg = False)</li>
+</ul>
 </div></blockquote>
-<p>Outputs:</p>
-<blockquote>
-<div><p>shuffled_matrix_file:</p>
-<blockquote>
-<div>type = File, exists=True, desc=&#8217;shuffled matrix in npy format&#8217;, mandatory=True</div></blockquote>
-</div></blockquote>
+<p>Comments:</p>
+<p>Typically used after previous pipeline (create_pipeline_nii_to_conmat) and before conmat_to_graph pipeline</p>
 </dd></dl>
 
 </div>
@@ -218,10 +206,10 @@ Typically, cor_mat, coords -&gt; 2, or Z_list, node_corres and labels -&gt; 3</p
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="radatools.html" class="btn btn-neutral float-right" title="Radatools" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="conmat_to_graph.html" class="btn btn-neutral float-right" title="conmat_to_graph" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="modularity.html" class="btn btn-neutral" title="Modularity" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="plot_igraph.html" class="btn btn-neutral" title="Plot_igraph" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -86,13 +86,28 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Correl Mat</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-neuropype_graph.nodes.correl_mat">ComputeConfCorMat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extractts">ExtractTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#intersectmask">IntersectMask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extractmeants">ExtractMeanTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concatts">ConcatTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergets">MergeTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#separatets">SeparateTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#findspmregressor">FindSPMRegressor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computeconfcormat">ComputeConfCorMat</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coclass.html">CoClass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modularity.html">Modularity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Modularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Graph_stats</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="radatools.html">Radatools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot_igraph.html">Plot_igraph</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nii_to_conmat.html">nii_to_conmat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conmat_to_graph.html">conmat_to_graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intmat_to_graph.html">intmat_to_graph</a></li>
 </ul>
 
             
@@ -140,17 +155,230 @@
   <div class="section" id="correl-mat">
 <h1>Correl Mat<a class="headerlink" href="#correl-mat" title="Permalink to this headline">¶</a></h1>
 <p>Functions used for the generation of weighted correlation matrices</p>
-<div class="section" id="module-neuropype_graph.nodes.correl_mat">
-<span id="computeconfcormat"></span><h2>ComputeConfCorMat<a class="headerlink" href="#module-neuropype_graph.nodes.correl_mat" title="Permalink to this headline">¶</a></h2>
-<p>Definition of Nodes for computing correlation matrices</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">noindex:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<div class="section" id="extractts">
+<h2>ExtractTS<a class="headerlink" href="#extractts" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.ExtractTS">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ExtractTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.ExtractTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description: Extract time series from a labelled mask in Nifti Format where all ROIs have the same index</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>indexed_rois_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)&#8217;, mandatory=True</dd>
+<dt>file_4D:</dt>
+<dd>type = File, exists=True, desc=&#8216;4D volume to be extracted&#8217;, mandatory=True</dd>
+<dt>coord_rois_file:</dt>
+<dd>type = File, desc=&#8217;ROI coordinates&#8217;</dd>
+<dt>min_BOLD_intensity:</dt>
+<dd>type = Float, default = 50.0, desc=&#8217;BOLD signal below this value will be set to zero&#8217;,usedefault = True</dd>
+<dt>percent_signal:</dt>
+<dd>type = Float, default = 0.5, desc  = &#8220;Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI&#8221;,usedefault = True</dd>
+<dt>plot_fig:</dt>
+<dd>type = Bool, defaults = False, desc = &#8220;Plotting mean signal or not&#8221;, usedefault = True)</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>mean_masked_ts_file: </dt>
+<dd>type = File, exists=True, desc=&#8221;mean ts in .npy (pickle format)&#8221;</dd>
+<dt>subj_coord_rois_file: </dt>
+<dd>type = File, exists=True, desc=&#8221;ROI coordinates retained for the subject&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="intersectmask">
+<h2>IntersectMask<a class="headerlink" href="#intersectmask" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.IntersectMask">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">IntersectMask</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.IntersectMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Keep only values of indexed mask where filter_mask is present.
+Optionnally, keep only ijk_coords, MNI_coords and labels that are kept in filtered mask</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>indexed_rois_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)&#8217;, mandatory=True</dd>
+<dt>filter_mask_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;nii file with (binary) mask - e.g. grey matter mask&#8217;, mandatory=True</dd>
+<dt>coords_rois_file:</dt>
+<dd>type = File, desc=&#8217;ijk coords txt file&#8217;</dd>
+<dt>labels_rois_file:</dt>
+<dd>type = File, desc=&#8217;labels txt file&#8217;</dd>
+<dt>MNI_coords_rois_file:</dt>
+<dd>type = File, desc=&#8217;MNI coords txt file&#8217;</dd>
+<dt>filter_thr:</dt>
+<dd>type = Float, default = 0.99, usedefault = True, desc=&#8217;Value to threshold filter_mask&#8217;</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>filtered_indexed_rois_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;nii file with indexed mask where all voxels belonging to the same ROI have the same value (! starting from 0)&#8217;</dd>
+<dt>filtered_coords_rois_file:</dt>
+<dd>type = File, exists=False, desc=&#8217;filtered ijk coords txt file&#8217;</dd>
+<dt>filtered_labels_rois_file:</dt>
+<dd>type = File, exists=False, desc=&#8217;filtered labels txt file&#8217;</dd>
+<dt>filtered_MNI_coords_rois_file:</dt>
+<dd>type = File, exists=False, desc=&#8217;filtered MNI coords txt file&#8217;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="extractmeants">
+<h2>ExtractMeanTS<a class="headerlink" href="#extractmeants" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.ExtractMeanTS">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ExtractMeanTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.ExtractMeanTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Extract mean time series from a labelled mask in Nifti Format where the voxels of interest have values 1 (mask_file), or from a percent mask (filter_mask_file) with values higher than threshold (filter_thr)</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>file_4D:</dt>
+<dd>type = File, exists=True, desc=&#8216;4D volume to be extracted&#8217;, mandatory=True</dd>
+<dt>mask_file:</dt>
+<dd>type = File, xor = [&#8216;filter_mask_file&#8217;], exists=True, desc=&#8217;mask file where all voxels belonging to the selected region have index 1&#8217;, mandatory=True</dd>
+<dt>filter_mask_file:</dt>
+<dd>type = File, xor = [&#8216;mask_file&#8217;],requires = [&#8216;filter_thr&#8217;], exists=True, desc=&#8217;mask file where all voxels belonging to the selected region have values higher than threshold&#8217;, mandatory=True</dd>
+<dt>filter_thr:</dt>
+<dd>type = Float, default = 0.99, usedefault = True, desc=&#8217;Value to threshold filter_mask&#8217;</dd>
+<dt>suffix:</dt>
+<dd>type = String, default = &#8220;suf&#8221;,desc=&#8217;Suffix added to describe the extracted time series&#8217;,mandatory=False,usedefault = True</dd>
+<dt>plot_fig:</dt>
+<dd>type = Bool, default = False, desc = &#8220;Plotting mean signal or not&#8221;, usedefault = True</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>mean_masked_ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;mean ts in .npy format&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="concatts">
+<h2>ConcatTS<a class="headerlink" href="#concatts" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.ConcatTS">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ConcatTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.ConcatTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Concatenate time series</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>all_ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;npy file containing all ts to be concatenated&#8217;, mandatory=True</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>concatenated_ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8221;ts after concatenation&#8221;</dd>
+</dl>
+</div></blockquote>
+<p>Comments:</p>
+<p>Not sure where it is used</p>
+</dd></dl>
+
+</div>
+<div class="section" id="mergets">
+<h2>MergeTS<a class="headerlink" href="#mergets" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.MergeTS">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">MergeTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.MergeTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Merges time series from several files</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>all_ts_files:</dt>
+<dd>type = List of Files, exists=True, desc=&#8217;list of npy files containing all ts to be merged&#8217;, mandatory=True</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>merged_ts_file: </dt>
+<dd>type = File, exists=True, desc=&#8221;ts after merge&#8221;</dd>
+</dl>
+</div></blockquote>
+<p>Comments:</p>
+<p>Used for multiple-session merges</p>
+</dd></dl>
+
+</div>
+<div class="section" id="separatets">
+<h2>SeparateTS<a class="headerlink" href="#separatets" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.SeparateTS">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">SeparateTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.SeparateTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Save all time series from a npy file to several single time series npy files</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>all_ts_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;npy file containing all ts to be concatenated&#8217;, mandatory=True</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>separated_ts_files</dt>
+<dd>type = List of Files, exists=True, desc=&#8221;ts files after separation&#8221;</dd>
+</dl>
+</div></blockquote>
+<p>Comments:</p>
+<p>Not sure where it is used...</p>
+</dd></dl>
+
+</div>
+<div class="section" id="findspmregressor">
+<h2>FindSPMRegressor<a class="headerlink" href="#findspmregressor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropype_graph.nodes.correl_mat.FindSPMRegressor">
+<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">FindSPMRegressor</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.FindSPMRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description:</p>
+<p>Find regressor in SPM.mat and save it as timeseries txt file</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>spm_mat_file:</dt>
+<dd>type = File, exists=True, desc=&#8217;SPM design matrix after generate model&#8217;, mandatory=True</dd>
+<dt>regressor_name:</dt>
+<dd>type = String, exists=True, desc=&#8217;Name of the regressor in SPM design matrix to be looked after&#8217;, mandatory=True</dd>
+<dt>run_index:</dt>
+<dd>type = Int, default = 1 , usedefault = True , desc = &#8220;Run (session) index, default is one in SPM&#8221;</dd>
+<dt>only_positive_values:</dt>
+<dd>type = Bool, default = True, usedefault = True , desc = &#8220;Return only positive values of the regressor (negative values are set to 0); Otherwise return all values&#8221;</dd>
+<dt>concatenated_runs:  </dt>
+<dd><p class="first">type = Bool, default = False , usedefault = True , desc = &#8220;If concatenate runs, need to search for the length of the session&#8221;</p>
+<p class="last">Deprecation: #concatenate_runs = traits.Int(1, usedefault = True , desc = &#8220;If concatenate runs, how many runs there is (needed to return the part of the regressors that is active for the session only)&#8221;)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Outputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>regressor_file:</dt>
+<dd>type = File,exists=True, desc=&#8221;txt file containing the regressor&#8221;</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="computeconfcormat">
+<h2>ComputeConfCorMat<a class="headerlink" href="#computeconfcormat" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="neuropype_graph.nodes.correl_mat.ComputeConfCorMat">
 <em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ComputeConfCorMat</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#neuropype_graph.nodes.correl_mat.ComputeConfCorMat" title="Permalink to this definition">¶</a></dt>
@@ -182,42 +410,6 @@
 <dd>type = File, exists=True, desc=&#8221;npy file containing the Z-values (after Fisher&#8217;s R-to-Z trasformation) of correlation&#8221;</dd>
 <dt>conf_cor_mat_file:</dt>
 <dd>type = File, exists=True, desc=&#8221;npy file containing the confidence interval around R values&#8221;</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
-</div>
-<div class="section" id="extractts">
-<h2>ExtractTS<a class="headerlink" href="#extractts" title="Permalink to this headline">¶</a></h2>
-<p>Definition of Nodes for computing correlation matrices</p>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="descclassname">neuropype_graph.nodes.correl_mat.</code><code class="descname">ExtractTS</code><span class="sig-paren">(</span><em>from_file=None</em>, <em>**inputs</em><span class="sig-paren">)</span></dt>
-<dd><p>Description: Extract time series from a labelled mask in Nifti Format where all ROIs have the same index</p>
-<p>Inputs:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>indexed_rois_file:</dt>
-<dd>type = File, exists=True, desc=&#8217;indexed mask where all voxels belonging to the same ROI have the same value (! starting from 1)&#8217;, mandatory=True</dd>
-<dt>file_4D:</dt>
-<dd>type = File, exists=True, desc=&#8216;4D volume to be extracted&#8217;, mandatory=True</dd>
-<dt>coord_rois_file:</dt>
-<dd>type = File, desc=&#8217;ROI coordinates&#8217;</dd>
-<dt>min_BOLD_intensity:</dt>
-<dd>type = Float, default = 50.0, desc=&#8217;BOLD signal below this value will be set to zero&#8217;,usedefault = True</dd>
-<dt>percent_signal:</dt>
-<dd>type = Float, default = 0.5, desc  = &#8220;Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI&#8221;,usedefault = True</dd>
-<dt>plot_fig:</dt>
-<dd>type = Bool, defaults = False, desc = &#8220;Plotting mean signal or not&#8221;, usedefault = True)</dd>
-</dl>
-</div></blockquote>
-<p>Outputs:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>mean_masked_ts_file: </dt>
-<dd>type = File, exists=True, desc=&#8221;mean ts in .npy (pickle format)&#8221;</dd>
-<dt>subj_coord_rois_file: </dt>
-<dd>type = File, exists=True, desc=&#8221;ROI coordinates retained for the subject&#8221;</dd>
 </dl>
 </div></blockquote>
 </dd></dl>

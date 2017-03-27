@@ -87,11 +87,16 @@
 <li class="toctree-l1"><a class="reference internal" href="correl_mat.html">Correl Mat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coclass.html">CoClass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modularity.html">Modularity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Modularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Graph_stats</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="radatools.html">Radatools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_igraph.html">Plot_igraph</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nii_to_conmat.html">nii_to_conmat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conmat_to_graph.html">conmat_to_graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intmat_to_graph.html">intmat_to_graph</a></li>
 </ul>
 
             
@@ -147,20 +152,30 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="correl_mat.html">Correl Mat</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#module-neuropype_graph.nodes.correl_mat">ComputeConfCorMat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="correl_mat.html#extractts">ExtractTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#intersectmask">IntersectMask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#extractmeants">ExtractMeanTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#concatts">ConcatTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#mergets">MergeTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#separatets">SeparateTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#findspmregressor">FindSPMRegressor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correl_mat.html#computeconfcormat">ComputeConfCorMat</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coclass.html">CoClass</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="coclass.html#preparecoclass">PrepareCoclass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coclass.html#diffmatrices">DiffMatrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coclass.html#plotcoclass">PlotCoclass</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modularity.html">Modularity</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="modularity.html#computenetlist">ComputeNetList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modularity.html#computenoderoles">ComputeNodeRoles</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Modularity</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="graph_stats.html#computenetlist">ComputeNetList</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_stats.html">Graph_stats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="graph_stats.html#swaplists">SwapLists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_stats.html#shufflematrix">ShuffleMatrix</a></li>
 </ul>
 </li>
 </ul>
@@ -169,11 +184,32 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="radatools.html">Radatools</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="radatools.html#module-neuropype_graph.interfaces.radatools.rada">PrepRada</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radatools.html#preprada">PrepRada</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radatools.html#netproprada">NetPropRada</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="plot_igraph.html">Plot_igraph</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="plot_igraph.html#module-neuropype_graph.interfaces.plot_igraph.plots">PlotIGraphModules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_igraph.html#plotigraphmodules">PlotIGraphModules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_igraph.html#plotigraphcoclass">PlotIGraphCoclass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_igraph.html#plotigraphconjcoclass">PlotIGraphConjCoclass</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Pipelines:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nii_to_conmat.html">nii_to_conmat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nii_to_conmat.html#create-pipeline-nii-to-conmat">create_pipeline_nii_to_conmat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nii_to_conmat.html#create-pipeline-nii-to-weighted-conmat">create_pipeline_nii_to_weighted_conmat</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="conmat_to_graph.html">conmat_to_graph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="conmat_to_graph.html#create-pipeline-conmat-to-graph-density">create_pipeline_conmat_to_graph_density</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intmat_to_graph.html">intmat_to_graph</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intmat_to_graph.html#create-pipeline-intmat-to-graph-threshold">create_pipeline_intmat_to_graph_threshold</a></li>
 </ul>
 </li>
 </ul>
