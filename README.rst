@@ -11,6 +11,19 @@ http://deim.urv.cat/~sergio.gomez/radatools.php#download
 
 3) Add following lines in your .bashrc:
 
+For radatools 3.2:
+    
+RADA_PATH=/home/david/Tools/Software/radatools-3.2-linux32
+
+(replace /home/david/Tools/Software by your path to radatools)
+
+export PATH=$PATH:$RADA_PATH/01-Prepare_Network/
+export PATH=$PATH:$RADA_PATH/02-Find_Communities/
+export PATH=$PATH:$RADA_PATH/03-Reformat_Results
+export PATH=$PATH:$RADA_PATH/04-Other_Tools/
+    
+For radatools 4.0:
+    
 RADA_PATH=/home/david/Tools/Software/radatools-4.0-linux64
 
 (replace /home/david/Tools/Software by yout path to radatools)
