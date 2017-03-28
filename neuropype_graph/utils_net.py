@@ -256,7 +256,24 @@ def read_Pajek_corres_nodes_and_sparse_matrix(Pajek_net_file):
         
     return node_corres,sparse_matrix
    
-   
+#####################" compute modular Network
+def compute_modular_network(sparse_matrix,community_vect):
+    
+    mod_mat = np.empty(sparse_matrix.todense().shape) 
+    
+    mod_mat[:] = np.NAN
+    
+    for u,v,w in zip(sparse_matrix.row,sparse_matrix.col,sparse_matrix.data):
+        
+        if (community_vect[u] == community_vect[v]):
+            
+            mod_mat[u,v] = community_vect[u] 
+        else:
+            
+            mod_mat[u,v] = -1
+            
+    return mod_mat
+          
 ### read strength from Network_Properties node results 
 def get_strength_values_from_info_nodes_file(info_nodes_file):
 

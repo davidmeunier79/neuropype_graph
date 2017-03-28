@@ -62,8 +62,8 @@ def plot_ranged_cormat(plot_file, cor_mat,list_labels = [], fix_full_range = [-1
     [i.set_visible(False) for i in ax.spines.itervalues()]
     
     #im.set_cmap('binary')
-    #im.set_cmap('spectral')
-    im.set_cmap('jet')
+    im.set_cmap('spectral')
+    #im.set_cmap('jet')
     
     ### add labels
     
