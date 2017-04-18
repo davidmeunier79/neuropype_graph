@@ -641,7 +641,7 @@ class ShuffleMatrix(BaseInterface):
             
             np.fill_diagonal(original_matrix,np.nan)
         
-            shuffled_matrix = np.zefros(shape = original_matrix.shape,dtype = original_matrix.dtype)
+            shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
         
             for i,j in iter.combinations(range(original_matrix.shape[0]),2):
                 print i,j
