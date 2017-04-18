@@ -17,6 +17,24 @@ from numpy import isnan, nan, logical_not, logical_or
 from collections import Counter
 #from neuropype_graph.utils_stats import compute_oneway_anova_fwe,compute_pairwise_ttest_fdr
 
+
+####################################### utils
+
+
+def glob_natural_sorted(reg_exp):
+    
+    print reg_exp
+    
+    files = glob.glob(reg_exp)
+    
+    print len(files)
+    
+    natural_sorted_files = [reg_exp.replace('*',str(i),-1) for i in range(len(files))]
+    
+    return natural_sorted_files,range(len(files))
+
+########################################
+
 def compute_rada_df(iter_path,df):
 
     from neuropype_graph.utils_mod import get_modularity_value_from_lol_file
@@ -240,9 +258,13 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         #0/0
         return pd.DataFrame()
     
+    
+    
     expected_permut_indexes = range(len(seed_index)-1)
     
     print expected_permut_indexes
+    
+    
     
     ### should start at 0 and have all values in between
     if not all(x in seed_index[1:] for x in expected_permut_indexes):
@@ -313,6 +335,12 @@ def compute_signif_permuts(permut_df, permut_col = "Seed",session_col = "Session
         
         print count_elements
         
+        ### -1 should be represented Two times:
+        if not count_elements[-1] == 2:
+            print "-1 should be represented Two times"
+            
+            return pd.DataFrame()
+    
         if not all(val == 2 for val in count_elements.values()):
             print "Error, all permut indexes should have 2 and only 2 lines: {}".format(count_elements)
             #0/0
