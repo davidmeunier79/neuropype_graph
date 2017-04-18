@@ -34,6 +34,8 @@ class ExtractTSInputSpec(BaseInterfaceInputSpec):
     
     coord_rois_file = File(desc='ROI coordinates')
     
+    label_rois_file = File(desc='ROI labels')
+    
     min_BOLD_intensity = traits.Float(50.0, desc='BOLD signal below this value will be set to zero',usedefault = True)
 
     percent_signal = traits.Float(0.5, desc  = "Percent of voxels in a ROI with signal higher that min_BOLD_intensity to keep this ROI",usedefault = True)
@@ -45,7 +47,9 @@ class ExtractTSOutputSpec(TraitedSpec):
     
     mean_masked_ts_file = File(exists=True, desc="mean ts in .npy (pickle format)")
     
-    subj_coord_rois_file = File(exists=True, desc="ROI coordinates retained for the subject")
+    subj_coord_rois_file = File(desc="ROI coordinates retained for the subject")
+    
+    subj_label_rois_file = File(desc="ROI labels retained for the subject")
     
 
 class ExtractTS(BaseInterface):
@@ -65,6 +69,9 @@ class ExtractTS(BaseInterface):
         coord_rois_file:
             type = File, desc='ROI coordinates'
         
+        label_rois_file:
+            type = File, desc='ROI labels')
+    
         min_BOLD_intensity:
             type = Float, default = 50.0, desc='BOLD signal below this value will be set to zero',usedefault = True
 
@@ -80,8 +87,11 @@ class ExtractTS(BaseInterface):
             type = File, exists=True, desc="mean ts in .npy (pickle format)"
     
         subj_coord_rois_file: 
-            type = File, exists=True, desc="ROI coordinates retained for the subject"
+            type = File, desc="ROI coordinates retained for the subject"
             
+            
+        subj_label_rois_file: 
+            type = File, desc="ROI labels retained for the subject"
             
     
 
@@ -92,18 +102,12 @@ class ExtractTS(BaseInterface):
 
     def _run_interface(self, runtime):
               
-        coord_rois_file = self.inputs.coord_rois_file
         indexed_rois_file = self.inputs.indexed_rois_file
         file_4D = self.inputs.file_4D
         min_BOLD_intensity = self.inputs.min_BOLD_intensity
+        percent_signal = self.inputs.percent_signal
         
         plot_fig = self.inputs.plot_fig
-        
-        ## loading ROI coordinates
-        coord_rois = np.loadtxt(coord_rois_file)
-        
-        print "coord_rois: " 
-        print coord_rois.shape
         
         ## loading ROI indexed mask
         indexed_rois_img = nib.load(indexed_rois_file)
@@ -115,20 +119,54 @@ class ExtractTS(BaseInterface):
         print "orig_ts shape:"
         print orig_ts.shape
             
-        mean_masked_ts,subj_coord_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity, percent_signal = 0.5)
+        mean_masked_ts,keep_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intensity, percent_signal = percent_signal, background_val = -1.0)
         
+        print keep_rois
+        
+        ## loading ROI coordinates
+        
+        if isdefined(self.inputs.coord_rois_file):
+            
+            coord_rois_file = self.inputs.coord_rois_file
+        
+            coord_rois = np.loadtxt(coord_rois_file)
+            
+            print "coord_rois: " 
+            print coord_rois.shape
+            
+            subj_coord_rois = coord_rois[keep_rois,:]
+            
+            print coord_rois.shape
+            print subj_coord_rois.shape
+            
+            ### saving subject ROIs
+            subj_coord_rois_file = os.path.abspath("subj_coord_rois.txt")
+            np.savetxt(subj_coord_rois_file,subj_coord_rois,fmt = '%.3f')
+            
+        if isdefined(self.inputs.label_rois_file):
+            
+            label_rois_file = self.inputs.label_rois_file
+        
+            labels_rois = np.array([line.strip() for line in open(label_rois_file)],dtype = 'str')
+            
+            print labels_rois.shape
+            
+            subj_label_rois = labels_rois[keep_rois]
+            
+            print labels_rois.shape
+            print subj_label_rois.shape
+            
+            ### saving subject ROIs
+            subj_label_rois_file = os.path.abspath("subj_label_rois.txt")
+            np.savetxt(subj_label_rois_file,subj_label_rois,fmt = '%s')
+            
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
-        subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')
         
         print mean_masked_ts.shape
             
         ### saving time series
         mean_masked_ts_file = os.path.abspath("mean_masked_ts.txt")
         np.savetxt(mean_masked_ts_file,mean_masked_ts,fmt = '%.3f')
-        
-        ### saving subject ROIs
-        subj_coord_rois_file = os.path.abspath("subj_coord_rois.txt")
-        np.savetxt(subj_coord_rois_file,subj_coord_rois,fmt = '%.3f')
         
         if plot_fig == True:
                 
@@ -147,7 +185,14 @@ class ExtractTS(BaseInterface):
         outputs = self._outputs().get()
         
         outputs["mean_masked_ts_file"] = os.path.abspath("mean_masked_ts.txt")
-        outputs["subj_coord_rois_file"] = os.path.abspath("subj_coord_rois.txt")
+        
+        if isdefined(self.inputs.coord_rois_file):
+            
+            outputs["subj_coord_rois_file"] = os.path.abspath("subj_coord_rois.txt")
+    
+        if isdefined(self.inputs.label_rois_file):
+            
+            outputs["subj_label_rois_file"] = os.path.abspath("subj_label_rois.txt")
     
         return outputs
 
@@ -406,14 +451,17 @@ class IntersectMask(BaseInterface):
 ############################################################################################### ExtractMeanTS #####################################################################################################
 
 from neuropype_graph.utils_cor import mean_select_mask_data
+from neuropype_graph.utils import check_np_dimension
 
 class ExtractMeanTSInputSpec(BaseInterfaceInputSpec):
     
     file_4D = File(exists=True, desc='4D volume to be extracted', mandatory=True)
     
-    mask_file = File(xor = ['filter_mask_file'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True)
+    ROI_coord = traits.List(traits.Int(exists = True),desc='values for extracting ROI', mandatory=True,xor = ['mask_file','filter_mask_file'])
+        
+    mask_file = File(xor = ['filter_mask_file','ROI_coord'], exists=True, desc='mask file where all voxels belonging to the selected region have index 1', mandatory=True)
     
-    filter_mask_file = File(xor = ['mask_file'],requires = ['filter_thr'], exists=True, desc='mask file where all voxels belonging to the selected region have values higher than threshold', mandatory=True)
+    filter_mask_file = File(xor = ['mask_file','ROI_coord'],requires = ['filter_thr'], exists=True, desc='mask file where all voxels belonging to the selected region have values higher than threshold', mandatory=True)
     
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
     
@@ -468,6 +516,7 @@ class ExtractMeanTS(BaseInterface):
         print 'in select_ts_with_mask'
         
         file_4D = self.inputs.file_4D
+        ROI_coord = self.inputs.ROI_coord
         mask_file = self.inputs.mask_file
         filter_mask_file = self.inputs.filter_mask_file
         filter_thr = self.inputs.filter_thr
@@ -500,6 +549,22 @@ class ExtractMeanTS(BaseInterface):
             mask_data = np.zeros(shape = filter_mask_data.shape, dtype = 'int')
             
             mask_data[filter_mask_data > filter_thr] = 1
+            
+        elif isdefined(ROI_coord):
+        
+            print ("In ROI coords")
+            
+            mask_data = np.zeros(shape = img_data.shape[:3],dtype = int)
+            print mask_data.shape
+                  
+            ROI_coord = np.array(ROI_coord,dtype = int)
+            
+            assert check_np_dimension(mask_data.shape,ROI_coord), "Error, non compatible indexes {} with shape {}".format(ROI_coord,mask_data.shape)
+                
+            mask_data[ROI_coord[0],ROI_coord[1],ROI_coord[2]] = 1
+            
+            #print np.where(mask_data == 1)
+            
             
         else:
             print("Error, either mask_file or (filter_mask_file and filter_thr) should be defined")
@@ -1263,7 +1328,7 @@ class ComputeConfCorMatOutputSpec(TraitedSpec):
     
     conf_cor_mat_file = File(exists=True, desc="npy file containing the confidence interval around R values")
     
-    #Z_conf_cor_mat_file = File(exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation")
+    Z_conf_cor_mat_file = File(exists=True, desc="npy file containing the Z-values (after Fisher's R-to-Z trasformation) of correlation")
     
 class ComputeConfCorMat(BaseInterface):
     
@@ -1380,11 +1445,13 @@ class ComputeConfCorMat(BaseInterface):
         np.save(Z_cor_mat_file,Z_cor_mat)
         
         
-        #print "saving Z_conf_cor_mat as npy"
+        print "saving Z_conf_cor_mat as npy"
         
-        #Z_conf_cor_mat_file = os.path.abspath('Z_conf_cor_mat_' + fname + '.npy')
+        Z_conf_cor_mat_file = os.path.abspath('Z_conf_cor_mat_' + fname + '.npy')
         
-        #np.save(Z_conf_cor_mat_file,Z_conf_cor_mat)
+        Z_conf_cor_mat = Z_conf_cor_mat + np.transpose(Z_conf_cor_mat)
+        
+        np.save(Z_conf_cor_mat_file,Z_conf_cor_mat)
         
         
         if plot_mat == True:
@@ -1421,7 +1488,7 @@ class ComputeConfCorMat(BaseInterface):
             
             ############ Z_cor_mat
             
-            Z_cor_mat = np.load(Z_cor_mat_file)
+            #Z_cor_mat = np.load(Z_cor_mat_file)
             
             #### heatmap 
             
@@ -1431,13 +1498,13 @@ class ComputeConfCorMat(BaseInterface):
             
             plot_cormat(plot_heatmap_Z_cor_mat_file,Z_cor_mat,list_labels = labels)
             
-            #### heatmap 
+            ##### heatmap 
             
-            print 'plotting cor_mat heatmap'
+            #print 'plotting cor_mat heatmap'
             
-            plot_heatmap_ranged_Z_cor_mat_file =  os.path.abspath('heatmap_ranged_cor_mat_' + fname + '.eps')
+            #plot_heatmap_ranged_Z_cor_mat_file =  os.path.abspath('heatmap_ranged_cor_mat_' + fname + '.eps')
             
-            plot_ranged_cormat(plot_heatmap_ranged_Z_cor_mat_file,Z_cor_mat,fix_full_range = [0.0,3.5],list_labels = labels)
+            #plot_ranged_cormat(plot_heatmap_ranged_Z_cor_mat_file,Z_cor_mat,fix_full_range = [0.0,3.5],list_labels = labels)
             
             #### histogram 
             
@@ -1470,13 +1537,13 @@ class ComputeConfCorMat(BaseInterface):
             
             #Z_conf_cor_mat = np.load(Z_conf_cor_mat_file)
             
-            ##### heatmap 
+            #### heatmap 
             
-            #print 'plotting Z_conf_cor_mat heatmap'
+            print 'plotting Z_conf_cor_mat heatmap'
             
-            #plot_heatmap_Z_conf_cor_mat_file =  os.path.abspath('heatmap_Z_conf_cor_mat_' + fname + '.eps')
+            plot_heatmap_Z_conf_cor_mat_file =  os.path.abspath('heatmap_Z_conf_cor_mat_' + fname + '.eps')
             
-            #plot_cormat(plot_heatmap_Z_conf_cor_mat_file,Z_conf_cor_mat,list_labels = labels)
+            plot_cormat(plot_heatmap_Z_conf_cor_mat_file,Z_conf_cor_mat,list_labels = labels)
             
             ##### histogram 
             
@@ -1501,7 +1568,7 @@ class ComputeConfCorMat(BaseInterface):
         
         outputs["Z_cor_mat_file"] = os.path.abspath('Z_cor_mat_' + fname + '.npy')
         
-        #outputs["Z_conf_cor_mat_file"] = os.path.abspath('Z_conf_cor_mat_' + fname + '.npy')
+        outputs["Z_conf_cor_mat_file"] = os.path.abspath('Z_conf_cor_mat_' + fname + '.npy')
         
         print outputs
         
@@ -1708,7 +1775,7 @@ class PrepareMeanCorrel(BaseInterface):
             
             gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
             
-            print gm_mask_coords
+            #print gm_mask_coords
             print gm_mask_coords.shape
             
             #### read matrix from the first group
@@ -1802,6 +1869,8 @@ class PrepareMeanCorrel(BaseInterface):
                     print sum_possible_edge_matrix
                     print np.array(sum_possible_edge_matrix == 0)
                     print np.sum(np.array(sum_possible_edge_matrix == 0))
+                    
+                    print np.unique(sum_possible_edge_matrix)
                     
                     return
                 
