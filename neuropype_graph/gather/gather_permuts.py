@@ -33,7 +33,86 @@ def glob_natural_sorted(reg_exp):
     
     return natural_sorted_files,range(len(files))
 
-########################################
+######################################## gather con values ################################
+
+
+def gather_diff_con_values(res_path, cond, nb_permuts, labels):
+    
+    df_filename = os.path.join(res_path, "permuts_" + ".".join(cond) + '_con_values.csv')
+    
+    if not os.path.exists(df_filename):
+        
+        ############ pair of labels and tri triu_indices
+
+        triu_indices_i,triu_indices_j = np.triu_indices(len(labels),k=1)
+        
+        pair_labels = [labels[i] + "_" + labels[j] for i,j in zip(triu_indices_i.tolist(),triu_indices_j.tolist())]
+        
+        print pair_labels
+        print len(pair_labels)
+                
+            
+        ############ creating dataframe
+        all_vect_cormats = []
+
+        all_global_info_values = []
+        
+        for  seed in range(-1,nb_permuts):
+                
+            print seed
+                    
+            for sess in ['1','2']:
+            
+                print sess
+                
+                dict_global_info_values = {'Session':sess, 'Seed':seed}
+                    
+                all_global_info_values.append(dict_global_info_values)
+                
+                ########### avg_cormat
+                
+                
+                iter_dir = "_cond_" + ".".join(cond) + "_permut_" + str(seed)
+                
+                avg_cormat_file = os.path.join(res_path,iter_dir,"prepare_mean_correl" + sess,"avg_cormat.npy")
+            
+                print avg_cormat_file
+                
+                if os.path.exists(avg_cormat_file):
+                
+                    avg_cormat = np.load(avg_cormat_file)
+                    
+                    print avg_cormat
+                    
+                    vect_avg_cormat = avg_cormat[triu_indices_i,triu_indices_j]
+                    
+                    print vect_avg_cormat.shape
+                    
+                    all_vect_cormats.append(vect_avg_cormat)
+                
+        df_info = pd.DataFrame(all_global_info_values)
+        
+        print df_info
+        
+        df_con = pd.DataFrame(all_vect_cormats,columns = pair_labels)
+        
+        print df_con
+        
+        df = pd.concat((df_info,df_con),axis = 1)
+        
+        print df
+        
+        print df_filename
+        
+        df.to_csv(df_filename)
+        
+    else:
+        
+        df = pd.read_csv(df_filename)
+        
+    return df
+        
+######################################## gather rada ######################################
 
 def compute_rada_df(iter_path,df):
 
