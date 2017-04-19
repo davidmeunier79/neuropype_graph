@@ -33,85 +33,6 @@ def glob_natural_sorted(reg_exp):
     
     return natural_sorted_files,range(len(files))
 
-######################################## gather con values ################################
-
-
-def gather_diff_con_values(res_path, cond, nb_permuts, labels):
-    
-    df_filename = os.path.join(res_path, "permuts_" + ".".join(cond) + '_con_values.csv')
-    
-    if not os.path.exists(df_filename):
-        
-        ############ pair of labels and tri triu_indices
-
-        triu_indices_i,triu_indices_j = np.triu_indices(len(labels),k=1)
-        
-        pair_labels = [labels[i] + "_" + labels[j] for i,j in zip(triu_indices_i.tolist(),triu_indices_j.tolist())]
-        
-        print pair_labels
-        print len(pair_labels)
-                
-            
-        ############ creating dataframe
-        all_vect_cormats = []
-
-        all_global_info_values = []
-        
-        for  seed in range(-1,nb_permuts):
-                
-            print seed
-                    
-            for sess in ['1','2']:
-            
-                print sess
-                
-                dict_global_info_values = {'Session':sess, 'Seed':seed}
-                    
-                all_global_info_values.append(dict_global_info_values)
-                
-                ########### avg_cormat
-                
-                
-                iter_dir = "_cond_" + ".".join(cond) + "_permut_" + str(seed)
-                
-                avg_cormat_file = os.path.join(res_path,iter_dir,"prepare_mean_correl" + sess,"avg_cormat.npy")
-            
-                print avg_cormat_file
-                
-                if os.path.exists(avg_cormat_file):
-                
-                    avg_cormat = np.load(avg_cormat_file)
-                    
-                    print avg_cormat
-                    
-                    vect_avg_cormat = avg_cormat[triu_indices_i,triu_indices_j]
-                    
-                    print vect_avg_cormat.shape
-                    
-                    all_vect_cormats.append(vect_avg_cormat)
-                
-        df_info = pd.DataFrame(all_global_info_values)
-        
-        print df_info
-        
-        df_con = pd.DataFrame(all_vect_cormats,columns = pair_labels)
-        
-        print df_con
-        
-        df = pd.concat((df_info,df_con),axis = 1)
-        
-        print df
-        
-        print df_filename
-        
-        df.to_csv(df_filename)
-        
-    else:
-        
-        df = pd.read_csv(df_filename)
-        
-    return df
-        
 ######################################## gather rada ######################################
 
 def compute_rada_df(iter_path,df):
@@ -541,7 +462,186 @@ def compute_signif_node_prop(orig_df, list_permut_df, columns):
     df_signif = pd.DataFrame(np.transpose(np.array(all_frac_higher)),columns = columns)
     
     return df_signif
+########################################################################################################################
 
+######################################## gather con values ################################
+
+
+def gather_diff_con_values(res_path, cond, nb_permuts, labels):
+    
+    import os
+    
+    if isinstance(cond,tuple):
+        ## si plusieurs conditions = IRMf
+        df_filename = os.path.join(res_path, "permuts_" + ".".join(cond) + '_con_values.csv')
+    
+    else:
+        ## si une seule valeur
+        df_filename = os.path.join(res_path, "permuts_" + cond + '_con_values.csv')
+        
+    
+    
+    if not os.path.exists(df_filename):
+        
+        ############ pair of labels and tri triu_indices
+
+        triu_indices_i,triu_indices_j = np.triu_indices(len(labels),k=1)
+        
+        pair_labels = [labels[i] + "_" + labels[j] for i,j in zip(triu_indices_i.tolist(),triu_indices_j.tolist())]
+        
+        print pair_labels
+        print len(pair_labels)
+                
+            
+        ############ creating dataframe
+        all_vect_cormats = []
+
+        all_global_info_values = []
+        
+        for  seed in range(-1,nb_permuts):
+                
+            print seed
+                    
+            for sess in ['1','2']:
+            
+                print sess
+                
+                dict_global_info_values = {'Session':sess, 'Seed':seed}
+                    
+                all_global_info_values.append(dict_global_info_values)
+                
+                ########### avg_cormat
+                
+                if isinstance(cond,tuple):
+                    iter_dir = "_cond_" + ".".join(cond) + "_permut_" + str(seed)
+                    
+                else:
+                    iter_dir =  "_freq_band_name_" + cond + "_permut_" + str(seed)
+                    
+                avg_cormat_file = os.path.join(res_path,iter_dir,"prepare_mean_correl" + sess,"avg_cormat.npy")
+            
+                print avg_cormat_file
+                
+                if os.path.exists(avg_cormat_file):
+                
+                    avg_cormat = np.load(avg_cormat_file)
+                    
+                    print avg_cormat
+                    
+                    vect_avg_cormat = avg_cormat[triu_indices_i,triu_indices_j]
+                    
+                    print vect_avg_cormat.shape
+                    
+                    all_vect_cormats.append(vect_avg_cormat)
+                
+        df_info = pd.DataFrame(all_global_info_values)
+        
+        print df_info
+        
+        df_con = pd.DataFrame(all_vect_cormats,columns = pair_labels)
+        
+        print df_con
+        
+        df = pd.concat((df_info,df_con),axis = 1)
+        
+        print df
+        
+        print df_filename
+        
+        #df.to_csv(df_filename)
+        df.to_csv(df_filename,index_col = 0)
+    else:
+        
+        #df = pd.read_csv(df_filename)
+        df = pd.read_csv(df_filename,index_col = 0)
+        
+    return df
+        
+def compute_signif_permut_con_values(df, res_path, cond, alpha, labels, coords = np.array([])):
+    
+    import os
+    import numpy as np
+    import pandas as pd
+    
+    from neuropype_graph.gather.gather_permuts import compute_signif_permuts
+    from neuropype_graph.utils_plot import plot_int_mat
+    from neuropype_graph.plot_igraph import plot_3D_igraph_bin_mat
+    
+    print len(cond)
+    
+    if isinstance(cond,tuple):
+        
+        cond = ".".join(cond)
+        
+    print cond
+    
+    signif_df  = os.path.join(res_path, 'signif_' + cond + '_permut_con_values.csv')
+      
+    if os.path.exists(signif_df):
+            
+        df_res = pd.read_csv(signif_df,index_col = 0)
+    else:
+        
+        df_res = compute_signif_permuts(df)
+        
+        df_res.to_csv(signif_df)
+    
+    res_higher = df_res.values[0,2:]
+    res_lower = df_res.values[1,2:]
+    
+    print res_higher.shape,res_lower.shape 
+    
+    signif_mat_higher = np.zeros(shape = (len(labels),len(labels)), dtype = "int")
+    signif_mat_lower = np.zeros(shape = (len(labels),len(labels)), dtype = "int")
+    
+    signif_vect_higher = (res_higher < alpha) & (res_higher != -1)
+    signif_vect_lower = (res_lower < alpha) & (res_lower != -1)
+    
+    print signif_vect_higher.shape
+    
+    triu_indices_i,triu_indices_j = np.triu_indices(signif_mat_higher.shape[0],k=1)
+    
+    signif_mat_higher[triu_indices_i,triu_indices_j] = signif_vect_higher
+    signif_mat_lower[triu_indices_i,triu_indices_j] = signif_vect_lower
+    
+    print signif_mat_higher
+    print np.sum(signif_mat_higher == 1)
+    
+    #signif_mat_higher_plot_file = os.path.join(res_path, "signif_higher_" + cond + '_permut_con_values.eps')
+    
+    #plot_int_mat(plot_file = signif_mat_higher_plot_file, cor_mat = signif_mat_higher,list_labels = labels, fix_full_range = [0,1],label_size = 2)
+    
+    #signif_mat_lower_plot_file = os.path.join(res_path, "signif_lower_" + cond + '_permut_con_values.eps')
+    
+    #plot_int_mat(plot_file = signif_mat_lower_plot_file, cor_mat = signif_mat_lower,list_labels = labels, fix_full_range = [0,1],label_size = 2)
+    
+    if coords.size != 0:
+        
+        print "Adding coords"
+        
+        plot_signif_higher_file = os.path.join(res_path, "plot_3D_signif_higher_" + cond + "_permut_con_values.eps")
+        
+        plot_3D_igraph_bin_mat(plot_signif_higher_file,int_matrix = np.array(signif_mat_higher,dtype = int), coords = coords,labels = labels, color = "red")
+        
+        
+        plot_signif_lower_file = os.path.join(res_path, "plot_3D_signif_lower_" + cond + "_permut_con_values.eps")
+        
+        plot_3D_igraph_bin_mat(plot_signif_lower_file,int_matrix = np.array(signif_mat_lower,dtype = int), coords = coords,labels = labels, color = "blue")
+        
+        
+    ### diff_mat
+    diff_mat = np.array(signif_mat_higher - signif_mat_lower,dtype = int)
+    print diff_mat
+    print np.unique(diff_mat)
+    
+    signif_mat_plot_file = os.path.join(res_path, "signif_" + cond + '_permut_con_values.eps')
+    
+    plot_int_mat(plot_file = signif_mat_plot_file, cor_mat = diff_mat,list_labels = labels, fix_full_range = [-1,1],label_size = 2)
+    
+    diff_mat_file = os.path.join(res_path, "signif_" + cond + '_permut_diff_mat.npy')
+    np.save(diff_mat_file,diff_mat)
+    
+            
 ##################################### main ###############################################
 if __name__ =='__main__':
 	
