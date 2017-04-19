@@ -203,84 +203,61 @@ def mean_select_mask_data(data_img,data_mask):
     else:
         print "Warning, Image and mask are incompatible"
         print img_shape
-        print data_mask
+        print mask_shape
         return
     
     return np.array(mean_mask_data_matrix)
     
-def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,coord_rois,min_BOLD_intensity = 50,percent_signal = 0.5):
+def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intensity = 50,percent_signal = 0.5, background_val = -1.0):
         
         ### extrating ts by averaging the time series of all voxel with the same index
         sequence_roi_index = np.unique(indexed_mask_rois_data)
         
         print sequence_roi_index
         
-        if sequence_roi_index[0] == -1.0:
+        if sequence_roi_index[0] == background_val:
             sequence_roi_index = sequence_roi_index[1:]
         
         #print "sequence_roi_index:"
         print sequence_roi_index
         
-        if sequence_roi_index.shape[0] != coord_rois.shape[0]:
-            print "Warning, indexes in template_ROI are incompatible with ROI coords"
-            return
-    
         mean_masked_ts = []
-        subj_coord_rois = []
         
-        for roi_index in sequence_roi_index:
+        keep_rois = np.zeros(shape = (sequence_roi_index.shape[0]), dtype = bool)
+        
+        
+        for i,roi_index in enumerate(sequence_roi_index):
         #for roi_index in sequence_roi_index[0:1]:
-            
-            #print "Roi index " + str(roi_index)
             
             index_roi_x,index_roi_y,index_roi_z = np.where(indexed_mask_rois_data == roi_index)
             
-            print index_roi_x,index_roi_y,index_roi_z
+            #print index_roi_x,index_roi_y,index_roi_z
             
             all_voxel_roi_ts = orig_ts[index_roi_x,index_roi_y,index_roi_z,:]
             
-            print all_voxel_roi_ts.shape
-            
-            #print "all_voxel_roi_ts shape: "
-            #print all_voxel_roi_ts.shape
-            
             ### testing if at least 50% of the voxels in the ROIs have values always higher than min bold intensity
+            nb_signal_voxels = np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])
             
-            if np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]) > percent_signal:
-                
-                #print "Roi selected: " + str(roi_index)
-                #print "coord_rois shape: "
-                #print coord_rois.shape
-                
-                mean_roi_ts = np.mean(all_voxel_roi_ts,axis = 0)
+            non_nan_voxels = np.sum(np.sum(np.logical_not(np.isnan(all_voxel_roi_ts)),axis = 1) == all_voxel_roi_ts.shape[1])
             
-                subj_coord_rois.append(coord_rois[roi_index,])
-                mean_masked_ts.append(mean_roi_ts)
+            print nb_signal_voxels, non_nan_voxels, all_voxel_roi_ts.shape[0]
+            
+            if nb_signal_voxels/float(all_voxel_roi_ts.shape[0]) > percent_signal:
+                
+                keep_rois[i] = True
+                
+                mean_masked_ts.append(np.nanmean(all_voxel_roi_ts,axis = 0))
             else:
                 print "ROI {} was not selected : {} {} ".format(roi_index, np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
-                
-                
-            ### testing if mean_roi_ts if always higher than minimal BOLD intensity
-            #if sum(mean_roi_ts > min_BOLD_intensity) == mean_roi_ts.shape[0]:
-                
-                ##print "Roi selected: " + str(roi_index)
-                ##print "coord_rois shape: "
-                ##print coord_rois.shape
-                
-                #subj_coord_rois.append(coord_rois[roi_index,])
-                #mean_masked_ts.append(mean_roi_ts)
-            #else:
-                #print "ROI " + str(roi_index) + " was not selected"
                 
         assert len(mean_masked_ts) != 0, "min_BOLD_intensity {} and percent_signal are to restrictive".format(min_BOLD_intensity,percent_signal)
             
             
         mean_masked_ts = np.array(mean_masked_ts,dtype = 'f')
-        subj_coord_rois = np.array(subj_coord_rois,dtype = 'float')
         
         print mean_masked_ts.shape
         
-        return mean_masked_ts,subj_coord_rois
+        return mean_masked_ts,keep_rois
         
     
 #def mean_select_non_null_data(data_img,data_mask):
@@ -739,8 +716,6 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
             
             0/0
         
-        Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
-        
         if cor_mat[i,j] > 0:
             conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
         else:
@@ -750,27 +725,24 @@ def return_conf_cor_mat(ts_mat,regressor_vect,conf_interval_prob):
             
             #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
     
+    Z_conf_cor_mat = np.zeros((n,n),dtype = float)
     
-    #for i,j in it.combinations(range(n), 2):
+    signif_pos = np.logical_and(Z_cor_mat > norm/np.sqrt(deg_freedom),np.sign(Z_cor_mat) == +1.0)
+                  
+    print np.sum(signif_pos)              
+    #print signif_pos
     
-        #s1 = ts_mat2[:,i]
-        #s2 = ts_mat2[:,j]
-        
-        
-        
-        #cor_mat[i,j] = (s1*s2).sum()/np.sqrt((s1*s1).sum() *(s2*s2).sum())
-        #Z_cor_mat[i,j] = np.arctanh(cor_mat[i,j])
-        
-        #Z_conf_cor_mat[i,j] = norm/np.sqrt(deg_freedom)
-        
-        #if cor_mat[i,j] > 0:
-            #conf_cor_mat[i,j] = cor_mat[i,j] - np.tanh(Z_cor_mat[i,j] - norm/np.sqrt(deg_freedom))
-        #else:
-            #conf_cor_mat[i,j] = - cor_mat[i,j] + np.tanh(Z_cor_mat[i,j] + norm/np.sqrt(deg_freedom))
-            
-        
-        #print i,j,cor_mat[i,j],conf_cor_mat[i,j]
-        
+    signif_neg = np.logical_and(Z_cor_mat < -norm/np.sqrt(deg_freedom),np.sign(Z_cor_mat) == -1.0)
+                          
+    
+    print np.sum(signif_neg)   
+    #print signif_neg
+    
+    Z_conf_cor_mat[signif_pos] = Z_cor_mat[signif_pos]
+    Z_conf_cor_mat[signif_neg] = Z_cor_mat[signif_neg]
+    
+    print np.sum(Z_conf_cor_mat != 0.0)
+    
     t2 = time.time()
     
     print "Weighted correlation computation took " + str(t2-t1) + "s"
