@@ -1860,13 +1860,13 @@ class PrepareMeanCorrel(BaseInterface):
                     
                     print np.amin(avg_cor_mat_matrix),np.amax(avg_cor_mat_matrix)
                     
-                    
                     np.save(self.avg_cor_mat_matrix_file,avg_cor_mat_matrix)
             
             else:
                     print "!!!!!!!!!!!!!!!!!!!!!!Breaking!!!!!!!!!!!!!!!!!!!!!!!!, found 0 elements in sum_cor_mat_matrix"
                     
                     print sum_possible_edge_matrix
+                    print np.array(sum_possible_edge_matrix == 0)
                     print np.array(sum_possible_edge_matrix == 0)
                     print np.sum(np.array(sum_possible_edge_matrix == 0))
                     
