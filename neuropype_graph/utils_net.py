@@ -227,30 +227,7 @@ def read_Pajek_corres_nodes_and_sparse_matrix(Pajek_net_file):
         
         np_list_sparse_matrix = np.transpose(np.array(list_sparse_matrix,dtype = 'int64'))
         
-        #print np_list_sparse_matrix.shape
-        
-        #np_ij_lines = np.array(ij_lines,dtype = 'int64')
-        #np_val_lines = np.array(val_lines,dtype = 'int64')
-        
-        #print np_ij_lines
-        #print np_val_lines
-        
-        #print np_list_sparse_matrix[2,:].shape
-        #print np_list_sparse_matrix[:2,:].shape
-        
-        #sparse_matrix = sp.coo_matrix((np_list_sparse_matrix[2,:],(np_list_sparse_matrix[0,:]-1,np_list_sparse_matrix[1,:]-1)), shape = (nb_elements,nb_elements))
         sparse_matrix = sp.coo_matrix((np_list_sparse_matrix[2,:],(np_list_sparse_matrix[0,:]-1,np_list_sparse_matrix[1,:]-1)), shape = (nb_elements,nb_elements))
-        
-        #print sparse_matrix
-        #print sparse_matrix.todense()[168,168]
-        
-        
-        #print np.sum(sparse_matrix.todense()[168,:],axis = 0)
-        
-        #[168,160:170]
-        
-        #print sparse_matrix.shape
-        #print sparse_matrix.todense().shape
         
         f.close()
         
