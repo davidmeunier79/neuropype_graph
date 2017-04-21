@@ -26,7 +26,6 @@ from neuropype_graph.utils import show_files,show_length
 
 #except ImportError:
     #can_plot_igraph = False
-    
 
 def create_pipeline_nii_to_conmat_no_seg(main_path, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
 
@@ -39,7 +38,6 @@ def create_pipeline_nii_to_conmat_no_seg(main_path, pipeline_name = "nii_to_conm
     
         * nii_4D_file
         * rp_file
-        
         * ROI_mask_file
         * ROI_coords_file
         * ROI_MNI_coords_file
@@ -110,6 +108,113 @@ def create_pipeline_nii_to_conmat_no_seg(main_path, pipeline_name = "nii_to_conm
     
     return pipeline
 
+
+def create_pipeline_nii_to_conmat_seg_template(main_path, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
+
+    """
+    Description:
+    
+    Pipeline from nifti 4D (after preprocessing) to connectivity matrices
+    
+    Inputs (inputnode):
+    
+        * nii_4D_file
+        * rp_file
+        
+        * wm_anat_file
+        * csf_anat_file
+        
+        * ROI_mask_file
+        * ROI_coords_file
+        * ROI_MNI_coords_file
+        * ROI_labels_file
+    
+    Comments:
+    
+    Typically used after nipype preprocessing pipeline and before conmat_to_graph pipeline
+    
+    """
+    
+    pipeline = pe.Workflow(name=pipeline_name)
+    pipeline.base_dir = main_path
+    
+    inputnode = pe.Node(niu.IdentityInterface(fields=['nii_4D_file','rp_file','wm_anat_file','csf_anat_file','ROI_mask_file','ROI_coords_file','ROI_MNI_coords_file','ROI_labels_file']),
+                        name='inputnode')
+     
+    #### Nodes version: use min_BOLD_intensity and return coords where signal is strong enough 
+    extract_mean_ROI_ts = pe.Node(interface = ExtractTS(plot_fig = False),name = 'extract_mean_ROI_ts')
+    
+    #pipeline.connect(inputnode, 'ROI_coords_file', filter_ROI_mask_with_GM, 'coords_rois_file')
+    #pipeline.connect(inputnode, 'ROI_MNI_coords_file', filter_ROI_mask_with_GM, 'MNI_coords_rois_file')
+    #pipeline.connect(inputnode, 'ROI_labels_file', filter_ROI_mask_with_GM, 'labels_rois_file')
+    
+    
+    #extract_mean_ROI_ts.inputs.indexed_rois_file = ROI_mask_file
+    
+    #extract_mean_ROI_ts.inputs.coord_rois_file = ROI_coords_file
+    #extract_mean_ROI_ts.inputs.min_BOLD_intensity = min_BOLD_intensity
+    
+    pipeline.connect(inputnode,'nii_4D_file', extract_mean_ROI_ts, 'file_4D')
+    pipeline.connect(inputnode, 'ROI_mask_file', extract_mean_ROI_ts, 'indexed_rois_file')
+    pipeline.connect(inputnode, 'ROI_coords_file', extract_mean_ROI_ts, 'coord_rois_file')
+    pipeline.connect(inputnode, 'ROI_labels_file', extract_mean_ROI_ts, 'label_rois_file')
+    
+    
+    #### extract white matter signal
+    compute_wm_ts = pe.Node(interface = ExtractMeanTS(plot_fig = False),name = 'extract_wm_ts')
+    compute_wm_ts.inputs.suffix = 'wm'
+    
+    pipeline.connect(inputnode,'nii_4D_file', compute_wm_ts, 'file_4D')
+    pipeline.connect(inputnode, 'wm_anat_file',  compute_wm_ts, 'filter_mask_file')
+    
+    #### extract csf signal
+    compute_csf_ts = pe.Node(interface = ExtractMeanTS(plot_fig = False),name = 'extract_csf_ts')
+    compute_csf_ts.inputs.suffix = 'csf'
+    
+    pipeline.connect(inputnode,'nii_4D_file', compute_csf_ts, 'file_4D')
+    pipeline.connect(inputnode, 'csf_anat_file', compute_csf_ts, 'filter_mask_file')
+    
+    
+    
+    
+    
+    
+    
+    ##### extract white matter signal
+    #compute_wm_ts = pe.Node(interface = ExtractMeanTS(plot_fig = False),name = 'extract_wm_ts')
+    #compute_wm_ts.inputs.suffix = 'wm'
+    
+    #pipeline.connect(inputnode,'nii_4D_file', compute_wm_ts, 'file_4D')
+    ##compute_wm_ts.inputs.ROI_coord = [46,40,76]
+    
+    ##### extract csf signal
+    #compute_csf_ts = pe.Node(interface = ExtractMeanTS(plot_fig = False),name = 'extract_csf_ts')
+    #compute_csf_ts.inputs.suffix = 'csf'
+    
+    #pipeline.connect(inputnode,'nii_4D_file', compute_csf_ts, 'file_4D')
+    #compute_csf_ts.inputs.ROI_coord = [47,18,83]
+    
+    #### regress covariates
+    
+    ### use R linear model to regress movement parameters, white matter and ventricule signals, and compute Z-score of the residuals
+    #regress_covar = pe.MapNode(interface = RegressCovar(filtered = False, normalized = False),iterfield = ['masked_ts_file','rp_file','mean_wm_ts_file','mean_csf_ts_file'],name='regress_covar')
+    
+    regress_covar = pe.Node(interface = RegressCovar(),iterfield = ['masked_ts_file','rp_file'],name='regress_covar')
+    
+    pipeline.connect(extract_mean_ROI_ts, 'mean_masked_ts_file', regress_covar, 'masked_ts_file')
+    pipeline.connect(compute_wm_ts, 'mean_masked_ts_file', regress_covar, 'mean_wm_ts_file')
+    pipeline.connect(compute_csf_ts, 'mean_masked_ts_file', regress_covar, 'mean_csf_ts_file')
+    pipeline.connect(inputnode, 'rp_file', regress_covar, 'rp_file')
+    
+    ##################################### compute correlations ####################################################
+    
+    compute_conf_cor_mat = pe.Node(interface = ComputeConfCorMat(),name='compute_conf_cor_mat')
+    compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
+    
+    pipeline.connect(regress_covar, 'resid_ts_file', compute_conf_cor_mat, 'ts_file')
+    pipeline.connect(extract_mean_ROI_ts, 'subj_label_rois_file', compute_conf_cor_mat, 'labels_file')
+    
+    return pipeline
 
 
 
