@@ -197,7 +197,7 @@ def mean_select_mask_data(data_img,data_mask):
         masked_data_matrix = data_img[data_mask == 1,:]
         print masked_data_matrix.shape
         
-        mean_mask_data_matrix = np.mean(masked_data_matrix,axis = 0)
+        mean_mask_data_matrix = np.nanmean(masked_data_matrix,axis = 0)
         print mean_mask_data_matrix.shape
         
     else:
@@ -228,6 +228,8 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intens
         
         for i,roi_index in enumerate(sequence_roi_index):
         #for roi_index in sequence_roi_index[0:1]:
+            
+            print np.where(indexed_mask_rois_data == roi_index)
             
             index_roi_x,index_roi_y,index_roi_z = np.where(indexed_mask_rois_data == roi_index)
             
