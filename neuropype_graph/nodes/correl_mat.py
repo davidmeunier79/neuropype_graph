@@ -1702,6 +1702,8 @@ class PrepareMeanCorrelInputSpec(BaseInterfaceInputSpec):
     
     plot_mat = traits.Bool(True, usedefault = True, mandatory = False)
     
+    export_csv = traits.Bool(False, usedefault = True, mandatory = False)
+    
 class PrepareMeanCorrelOutputSpec(TraitedSpec):
     
     #print "in PrepareMeanCorrelOutputSpec"
@@ -1719,6 +1721,7 @@ class PrepareMeanCorrel(BaseInterface):
     import numpy as np
     import os
 
+    
     #import nibabel as nib
     
     """
@@ -1765,11 +1768,14 @@ class PrepareMeanCorrel(BaseInterface):
 
     def _run_interface(self, runtime):
                 
+            import pandas as pd
+    
             gm_mask_coords_file = self.inputs.gm_mask_coords_file
             cor_mat_files = self.inputs.cor_mat_files
             coords_files = self.inputs.coords_files
             labels_file  = self.inputs.labels_file
             plot_mat  = self.inputs.plot_mat
+            export_csv  = self.inputs.export_csv
             
             print 'loading gm mask corres'
             
@@ -1778,6 +1784,17 @@ class PrepareMeanCorrel(BaseInterface):
             #print gm_mask_coords
             print gm_mask_coords.shape
             
+            if isdefined(labels_file):
+                    
+                print 'extracting node labels'
+                    
+                labels = [line.strip() for line in open(labels_file)]
+                print labels
+                
+            else:
+                labels = []
+            
+                
             #### read matrix from the first group
             #print Z_cor_mat_files
             
@@ -1861,6 +1878,17 @@ class PrepareMeanCorrel(BaseInterface):
                     print np.amin(avg_cor_mat_matrix),np.amax(avg_cor_mat_matrix)
                     
                     np.save(self.avg_cor_mat_matrix_file,avg_cor_mat_matrix)
+                    
+                    
+                    if export_csv:
+                        
+                        csv_avg_cor_mat_matrix_file  = os.path.abspath('avg_cor_mat_matrix.csv')
+                        
+                        df = pd.DataFrame(avg_cor_mat_matrix, index = labels, columns = labels)
+                        
+                        df.to_csv(csv_avg_cor_mat_matrix_file)
+                        
+                
             
             else:
                     print "!!!!!!!!!!!!!!!!!!!!!!Breaking!!!!!!!!!!!!!!!!!!!!!!!!, found 0 elements in sum_cor_mat_matrix"
@@ -1876,16 +1904,6 @@ class PrepareMeanCorrel(BaseInterface):
                 
                 
             if plot_mat == True:
-                
-                if isdefined(labels_file):
-                        
-                    print 'extracting node labels'
-                        
-                    labels = [line.strip() for line in open(labels_file)]
-                    print labels
-                    
-                else:
-                    labels = []
                 
                 #### heatmap 
                 
