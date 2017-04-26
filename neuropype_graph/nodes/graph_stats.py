@@ -473,19 +473,22 @@ class SwapLists(BaseInterface):
 
     def _run_interface(self, runtime):
                 
-        print 'in prepare_coclass'
+        print 'in SwapLists'
         list_of_lists = self.inputs.list_of_lists
         seed = self.inputs.seed
-        
+        unbalanced = self.inputs.unbalanced
         
         ######## checking lists homogeneity
         print len(list_of_lists)
         
-        print len(list_of_lists[0])
-        
-        0/0
-        
-        nb_files_per_list = -1
+        print len(list_of_lists[0][0])
+    
+        if unbalanced:
+            nb_files_per_list = []
+            
+        else:
+            
+            nb_files_per_list = -1
         
         ### number of elements tomix from (highest level)
         nb_set_to_shuffle = len(list_of_lists)
@@ -494,40 +497,59 @@ class SwapLists(BaseInterface):
         
         nb_args_per_list = -1
         
-        for i,j in iter.combinations(range(nb_set_to_shuffle),2):
-                                  
-            print i,j
+        for i in range(nb_set_to_shuffle):
+                                
+            print i
             
             print len(list_of_lists[i])
-            print len(list_of_lists[j])
             
             if nb_args_per_list == -1:
                 nb_args_per_list =len(list_of_lists[i])
             else:
                 assert nb_args_per_list == len(list_of_lists[i]),"Error list length {} != than list {} length {}".format(nb_args_per_list ,i,len(list_of_lists[i]))
         
-            if nb_files_per_list == -1:
-                nb_files_per_list = len(list_of_lists[i][0])
+            if unbalanced:
+                nb_files_per_list.append(len(list_of_lists[i][0]))
             else:
-                assert nb_files_per_list == len(list_of_lists[i][0]),"Error list length {} != than list {} length {}".format(nb_files_per_list,i,len(list_of_lists[i][0]))
-                
+                    
+                if nb_files_per_list == -1:
+                    nb_files_per_list = len(list_of_lists[i][0])
+                else:
+                    assert nb_files_per_list == len(list_of_lists[i][0]),"Error list length {} != than list {} length {}".format(nb_files_per_list,i,len(list_of_lists[i][0]))
+                    
         print nb_files_per_list
         
-        
+            
         
         ########## generating 0 or 1 for each subj:
         
         if seed == -1:
-            is_permut = np.zeros(shape = (nb_files_per_list), dtype=int)
+            self.permut_lists_of_lists = self.inputs.list_of_lists
             
+            return runtime
+        
+        np.random.seed(seed)
+        
+        if unbalanced:
+            
+            def prod(x, y): return x * y
+        
+            print sum(nb_files_per_list)
+            
+            is_permut = np.array(np.random.randint(nb_set_to_shuffle, size=sum(nb_files_per_list)),dtype = int)
+        
+            print is_permut
+        
         else:
-                
-            np.random.seed(seed)
+            
+            def prod(x, y): return x * y
+        
+            print reduce(prod,nb_files_per_list,1)
             
             is_permut = np.array(np.random.randint(nb_set_to_shuffle, size=nb_files_per_list),dtype = int)
             
-            
-        print is_permut
+                
+            print is_permut
                 
         np.savetxt(os.path.abspath("is_permut.txt"),is_permut, fmt = "%d")
         
@@ -537,37 +559,81 @@ class SwapLists(BaseInterface):
     
         print len(self.permut_lists_of_lists)
         print len(self.permut_lists_of_lists[0])
+        print len(self.permut_lists_of_lists[0][0])
         
-        
-        for index_file,permut in enumerate(is_permut):
+        if unbalanced:
             
-            print "index_file:",
-            print index_file
+            merged_group_lists = []
             
-            print "permut:",
-            print permut
+            for i in range(nb_args_per_list):
             
-            print "nb_set_to_shuffle:",
-            print nb_set_to_shuffle
+                merged_group_list = []
+                
+                for group in range(nb_set_to_shuffle):
+                    #print group
+                    
+                    merged_group_list = merged_group_list + list_of_lists[group][i]
+                    
+                    #print len(merged_group_list)
+                    
+                #print len(merged_group_list)
             
-            for j in range(nb_set_to_shuffle):
+                merged_group_lists.append(merged_group_list)
                 
-                print j,permut
+            print len(merged_group_lists)
+            print len(merged_group_lists[0])
+            
+            for index_file,permut in enumerate(is_permut):
                 
-                shift = j + permut
+                print "index_file:",
+                print index_file
                 
-                rel_shift = shift % nb_set_to_shuffle
-                
-                print shift,rel_shift
+                print "permut:",
+                print permut
                 
                 for i in range(nb_args_per_list):
-                    self.permut_lists_of_lists[j][i].append(list_of_lists[rel_shift][i][index_file])
+                    
+                    self.permut_lists_of_lists[permut][i].append(merged_group_lists[i][index_file])
+                    
                 
-        #print self.permut_lists_of_lists
-        
-        print len(self.permut_lists_of_lists)
-        print len(self.permut_lists_of_lists[0])
-        
+            print len(self.permut_lists_of_lists)
+            print len(self.permut_lists_of_lists[0])
+            print len(self.permut_lists_of_lists[0][0])
+            print len(self.permut_lists_of_lists[1][0])
+            
+            print self.permut_lists_of_lists[0][0]
+            
+        else:
+            
+            for index_file,permut in enumerate(is_permut):
+                
+                print "index_file:",
+                print index_file
+                
+                print "permut:",
+                print permut
+                
+                print "nb_set_to_shuffle:",
+                print nb_set_to_shuffle
+                
+                for j in range(nb_set_to_shuffle):
+                    
+                    print j,permut
+                    
+                    shift = j + permut
+                    
+                    rel_shift = shift % nb_set_to_shuffle
+                    
+                    print shift,rel_shift
+                    
+                    for i in range(nb_args_per_list):
+                        self.permut_lists_of_lists[j][i].append(list_of_lists[rel_shift][i][index_file])
+                    
+            #print self.permut_lists_of_lists
+            
+            print len(self.permut_lists_of_lists)
+            print len(self.permut_lists_of_lists[0])
+            
         return runtime
         
     def _list_outputs(self):
