@@ -431,6 +431,8 @@ class SwapListsInputSpec(BaseInterfaceInputSpec):
     
     list_of_lists = traits.List(traits.List(traits.List(File(exists=True))), desc='list of all correlation matrice files (in npy format) for each subject', mandatory=True)
     
+    unbalanced = traits.Bool(False, default = True, usedefault = True)
+    
     seed = traits.Int(-1, desc='value for seed', mandatory=True, usedefault = True)
     
 class SwapListsOutputSpec(TraitedSpec):
@@ -480,6 +482,8 @@ class SwapLists(BaseInterface):
         print len(list_of_lists)
         
         print len(list_of_lists[0])
+        
+        0/0
         
         nb_files_per_list = -1
         
