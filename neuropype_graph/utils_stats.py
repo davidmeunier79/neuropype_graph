@@ -508,37 +508,46 @@ def compute_pairwise_binom_fdr(X,Y,conf_interval_binom_fdr):
 
 ############### OneWay Anova (F-test)
 
-def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.001):
+def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.001, keep_intracon = False):
 
-    #np_cond_matrices = np.array(list_of_list_matrices)
-    
-    #print np_cond_matrices.shape
-    
-    #assert np_cond_matrices.shape[2] == np_cond_matrices.shape[3], "warning, matrices are not squared {} {}".format(np_cond_matrices.shape[2], np_cond_matrices.shape[3])
-    
-    #N = np_cond_matrices.shape[2]
-    
-    
     for group_mat in list_of_list_matrices:
         assert group_mat.shape[1] == group_mat.shape[2], "warning, matrices are not squared {} {}".format(group_mat.shape[1], group_mat.shape[2])
     
     N = group_mat.shape[2]
     list_diff = []
     
-    for i,j in it.combinations(range(N), 2):
+    if keep_intracon:
         
-        #print i,j
-        
-        list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
-        
-        #print list_val
-        
-        F_stat,p_val = stat.f_oneway(*list_val)
-        
-        #print F_stat,p_val
-        
-        list_diff.append([i,j,p_val,F_stat])
-        
+        for i,j in it.combinations_with_replacement(range(N), 2):
+            
+            #print i,j
+            
+            list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
+            
+            #print list_val
+            
+            F_stat,p_val = stat.f_oneway(*list_val)
+            
+            #print F_stat,p_val
+            
+            list_diff.append([i,j,p_val,F_stat])
+            
+    else:
+            
+        for i,j in it.combinations(range(N), 2):
+            
+            #print i,j
+            
+            list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
+            
+            #print list_val
+            
+            F_stat,p_val = stat.f_oneway(*list_val)
+            
+            #print F_stat,p_val
+            
+            list_diff.append([i,j,p_val,F_stat])
+            
     ############### computing significance code ################
     
     np_list_diff = np.array(list_diff)

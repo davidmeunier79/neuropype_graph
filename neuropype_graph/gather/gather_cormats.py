@@ -129,7 +129,7 @@ def compute_mean_cormats(all_cormats,all_descriptors,descript_columns):
 
 
 
-def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups = []):
+def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups = [], keep_intracon = False):
 
     print all_cormats.shape
     
@@ -157,7 +157,7 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
         print np.array(list_of_list_matrices).shape
         
         
-        signif_adj_mat, p_val_mat, F_stat_mat = compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.01)
+        signif_adj_mat, p_val_mat, F_stat_mat = compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha = 0.01, keep_intracon = keep_intracon)
         
         #print signif_adj_mat
         #print p_val_mat
