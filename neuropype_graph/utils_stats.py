@@ -176,9 +176,13 @@ def compute_pairwise_binom(X,Y,conf_interval_binom):
     return ADJ
 
     
-def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True):
+def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True, keep_intracon = False):
     
-    
+    if keep_intracon = False:
+        iter_indexes = it.combinations(range(N), 2)
+    else:
+        iter_indexes = it.combinations_with_replacement(range(N), 2)
+        
     if old_order:
             
         # number of nodes
@@ -189,7 +193,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
         
         list_diff = []
         
-        for i,j in it.combinations(range(N), 2):
+        for i,j in iter_indexes:
             
             X_nonan = X[i,j,np.logical_not(np.isnan(X[i,j,:]))]
             Y_nonan = Y[i,j,np.logical_not(np.isnan(Y[i,j,:]))]
@@ -234,7 +238,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
         
         list_diff = []
         
-        for i,j in it.combinations(range(N), 2):
+        for i,j in iter_indexes:
             
             X_nonan = X[np.logical_not(np.isnan(X[:,i,j])),i,j]
             Y_nonan = Y[np.logical_not(np.isnan(Y[:,i,j])),i,j]
@@ -517,37 +521,24 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     list_diff = []
     
     if keep_intracon:
+        iter_indexes = it.combinations_with_replacement(range(N), 2)
+    else
+        iter_indexes = it.combinations(range(N), 2)
+    
+    for i,j in iter_indexes:
         
-        for i,j in it.combinations_with_replacement(range(N), 2):
-            
-            #print i,j
-            
-            list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
-            
-            #print list_val
-            
-            F_stat,p_val = stat.f_oneway(*list_val)
-            
-            #print F_stat,p_val
-            
-            list_diff.append([i,j,p_val,F_stat])
-            
-    else:
-            
-        for i,j in it.combinations(range(N), 2):
-            
-            #print i,j
-            
-            list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
-            
-            #print list_val
-            
-            F_stat,p_val = stat.f_oneway(*list_val)
-            
-            #print F_stat,p_val
-            
-            list_diff.append([i,j,p_val,F_stat])
-            
+        #print i,j
+        
+        list_val = [group_mat[:,i,j].tolist() for group_mat in list_of_list_matrices]
+        
+        #print list_val
+        
+        F_stat,p_val = stat.f_oneway(*list_val)
+        
+        #print F_stat,p_val
+        
+        list_diff.append([i,j,p_val,F_stat])
+        
     ############### computing significance code ################
     
     np_list_diff = np.array(list_diff)

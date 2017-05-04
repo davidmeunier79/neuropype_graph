@@ -176,7 +176,7 @@ def compute_stats_cormats(all_cormats,all_descriptors,descript_columns, groups =
             try:
                 signif_adj_mat,p_val_mat,T_stat_mat = compute_pairwise_ttest_fdr(X = list_of_list_matrices[groups.index(combi_pair[0])],
                                                                Y = list_of_list_matrices[groups.index(combi_pair[1])],
-                                                               cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False)
+                                                               cor_alpha = 0.05, uncor_alpha = 0.01,paired = True,old_order = False, keep_intracon = keep_intracon)
                 
                 print T_stat_mat
                 
