@@ -178,10 +178,11 @@ def compute_pairwise_binom(X,Y,conf_interval_binom):
     
 def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True, keep_intracon = False):
     
-    if keep_intracon = False:
-        iter_indexes = it.combinations(range(N), 2)
-    else:
+    if keep_intracon:
         iter_indexes = it.combinations_with_replacement(range(N), 2)
+    else:
+        
+        iter_indexes = it.combinations(range(N), 2)
         
     if old_order:
             
