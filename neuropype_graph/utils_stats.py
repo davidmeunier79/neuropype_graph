@@ -179,8 +179,12 @@ def compute_pairwise_binom(X,Y,conf_interval_binom):
 def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True, keep_intracon = False):
     
     # number of nodes
-    N = X.shape[0]
-        
+    if old_order:
+        N = X.shape[0]
+    else
+    
+        N = X.shape[1]
+    
     if keep_intracon:
         iter_indexes = it.combinations_with_replacement(range(N), 2)
     else:
@@ -231,8 +235,6 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
         # number of nodes
         assert X.shape[1] == X.shape[2] and Y.shape[1] == Y.shape[2], "Error, X {}{} and/or Y {}{} are not squared".format(X.shape[1],X.shape[2], Y.shape[1], Y.shape[2])
         
-        N = X.shape[1]
-    
         if paired:
             assert X.shape[0] == Y.shape[0], "Error, X and Y are paired but do not have the same number od samples{}{}".format(X.shape[0],Y.shape[0])
             
