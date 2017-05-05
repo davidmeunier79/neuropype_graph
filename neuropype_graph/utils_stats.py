@@ -178,6 +178,9 @@ def compute_pairwise_binom(X,Y,conf_interval_binom):
     
 def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_order = True, keep_intracon = False):
     
+    # number of nodes
+    N = X.shape[0]
+        
     if keep_intracon:
         iter_indexes = it.combinations_with_replacement(range(N), 2)
     else:
@@ -186,8 +189,6 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
         
     if old_order:
             
-        # number of nodes
-        N = X.shape[0]
     
     
         #print X.shape
