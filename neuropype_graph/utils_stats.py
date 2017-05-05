@@ -523,7 +523,8 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     
     if keep_intracon:
         iter_indexes = it.combinations_with_replacement(range(N), 2)
-    else
+        
+    else:
         iter_indexes = it.combinations(range(N), 2)
     
     for i,j in iter_indexes:
