@@ -181,7 +181,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     # number of nodes
     if old_order:
         N = X.shape[0]
-    else
+    else:
     
         N = X.shape[1]
     
@@ -193,9 +193,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
         
     if old_order:
             
-    
-    
-        #print X.shape
+        print X.shape
         
         list_diff = []
         
@@ -522,6 +520,7 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
         assert group_mat.shape[1] == group_mat.shape[2], "warning, matrices are not squared {} {}".format(group_mat.shape[1], group_mat.shape[2])
     
     N = group_mat.shape[2]
+    
     list_diff = []
     
     if keep_intracon:
