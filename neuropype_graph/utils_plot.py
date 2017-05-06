@@ -213,7 +213,7 @@ def plot_colorbar(plot_colorbar_file,colors):
     
 ################################################################### signals #######################################################
 
-def plot_signals(plot_signals_file,signals_matrix,colors = [], ylim = [], labels = []):
+def plot_signals(plot_signals_file,signals_matrix,colors = [], ylim = [], labels = [], add_zero_line = False):
     
     fig2 = plt.figure()
     ax = fig2.add_subplot(1,1,1)
@@ -249,9 +249,13 @@ def plot_signals(plot_signals_file,signals_matrix,colors = [], ylim = [], labels
                 else:
 			ax.plot(range(signals_matrix.shape[1]),signals_matrix[i,:])
                 
+    if add_zero_line:
+        ax.plot(range(signals_matrix.shape[1]),[0.0]*signals_matrix.shape[1], color = 'black',linestyle = '--')
+        
     if signals_matrix.shape[0] == len(labels):
+        
 	print "adding legend"
-	ax.legend()
+	ax.legend(loc=0, prop = {'size':8})
      
     #ax.plot(,signals_matrix)
     fig2.savefig(plot_signals_file)
