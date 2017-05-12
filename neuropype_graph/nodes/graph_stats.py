@@ -714,7 +714,7 @@ class ShuffleMatrix(BaseInterface):
             shuffled_matrix = np.zeros(shape = original_matrix.shape,dtype = original_matrix.dtype)
         
             for i,j in iter.combinations(range(original_matrix.shape[0]),2):
-                print i,j
+                #print i,j
                 
                 bool_ok = False
                 
@@ -722,7 +722,7 @@ class ShuffleMatrix(BaseInterface):
                         
                     new_indexes = np.random.randint(low = original_matrix.shape[0],size = 2)
                     
-                    print new_indexes
+                    #print new_indexes
                     
                     if not np.isnan(original_matrix[new_indexes[0],new_indexes[1]]):
                                             
@@ -732,9 +732,9 @@ class ShuffleMatrix(BaseInterface):
                                         
                         bool_ok = True
                     
-                    print bool_ok,np.sum(np.isnan(original_matrix))
+                    #print bool_ok,np.sum(np.isnan(original_matrix))
                     
-                print "**********************************"
+                #print "**********************************"
                     
                                         
                 
