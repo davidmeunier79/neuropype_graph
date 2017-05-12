@@ -1686,19 +1686,31 @@ class SelectNonNAN(BaseInterface):
 
 ##################################################### PrepareMeanCorrel ###############################################################################
 
-from neuropype_graph.utils_cor import return_corres_correl_mat
+from neuropype_graph.utils_cor import return_corres_correl_mat,return_corres_correl_mat_labels
 
 class PrepareMeanCorrelInputSpec(BaseInterfaceInputSpec):
     
     #print "in PrepareMeanCorrelInputSpec"
     
-    gm_mask_coords_file = File(exists=True, desc='reference coordinates',mandatory=True)
+    #gm_mask_coords_file = File(exists=True, desc='reference coordinates',mandatory=True)
                 
     cor_mat_files = traits.List(File(exists=True), desc='Numpy files with correlation matrices gm_mask_coords',mandatory=True)
 
-    coords_files = traits.List(File(exists=True), desc='Txt files with coordinates (corresponding to the space also described in ', mandatory=True)
+    #coords_files = traits.List(File(exists=True), desc='Txt files with coordinates (corresponding to the space also described in ', mandatory=True)
     
-    labels_file = File(exists=True, desc='reference labels',mandatory=False)
+    #labels_file = File(exists=True, desc='reference labels',mandatory=False)
+    
+    
+    coords_files = traits.List(File(exists=True), desc='list of all coordinates in numpy space files (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['labels_files'])
+    
+    labels_files = traits.List(File(exists=True), desc='list of labels (in txt format) for each subject (after removal of non void data)', mandatory=True, xor = ['coords_files'])
+    
+    gm_mask_coords_file = File(exists=True, desc='Coordinates in numpy space, corresponding to all possible nodes in the original space', mandatory=False)
+    
+    gm_mask_labels_file = File(exists=True, desc='Labels for all possible nodes - in case coords are varying from one indiv to the other (source space for example)', mandatory=False)
+    
+    
+    
     
     plot_mat = traits.Bool(True, usedefault = True, mandatory = False)
     
@@ -1740,7 +1752,7 @@ class PrepareMeanCorrel(BaseInterface):
     coords_files:
         type = List of Files, exists=True, desc='Txt files with coordinates (corresponding to the space also described in ', mandatory=True
     
-    labels_file:
+    gm_mask_labels_file:
         type = File, exists=True, desc='reference labels',mandatory=False
     
     plot_mat:
@@ -1770,81 +1782,149 @@ class PrepareMeanCorrel(BaseInterface):
                 
             import pandas as pd
     
-            gm_mask_coords_file = self.inputs.gm_mask_coords_file
             cor_mat_files = self.inputs.cor_mat_files
-            coords_files = self.inputs.coords_files
-            labels_file  = self.inputs.labels_file
+            gm_mask_labels_file  = self.inputs.gm_mask_labels_file
             plot_mat  = self.inputs.plot_mat
             export_csv  = self.inputs.export_csv
             
-            print 'loading gm mask corres'
             
-            gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
-            
-            #print gm_mask_coords
-            print gm_mask_coords.shape
-            
-            if isdefined(labels_file):
+            if isdefined(gm_mask_labels_file):
                     
                 print 'extracting node labels'
                     
-                labels = [line.strip() for line in open(labels_file)]
+                labels = [line.strip() for line in open(gm_mask_labels_file)]
                 print labels
                 
             else:
                 labels = []
             
                 
-            #### read matrix from the first group
-            #print Z_cor_mat_files
-            
-            sum_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
-            print sum_cor_mat_matrix.shape
-            
-            sum_possible_edge_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = int)
-            print sum_possible_edge_matrix.shape
-            
-                    
-            group_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
-            print group_cor_mat_matrix.shape
-            
-            if len(cor_mat_files) != len(coords_files):
-                print "warning, length of cor_mat_files, coords_files are imcompatible {} {} {}".format(len(cor_mat_files),len(coords_files))
-            
-            for index_file in range(len(cor_mat_files)):
                 
-                print cor_mat_files[index_file]
+            if isdefined(self.inputs.gm_mask_coords_file) and isdefined(self.inputs.coords_files):
+            
+                coords_files = self.inputs.coords_files
                 
-                if os.path.exists(cor_mat_files[index_file]) and os.path.exists(coords_files[index_file]):
+                gm_mask_coords_file = self.inputs.gm_mask_coords_file
+            
+                print 'loading gm mask corres'
                 
-                    Z_cor_mat = np.load(cor_mat_files[index_file])
-                    print Z_cor_mat.shape
-                    
-                    
-                    coords = np.array(np.loadtxt(coords_files[index_file]),dtype = int)
-                    
-                    print coords
-                    print coords.shape
-                                        
-                    corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
-                    
-                    
-                    np.fill_diagonal(corres_cor_mat,0)
-                    
-                    np.fill_diagonal(possible_edge_mat,1)
-                    
-                    sum_cor_mat_matrix += corres_cor_mat
-                    
-                    sum_possible_edge_matrix += possible_edge_mat
-                    
-                    
-                    group_cor_mat_matrix[:,:,index_file] = corres_cor_mat
-                    
-                    
-                else:
-                    print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
+                gm_mask_coords = np.loadtxt(gm_mask_coords_file)
                 
+                print gm_mask_coords.shape
+                    
+                sum_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
+                print sum_cor_mat_matrix.shape
                 
+                sum_possible_edge_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = int)
+                print sum_possible_edge_matrix.shape
+                
+                        
+                group_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0],len(cor_mat_files)),dtype = float)
+                print group_cor_mat_matrix.shape
+                
+                if len(cor_mat_files) != len(coords_files):
+                    print "warning, length of cor_mat_files, coords_files are imcompatible {} {} {}".format(len(cor_mat_files),len(coords_files))
+                
+                for index_file in range(len(cor_mat_files)):
+                    
+                    print cor_mat_files[index_file]
+                    
+                    if os.path.exists(cor_mat_files[index_file]) and os.path.exists(coords_files[index_file]):
+                    
+                        Z_cor_mat = np.load(cor_mat_files[index_file])
+                        print Z_cor_mat.shape
+                        
+                        
+                        coords = np.array(np.loadtxt(coords_files[index_file]),dtype = int)
+                        
+                        print coords
+                        print coords.shape
+                                            
+                        corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
+                        
+                        
+                        np.fill_diagonal(corres_cor_mat,0)
+                        
+                        np.fill_diagonal(possible_edge_mat,1)
+                        
+                        sum_cor_mat_matrix += corres_cor_mat
+                        
+                        sum_possible_edge_matrix += possible_edge_mat
+                        
+                        
+                        group_cor_mat_matrix[:,:,index_file] = corres_cor_mat
+                        
+                        
+                    else:
+                        print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
+                    
+                    
+                    
+            elif isdefined(self.inputs.gm_mask_labels_file) and isdefined(self.inputs.labels_files):    
+                    
+                labels_files = self.inputs.labels_files
+                
+                gm_mask_labels_file = self.inputs.gm_mask_labels_file
+                
+                    
+                print 'loading gm mask labels'
+                
+                gm_mask_labels = [line.strip() for line in open(gm_mask_labels_file)]
+                
+                print len(gm_mask_labels)
+                    
+                gm_mask_labels = np.array([line.strip() for line in open(gm_mask_labels_file)],dtype = 'str')
+            
+                sum_cor_mat_matrix = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = float)
+                print sum_cor_mat_matrix.shape
+                
+                sum_possible_edge_matrix = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0]),dtype = int)
+                print sum_possible_edge_matrix.shape
+                
+                        
+                group_cor_mat_matrix = np.zeros((gm_mask_labels.shape[0],gm_mask_labels.shape[0],len(cor_mat_files)),dtype = float)
+                print group_cor_mat_matrix.shape
+                
+                if len(cor_mat_files) != len(labels_files):
+                    print "warning, length of cor_mat_files, labels_files are imcompatible {} {} {}".format(len(cor_mat_files),len(labels_files))
+                
+                for index_file in range(len(cor_mat_files)):
+                    
+                    print cor_mat_files[index_file]
+                    
+                    if os.path.exists(cor_mat_files[index_file]) and os.path.exists(labels_files[index_file]):
+                    
+                        Z_cor_mat = np.load(cor_mat_files[index_file])
+                        print Z_cor_mat.shape
+                        
+                        labels = [line.strip() for line in open(gm_mask_labels_file)]
+                        print labels
+                
+                        np_labels = np.array(labels,dtype = str)
+                        
+                        print np_labels
+                        print np_labels.shape
+                                            
+                        corres_cor_mat,possible_edge_mat = return_corres_correl_mat_labels(Z_cor_mat,np_labels,gm_mask_labels)
+                        
+                        print corres_cor_mat
+                        
+                        np.fill_diagonal(corres_cor_mat,0)
+                        
+                        np.fill_diagonal(possible_edge_mat,1)
+                        
+                        sum_cor_mat_matrix += corres_cor_mat
+                        
+                        sum_possible_edge_matrix += possible_edge_mat
+                        
+                        
+                        group_cor_mat_matrix[:,:,index_file] = corres_cor_mat
+                        
+                        
+                    else:
+                        print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + labels_files[index_file] + " do not exists"
+                    
+                    
             self.group_cor_mat_matrix_file= os.path.abspath('group_cor_mat_matrix.npy')
             
             np.save(self.group_cor_mat_matrix_file,group_cor_mat_matrix)
@@ -1866,7 +1946,7 @@ class PrepareMeanCorrel(BaseInterface):
             
             self.avg_cor_mat_matrix_file  = os.path.abspath('avg_cor_mat_matrix.npy')
             
-            avg_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
+            #avg_cor_mat_matrix = np.zeros((gm_mask_coords.shape[0],gm_mask_coords.shape[0]),dtype = float)
             
             
             if np.sum(np.array(sum_possible_edge_matrix == 0)) == 0:
