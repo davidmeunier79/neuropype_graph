@@ -557,7 +557,98 @@ def gather_diff_con_values(res_path, cond, nb_permuts, labels):
         
     return df
         
-def compute_signif_permut_con_values(df, res_path, cond, alpha, labels, coords = np.array([])):
+def gather_con_values(res_path, cond, nb_permuts, labels):
+    
+    import os
+    
+    if isinstance(cond,tuple):
+        ## si plusieurs conditions = IRMf
+        df_filename = os.path.join(res_path, "permuts_" + ".".join(cond) + '_con_values.csv')
+    
+    else:
+        ## si une seule valeur
+        df_filename = os.path.join(res_path, "permuts_" + cond + '_con_values.csv')
+        
+    
+    
+    if not os.path.exists(df_filename):
+        
+        ############ pair of labels and tri triu_indices
+
+        triu_indices_i,triu_indices_j = np.triu_indices(len(labels),k=1)
+        
+        pair_labels = [labels[i] + "_" + labels[j] for i,j in zip(triu_indices_i.tolist(),triu_indices_j.tolist())]
+        
+        print pair_labels
+        print len(pair_labels)
+                
+            
+        ############ creating dataframe
+        all_vect_cormats = []
+
+        all_global_info_values = []
+        
+        for  seed in range(-1,nb_permuts):
+                
+            print seed
+                
+            dict_global_info_values = {'Seed':seed}
+                
+            all_global_info_values.append(dict_global_info_values)
+            
+            ########### avg_cormat
+            
+            if isinstance(cond,tuple):
+                iter_dir = "_cond_" + ".".join(cond) + "_permut_" + str(seed)
+                
+            else:
+                iter_dir =  "_freq_band_name_" + cond + "_permut_" + str(seed)
+                
+            avg_cormat_file = os.path.join(res_path,iter_dir,"shuffle_matrix","shuffled_matrix.npy")
+        
+            print avg_cormat_file
+            
+            if os.path.exists(avg_cormat_file):
+            
+                avg_cormat = np.load(avg_cormat_file)
+                
+                print avg_cormat
+                
+                avg_cormat = avg_cormat + np.transpose(avg_cormat)
+                
+                vect_avg_cormat = avg_cormat[triu_indices_i,triu_indices_j]
+                
+                print vect_avg_cormat.shape
+                
+                all_vect_cormats.append(vect_avg_cormat)
+            
+            else:
+                print ("Warning, could not find file {}".format(avg_cormat_file))
+                       
+        df_info = pd.DataFrame(all_global_info_values)
+        
+        print df_info
+        
+        df_con = pd.DataFrame(all_vect_cormats,columns = pair_labels)
+        
+        print df_con
+        
+        df = pd.concat((df_info,df_con),axis = 1)
+        
+        print df
+        
+        print df_filename
+        
+        #df.to_csv(df_filename)
+        df.to_csv(df_filename,index = False)
+    else:
+        
+        #df = pd.read_csv(df_filename)
+        df = pd.read_csv(df_filename,index_col = None)
+        
+    return df
+        
+def compute_signif_permut_con_values(df, res_path, cond, alpha, labels, coords = np.array([]),diff_sess = True):
     
     import os
     import numpy as np
@@ -582,13 +673,24 @@ def compute_signif_permut_con_values(df, res_path, cond, alpha, labels, coords =
         df_res = pd.read_csv(signif_df,index_col = 0)
     else:
         
-        df_res = compute_signif_permuts(df)
-        
+        if diff_sess:
+            df_res = compute_signif_permuts(df)
+            
+        else:
+            df_res = compute_signif_permuts(df, session_col = -1)
+            
         df_res.to_csv(signif_df)
     
-    res_higher = df_res.values[0,2:]
-    res_lower = df_res.values[1,2:]
-    
+    if diff_sess:
+        
+        res_higher = df_res.values[0,2:]
+        res_lower = df_res.values[1,2:]
+        
+    else:
+        
+        res_higher = df_res.values[0,1:]
+        res_lower = df_res.values[1,1:]
+        
     print res_higher.shape,res_lower.shape 
     
     signif_mat_higher = np.zeros(shape = (len(labels),len(labels)), dtype = "int")
