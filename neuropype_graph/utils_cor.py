@@ -252,7 +252,10 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intens
                 
                 keep_rois[i] = True
                 
-                mean_masked_ts.append(np.nanmean(all_voxel_roi_ts,axis = 0))
+                all_voxel_roi_ts = all_voxel_roi_ts[~np.isnan(all_voxel_roi_ts)]
+                mean_all_voxel_roi_ts = np.mean(all_voxel_roi_ts,axis = 0)
+            
+                mean_masked_ts.append(mean_all_voxel_roi_ts)
             else:
                 print "ROI {} was not selected : {} {} ".format(roi_index, np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
                 
