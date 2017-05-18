@@ -42,6 +42,7 @@ class ExtractTSInputSpec(BaseInterfaceInputSpec):
     
     plot_fig = traits.Bool(False, desc = "Plotting mean signal or not", usedefault = True)
     
+    background_val = traits.Float(-1.0, desc='value for background (i.e. outside brain)',usedefault = True)
     
 class ExtractTSOutputSpec(TraitedSpec):
     
@@ -81,6 +82,9 @@ class ExtractTS(BaseInterface):
         plot_fig:
             type = Bool, defaults = False, desc = "Plotting mean signal or not", usedefault = True)
         
+        background_val:
+            type = Float, -1.0, desc='value for background (i.e. outside brain)',usedefault = True
+    
     Outputs:
         
         mean_masked_ts_file: 
@@ -106,6 +110,7 @@ class ExtractTS(BaseInterface):
         file_4D = self.inputs.file_4D
         min_BOLD_intensity = self.inputs.min_BOLD_intensity
         percent_signal = self.inputs.percent_signal
+        background_val = self.inputs.background_val
         
         plot_fig = self.inputs.plot_fig
         
@@ -118,8 +123,8 @@ class ExtractTS(BaseInterface):
         
         print "orig_ts shape:"
         print orig_ts.shape
-            
-        mean_masked_ts,keep_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intensity, percent_signal = percent_signal, background_val = -1.0)
+        
+        mean_masked_ts,keep_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intensity, percent_signal = percent_signal, background_val = background_val)
         
         print keep_rois
         
