@@ -229,18 +229,17 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intens
         
         keep_rois = np.zeros(shape = (sequence_roi_index.shape[0]), dtype = bool)
         
-        
         for i,roi_index in enumerate(sequence_roi_index):
-        #for roi_index in sequence_roi_index[0:1]:
             
-            print np.where(indexed_mask_rois_data == roi_index)
+            #print np.where(indexed_mask_rois_data == roi_index)
             
             index_roi_x,index_roi_y,index_roi_z = np.where(indexed_mask_rois_data == roi_index)
             
-            #print index_roi_x,index_roi_y,index_roi_z
+            print index_roi_x,index_roi_y,index_roi_z
             
             all_voxel_roi_ts = orig_ts[index_roi_x,index_roi_y,index_roi_z,:]
             
+            print all_voxel_roi_ts.shape
             ### testing if at least 50% of the voxels in the ROIs have values always higher than min bold intensity
             nb_signal_voxels = np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])
             
@@ -252,9 +251,14 @@ def mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intens
                 
                 keep_rois[i] = True
                 
-                all_voxel_roi_ts = all_voxel_roi_ts[~np.isnan(all_voxel_roi_ts)]
-                mean_all_voxel_roi_ts = np.mean(all_voxel_roi_ts,axis = 0)
+                #all_voxel_roi_ts = all_voxel_roi_ts[~np.isnan(all_voxel_roi_ts)]
+                #mean_all_voxel_roi_ts = np.mean(all_voxel_roi_ts,axis = 0)
             
+                mean_all_voxel_roi_ts = np.nanmean(all_voxel_roi_ts,axis = 0)
+                
+                print mean_all_voxel_roi_ts
+                print mean_all_voxel_roi_ts.shape
+                
                 mean_masked_ts.append(mean_all_voxel_roi_ts)
             else:
                 print "ROI {} was not selected : {} {} ".format(roi_index, np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1]),np.sum(np.sum(all_voxel_roi_ts > min_BOLD_intensity,axis = 1) == all_voxel_roi_ts.shape[1])/float(all_voxel_roi_ts.shape[0]))
