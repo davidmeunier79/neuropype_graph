@@ -33,7 +33,7 @@ def return_signif_code(p_values,uncor_alpha = 0.05,fdr_alpha = 0.05,bon_alpha = 
 
     #print p_values
     
-    print uncor_alpha,fdr_alpha,bon_alpha
+    #print uncor_alpha,fdr_alpha,bon_alpha
     
     N = p_values.shape[0]
     
@@ -52,7 +52,7 @@ def return_signif_code(p_values,uncor_alpha = 0.05,fdr_alpha = 0.05,bon_alpha = 
     ### code = 0 for all correlation below uncor_alpha
     signif_code[p_values > uncor_alpha] = 0
     
-    print p_values[p_values > uncor_alpha]
+    #print p_values[p_values > uncor_alpha]
     
     #print p_values < uncor_alpha
     #print p_values == uncor_alpha
@@ -60,7 +60,7 @@ def return_signif_code(p_values,uncor_alpha = 0.05,fdr_alpha = 0.05,bon_alpha = 
     ##print signif_code
     
     ################ FPcor #############################
-    if uncor_alpha < 1.0/N:
+    if 1.0/N < uncor_alpha:
         
         signif_code[p_values < 1.0/N] = 2
     
@@ -79,7 +79,7 @@ def return_signif_code(p_values,uncor_alpha = 0.05,fdr_alpha = 0.05,bon_alpha = 
     
     signif_code[p_values < bon_alpha/N] = 4
     
-    print signif_code
+    #print signif_code
     
     
     return signif_code
@@ -259,7 +259,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
                 if np.isnan(p_val):
                     
                     print "Warning, unable to compute T-test: "
-                    print t_stat,p_val,X_nonan,Y_nonan
+                    #print t_stat,p_val,X_nonan,Y_nonan
                     
                     
             
@@ -274,23 +274,23 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
             list_diff.append([i,j,p_val,np.sign(np.mean(X_nonan)-np.mean(Y_nonan)),t_stat])
             
         
-    print list_diff
+    #print list_diff
         
     assert len(list_diff) != 0, "Error, list_diff is empty"
     
     np_list_diff = np.array(list_diff)
    
-    print np_list_diff
+    #print np_list_diff
     
     signif_code = return_signif_code(np_list_diff[:,2],uncor_alpha = uncor_alpha,fdr_alpha = cor_alpha, bon_alpha = cor_alpha)
     
-    print np.sum(signif_code == 0.0),np.sum(signif_code == 1.0),np.sum(signif_code == 2.0),np.sum(signif_code == 3.0),np.sum(signif_code == 4.0)
+    #print np.sum(signif_code == 0.0),np.sum(signif_code == 1.0),np.sum(signif_code == 2.0),np.sum(signif_code == 3.0),np.sum(signif_code == 4.0)
     
     np_list_diff[:,3] = np_list_diff[:,3] * signif_code
     
-    print np.sum(np_list_diff[:,3] == 0.0)
-    print np.sum(np_list_diff[:,3] == 1.0),np.sum(np_list_diff[:,3] == 2.0),np.sum(np_list_diff[:,3] == 3.0),np.sum(np_list_diff[:,3] == 4.0)
-    print np.sum(np_list_diff[:,3] == -1.0),np.sum(np_list_diff[:,3] == -2.0),np.sum(np_list_diff[:,3] == -3.0),np.sum(np_list_diff[:,3] == -4.0)
+    #print np.sum(np_list_diff[:,3] == 0.0)
+    #print np.sum(np_list_diff[:,3] == 1.0),np.sum(np_list_diff[:,3] == 2.0),np.sum(np_list_diff[:,3] == 3.0),np.sum(np_list_diff[:,3] == 4.0)
+    #print np.sum(np_list_diff[:,3] == -1.0),np.sum(np_list_diff[:,3] == -2.0),np.sum(np_list_diff[:,3] == -3.0),np.sum(np_list_diff[:,3] == -4.0)
     
     
     signif_signed_adj_mat = np.zeros((N,N),dtype = 'int')
@@ -305,7 +305,7 @@ def compute_pairwise_ttest_fdr(X,Y, cor_alpha, uncor_alpha, paired = True,old_or
     p_val_mat[signif_i,signif_j] = p_val_mat[signif_j,signif_i] = np_list_diff[:,2]
     T_stat_mat[signif_i,signif_j] = T_stat_mat[signif_j,signif_i] = np_list_diff[:,4]
     
-    print T_stat_mat
+    #print T_stat_mat
     
     return signif_signed_adj_mat, p_val_mat, T_stat_mat
 
