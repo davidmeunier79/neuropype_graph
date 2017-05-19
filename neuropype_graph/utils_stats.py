@@ -575,7 +575,100 @@ def compute_oneway_anova_fwe(list_of_list_matrices,cor_alpha = 0.05, uncor_alpha
     
     return signif_adj_mat, p_val_mat, F_stat_mat
 
+        
+def compute_correl_behav(X, reg_interest,uncor_alpha = 0.001,cor_alpha = 0.05,old_order =False,keep_intracon = False):
+    
+    import numpy as np
+    import itertools as it
+    
+    import scipy.stats as stat
 
+    from neuropype_graph.utils_stats import return_signif_code
+    if old_order:
+        N = X.shape[0]
+    else:
+        N = X.shape[1]
+        
+    print reg_interest
+    print reg_interest.dtype
+        
+    
+    if keep_intracon:
+        iter_indexes = it.combinations_with_replacement(range(N), 2)
+    else:
+        iter_indexes = it.combinations(range(N), 2)
+        
+    if not old_order:
+        # number of nodes
+        assert X.shape[1] == X.shape[2] and  "Error, X {}{} is not squared".format(X.shape[1],X.shape[2])
+        
+        
+        assert X.shape[0] == reg_interest.shape[0], "Incompatible number of fields in dataframe and nb matrices"
+        
+        list_diff = []
+        
+        for i,j in iter_indexes:
+            
+            keep_val = (~np.isnan(X[:,i,j])) & (~np.isnan(reg_interest))
+            
+            print keep_val
+            
+            r_stat,p_val = stat.pearsonr(X[keep_val,i,j],reg_interest[keep_val])
+            
+            print r_stat,p_val
+            
+            if np.isnan(p_val):
+                
+                print "Warning, unable to compute T-test: "
+                print r_stat,p_val,X_nonan,Y_nonan
+                
+                    
+            
+                ## pas encore present (version scipy 0.18)
+                #t_stat,p_val = stat.ttest_rel(X[i,j,:],Y[i,j,:],nan_policy = 'omit')
+            
+            #print t_stat,p_val
+            
+            list_diff.append([i,j,p_val,np.sign(r_stat),r_stat])
+            
+        
+    print list_diff
+        
+    assert len(list_diff) != 0, "Error, list_diff is empty"
+    
+    np_list_diff = np.array(list_diff)
+   
+    print np_list_diff
+    
+    signif_code = return_signif_code(np_list_diff[:,2],uncor_alpha = uncor_alpha,fdr_alpha = cor_alpha, bon_alpha = cor_alpha)
+    
+    print np.sum(signif_code == 0.0),np.sum(signif_code == 1.0),np.sum(signif_code == 2.0),np.sum(signif_code == 3.0),np.sum(signif_code == 4.0)
+    
+    np_list_diff[:,3] = np_list_diff[:,3] * signif_code
+    
+    print np.sum(np_list_diff[:,3] == 0.0)
+    print np.sum(np_list_diff[:,3] == 1.0),np.sum(np_list_diff[:,3] == 2.0),np.sum(np_list_diff[:,3] == 3.0),np.sum(np_list_diff[:,3] == 4.0)
+    print np.sum(np_list_diff[:,3] == -1.0),np.sum(np_list_diff[:,3] == -2.0),np.sum(np_list_diff[:,3] == -3.0),np.sum(np_list_diff[:,3] == -4.0)
+    
+    
+    signif_signed_adj_mat = np.zeros((N,N),dtype = 'int')
+    p_val_mat =  np.zeros((N,N),dtype = 'float')
+    r_stat_mat = np.zeros((N,N),dtype = 'float')
+    
+    signif_i = np.array(np_list_diff[:,0],dtype = int)
+    signif_j = np.array(np_list_diff[:,1],dtype = int)
+    
+    signif_signed_adj_mat[signif_i,signif_j] = signif_signed_adj_mat[signif_j,signif_i] = np.array(np_list_diff[:,3],dtype = int)
+    
+    p_val_mat[signif_i,signif_j] = p_val_mat[signif_j,signif_i] = np_list_diff[:,2]
+    r_stat_mat[signif_i,signif_j] = r_stat_mat[signif_j,signif_i] = np_list_diff[:,4]
+    
+    print r_stat_mat
+    
+    return signif_signed_adj_mat, p_val_mat, r_stat_mat
+
+
+    
 ############### nodewise stats #########################
 def compute_nodewise_t_test_vect(d_stacked, nx, ny):
 
