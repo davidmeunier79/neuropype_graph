@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from visbrain import Brain
+from visbrain.brain.brain import Brain
 
 from neuropype_graph.utils_net import read_Pajek_corres_nodes_and_sparse_matrix
 
@@ -190,4 +190,40 @@ def visu_graph_modules(net_file, lol_file, coords_file, labels_file,inter_module
         c_colval[-1] = "grey"
         
     vb = Brain(s_xyz=corres_coords, s_text=newLabels, s_textsize = 2,s_textcolor="white", c_map=c_cmap, c_connect = c_connect, c_colval = c_colval)
+    vb.show()
+
+
+def visu_graph(conmat_file,coords_file, labels_file):
+    
+    ########## coords
+    #coord_file = os.path.abspath("data/MEG/label_coords.txt")
+
+    coords = np.loadtxt(coords_file)
+
+    print "coords: ",
+    print coords
+
+    ########## labels
+    labels = [line.strip() for line in open(labels_file)]
+    npLabels = np.array(labels)
+    print npLabels
+
+    ##########  net file
+    signif_mat = np.load(conmat_file)
+    print signif_mat
+    
+    c_connect = np.ma.masked_array(signif_mat, mask=True)
+    #c_connect.mask[np.where((c_connect > umin) & (c_connect < umax))] = False
+
+
+    print c_connect
+
+    c_colval = {4:"darkred",3:"red",2:"orange",1:"yellow",-1:"cyan",-2:"cornflowerblue",-3:"blue",-4:"navy"}
+    
+    
+    #c_colval = {4:"darkred",3:"red",2:"orange",1:"yellow",-1:"cyan",-2:"cornflowerblue",-3:"blue",-4:"navy"}
+    
+    #c_colval = {-1:"grey",0:"red",1:"orange",2:"blue",3:"green",4:"yellow",5:"purple"}
+
+    vb = Brain(s_xyz=coords, s_text=npLabels, s_textsize = 1,s_textcolor="white", c_connect = c_connect, c_colval = c_colval)
     vb.show()
