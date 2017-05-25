@@ -544,7 +544,7 @@ class SwapLists(BaseInterface):
             
             def prod(x, y): return x * y
         
-            print reduce(prod,nb_files_per_list,1)
+            #print reduce(prod,nb_files_per_list,1)
             
             is_permut = np.array(np.random.randint(nb_set_to_shuffle, size=nb_files_per_list),dtype = int)
             
