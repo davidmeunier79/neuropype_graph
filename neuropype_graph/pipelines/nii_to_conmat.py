@@ -78,6 +78,75 @@ def create_pipeline_nii_to_conmat_simple(main_path, ROI_mask_file,pipeline_name 
     
     return pipeline
 
+def create_pipeline_nii_to_conmat_gm(main_path, ROI_mask_file,pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05,background_val=-1.0):
+
+    """
+    Description:
+    
+    Pipeline from nifti 4D (after preprocessing) to connectivity matrices
+    
+    Inputs (inputnode):
+    
+        * nii_4D_file
+        * rp_file
+        
+        as arguments;
+        * ROI_mask_file
+    
+    Comments:
+    
+    Typically used after nipype preprocessing pipeline and before conmat_to_graph pipeline
+    
+    """
+    
+    pipeline = pe.Workflow(name=pipeline_name)
+    pipeline.base_dir = main_path
+    
+    inputnode = pe.Node(niu.IdentityInterface(fields=['nii_4D_file','rp_file','gm_anat_file','ROI_coords_file','ROI_MNI_coords_file','ROI_labels_file']),name='inputnode')
+    
+    ###### Preprocess pipeline,
+    filter_ROI_mask_with_GM = pe.Node(interface = IntersectMask(),name = 'filter_ROI_mask_with_GM')
+    
+    filter_ROI_mask_with_GM.inputs.indexed_rois_file = ROI_mask_file
+    
+    filter_ROI_mask_with_GM.inputs.background_val = background_val
+    
+    pipeline.connect(inputnode, 'ROI_coords_file', filter_ROI_mask_with_GM, 'coords_rois_file')
+    pipeline.connect(inputnode, 'ROI_MNI_coords_file', filter_ROI_mask_with_GM, 'MNI_coords_rois_file')
+    pipeline.connect(inputnode, 'ROI_labels_file', filter_ROI_mask_with_GM, 'labels_rois_file')
+    
+    pipeline.connect(inputnode, 'gm_anat_file', filter_ROI_mask_with_GM, 'filter_mask_file')
+    
+    #### Nodes version: use min_BOLD_intensity and return coords where signal is strong enough 
+    extract_mean_ROI_ts = pe.Node(interface = ExtractTS(plot_fig = False),name = 'extract_mean_ROI_ts')
+    
+    extract_mean_ROI_ts.inputs.background_val = -1.0
+    
+    #extract_mean_ROI_ts.inputs.indexed_rois_file = ROI_mask_file
+    #extract_mean_ROI_ts.inputs.coord_rois_file = ROI_coords_file
+    #extract_mean_ROI_ts.inputs.min_BOLD_intensity = min_BOLD_intensity
+    
+    pipeline.connect(inputnode,'nii_4D_file', extract_mean_ROI_ts, 'file_4D')
+    pipeline.connect(filter_ROI_mask_with_GM, 'filtered_indexed_rois_file', extract_mean_ROI_ts, 'indexed_rois_file')
+    pipeline.connect(filter_ROI_mask_with_GM, 'filtered_coords_rois_file', extract_mean_ROI_ts, 'coord_rois_file')
+    pipeline.connect(filter_ROI_mask_with_GM, 'filtered_labels_rois_file', extract_mean_ROI_ts, 'label_rois_file')
+    
+    ##### regress covariates
+    #### use R linear model to regress movement parameters, white matter and ventricule signals, and compute Z-score of the residuals
+    regress_covar = pe.Node(interface = RegressCovar(),iterfield = ['masked_ts_file','rp_file'],name='regress_covar')
+    
+    pipeline.connect(extract_mean_ROI_ts, 'mean_masked_ts_file', regress_covar, 'masked_ts_file')
+    pipeline.connect(inputnode, 'rp_file', regress_covar, 'rp_file')
+    
+    ###################################### compute correlations ####################################################
+    
+    compute_conf_cor_mat = pe.Node(interface = ComputeConfCorMat(),name='compute_conf_cor_mat')
+    compute_conf_cor_mat.inputs.conf_interval_prob = conf_interval_prob
+    
+    pipeline.connect(regress_covar, 'resid_ts_file', compute_conf_cor_mat, 'ts_file')
+    pipeline.connect(extract_mean_ROI_ts, 'subj_label_rois_file', compute_conf_cor_mat, 'labels_file')
+    
+    return pipeline
 
 def create_pipeline_nii_to_conmat_no_seg(main_path, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
 
@@ -234,8 +303,6 @@ def create_pipeline_nii_to_conmat_seg_template(main_path, pipeline_name = "nii_t
     pipeline.connect(extract_mean_ROI_ts, 'subj_label_rois_file', compute_conf_cor_mat, 'labels_file')
     
     return pipeline
-
-
 
 
 def create_pipeline_nii_to_conmat(main_path, ROI_mask_file,filter_gm_threshold = 0.9, pipeline_name = "nii_to_conmat",conf_interval_prob = 0.05):
