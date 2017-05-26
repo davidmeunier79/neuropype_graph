@@ -125,8 +125,8 @@ class ExtractTS(BaseInterface):
         print orig_ts.shape
         
         mean_masked_ts,keep_rois = mean_select_indexed_mask_data(orig_ts,indexed_mask_rois_data,min_BOLD_intensity, percent_signal = percent_signal, background_val = background_val)
-        
-        print keep_rois
+        print background_val
+        print keep_rois.shape
         
         ## loading ROI coordinates
         
@@ -220,6 +220,13 @@ class IntersectMaskInputSpec(BaseInterfaceInputSpec):
     MNI_coords_rois_file = File(desc='MNI coords txt file')
     
     filter_thr = traits.Float(0.99, usedefault = True, desc='Value to threshold filter_mask')
+    
+    
+    
+    background_val = traits.Float(-1.0, desc='value for background (i.e. outside brain)',usedefault = True)
+    
+    
+    
                           
 class IntersectMaskOutputSpec(TraitedSpec):
     
@@ -297,7 +304,7 @@ class IntersectMask(BaseInterface):
         labels_rois_file = self.inputs.labels_rois_file
         MNI_coords_rois_file = self.inputs.MNI_coords_rois_file
         filter_thr = self.inputs.filter_thr 
-        
+        background_val = self.inputs.background_val
         print filter_thr
         
         ## loading ROI indexed mask
@@ -342,7 +349,20 @@ class IntersectMask(BaseInterface):
         print np.unique(indexed_rois_data)        
         print len(np.unique(indexed_rois_data))
         
-        filtered_indexed_rois_data = np.array(filter_mask_data * (indexed_rois_data.copy()+1) -1,dtype = 'int64')
+        filtered_indexed_rois_data = np.array(filter_mask_data * indexed_rois_data.copy(),dtype = 'int64')
+        
+        if background_val == -1.0:
+            filtered_indexed_rois_data = np.array(filter_mask_data * (indexed_rois_data.copy()+1) -1,dtype = 'int64')
+            index_corres = np.unique(filtered_indexed_rois_data)[1:]
+            
+        else:
+            filtered_indexed_rois_data = np.array(filter_mask_data * indexed_rois_data.copy(),dtype = 'int64')
+                
+            print "index_corres:"
+            #index_corres = np.unique(filtered_indexed_rois_data)[:-1]
+            print np.unique(filtered_indexed_rois_data)[1:]-1
+            
+            index_corres = np.unique(filtered_indexed_rois_data)[1:]-1
         
         print "filtered_indexed_rois_data:"
         print np.unique(filtered_indexed_rois_data)
@@ -351,17 +371,18 @@ class IntersectMask(BaseInterface):
         filtered_indexed_rois_img_file = os.path.abspath("filtered_indexed_rois.nii")
         nib.save(nib.Nifti1Image(filtered_indexed_rois_data,indexed_rois_img.get_affine(),indexed_rois_img.get_header()),filtered_indexed_rois_img_file)
     
-        print "index_corres:"
-        #index_corres = np.unique(filtered_indexed_rois_data)[:-1]
-        index_corres = np.unique(filtered_indexed_rois_data)[1:]
         
         print index_corres
         print len(index_corres)
         
         print "reorder_indexed_rois:"
+        
         reorder_indexed_rois_data = np.zeros(shape = filtered_indexed_rois_data.shape,dtype = 'int64') - 1
         
-        for i,index in enumerate(index_corres):
+        i = 0
+        old_index_corres = []
+        
+        for index in index_corres:
             
             print i,index
             
@@ -369,11 +390,16 @@ class IntersectMask(BaseInterface):
                 
                 print np.sum(np.array(filtered_indexed_rois_data == index,dtype = int))
                 reorder_indexed_rois_data[filtered_indexed_rois_data == index] = i
+                i = i+1
+                old_index_corres.append(index)
+                
             else:
                 print "Warning could not find value %d in filtered_indexed_rois_data"%index
             
                                        
         print np.unique(reorder_indexed_rois_data)  
+        old_index_corres = np.array(old_index_corres)
+        print old_index_corres
         
         reorder_indexed_rois_img_file = os.path.abspath("reorder_filtered_indexed_rois.nii")
         nib.save(nib.Nifti1Image(reorder_indexed_rois_data,indexed_rois_img.get_affine(),indexed_rois_img.get_header()),reorder_indexed_rois_img_file)
@@ -389,7 +415,9 @@ class IntersectMask(BaseInterface):
             print "coords_rois: " 
             print coords_rois.shape
             
-            filtered_coords_rois = coords_rois[index_corres,:]
+            print old_index_corres
+            
+            filtered_coords_rois = coords_rois[old_index_corres,:]
             
             print "filtered_coords_rois: " 
             print filtered_coords_rois
@@ -405,10 +433,11 @@ class IntersectMask(BaseInterface):
             print "MNI_coords_rois: " 
             print MNI_coords_rois.shape
             
-            filtered_MNI_coords_rois = MNI_coords_rois[index_corres,:]
+            print old_index_corres.shape
+            filtered_MNI_coords_rois = MNI_coords_rois[old_index_corres,:]
             
             print "filtered_MNI_coords_rois: " 
-            print filtered_MNI_coords_rois
+            print filtered_MNI_coords_rois.shape
             
             filtered_MNI_coords_rois_file = os.path.abspath("filtered_MNI_coords_rois.txt")
             np.savetxt(filtered_MNI_coords_rois_file,filtered_MNI_coords_rois, fmt = "%f")
@@ -425,7 +454,7 @@ class IntersectMask(BaseInterface):
             np_labels_rois = np.array(labels_rois,dtype = 'str')
             
                 
-            filtered_labels_rois = np_labels_rois[index_corres]
+            filtered_labels_rois = np_labels_rois[old_index_corres]
             
             print "filtered_coords_rois: " 
             print filtered_coords_rois
@@ -1813,7 +1842,7 @@ class PrepareMeanCorrel(BaseInterface):
             
                 print 'loading gm mask corres'
                 
-                gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+                gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
                 
                 print gm_mask_coords.shape
                     
@@ -1838,11 +1867,10 @@ class PrepareMeanCorrel(BaseInterface):
                     
                         Z_cor_mat = np.load(cor_mat_files[index_file])
                         print Z_cor_mat.shape
-                        
-                        
+                                                
                         coords = np.array(np.loadtxt(coords_files[index_file]),dtype = int)
                         
-                        print coords
+                        #print coords
                         print coords.shape
                                             
                         corres_cor_mat,possible_edge_mat = return_corres_correl_mat(Z_cor_mat,coords,gm_mask_coords)
@@ -1862,8 +1890,6 @@ class PrepareMeanCorrel(BaseInterface):
                         
                     else:
                         print "Warning, one or more files between " + cor_mat_files[index_file] + ', ' + coords_files[index_file] + " do not exists"
-                    
-                    
                     
             elif isdefined(self.inputs.gm_mask_labels_file) and isdefined(self.inputs.labels_files):    
                     
