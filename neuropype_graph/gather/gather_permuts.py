@@ -35,7 +35,7 @@ def glob_natural_sorted(reg_exp):
 
 ######################################## gather rada ######################################
 
-def compute_rada_df(iter_path,df):
+def compute_rada_df(iter_path,df,radatools_version = "3.2"):
 
     from neuropype_graph.utils_mod import get_modularity_value_from_lol_file
     from neuropype_graph.utils_mod import get_values_from_global_info_file
@@ -61,7 +61,12 @@ def compute_rada_df(iter_path,df):
     
     #################### info_global 
     
-    global_info_file = os.path.join(iter_path,"net_prop","Z_List-info_global.txt")
+    if radatools_version == "3.2":
+        net_prop_dir = "net_prop"
+    elif radatools_version == "4.0":
+        net_prop_dir = "prep_rada"
+        
+    global_info_file = os.path.join(iter_path,net_prop_dir,"Z_List-info_global.txt")
     
     print global_info_file
     
@@ -78,7 +83,7 @@ def compute_rada_df(iter_path,df):
         
     ##################### info_dists
     
-    path_length_file = os.path.join(iter_path,"net_prop","Z_List-info_dists.txt")
+    path_length_file = os.path.join(iter_path,net_prop_dir,"Z_List-info_dists.txt")
 
     print path_length_file
     
@@ -95,13 +100,18 @@ def compute_rada_df(iter_path,df):
     print df
             
 
-def compute_nodes_rada_df(local_dir,gm_coords,coords_file,labels_file):
+def compute_nodes_rada_df(local_dir,gm_coords,coords_file,labels_file,radatools_version = "3.2"):
 
     from neuropype_graph.utils_net import read_lol_file,read_Pajek_corres_nodes
     from neuropype_graph.utils_dtype_coord import where_in_coords
     
     import glob
     
+    if radatools_version == "3.2":
+        net_prop_dir = "net_prop"
+    elif radatools_version == "4.0":
+        net_prop_dir = "prep_rada"
+        
     #### Z_List
     Pajek_files = glob.glob(os.path.join(local_dir,"prep_rada","*.net"))
     
@@ -155,7 +165,7 @@ def compute_nodes_rada_df(local_dir,gm_coords,coords_file,labels_file):
         print "Missing {},{} or {}".format(Pajek_file,coords_file,labels_file)
         
     #### info nodes
-    info_nodes_files = glob.glob(os.path.join(local_dir,"net_prop","*-info_nodes.txt"))
+    info_nodes_files = glob.glob(os.path.join(local_dir,net_prop_dir,"*-info_nodes.txt"))
     
     if len(info_nodes_files) == 1:
         
