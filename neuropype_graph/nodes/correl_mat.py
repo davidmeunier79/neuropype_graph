@@ -1813,7 +1813,7 @@ class PrepareMeanCorrel(BaseInterface):
             
                 print 'loading gm mask corres'
                 
-                gm_mask_coords = np.loadtxt(gm_mask_coords_file)
+                gm_mask_coords = np.array(np.loadtxt(gm_mask_coords_file),dtype = int)
                 
                 print gm_mask_coords.shape
                     
